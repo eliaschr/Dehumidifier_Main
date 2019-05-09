@@ -1,7 +1,7 @@
 # Dehumidifier_Main
 A Juro Pro Oxygen 16L Dehumidifier, totally hacked!!!
 
-# The Story Behind
+## The Story Behind
 I own a Juro Pro Oxygen 16L Dehumidifier. After 2 years of usage it started mulfunctioning,
 so, as an electronic engineer I had to find out what the problem was.
 The electronics part is split in two sections, one is the main board containing a microcontroller
@@ -23,7 +23,7 @@ the way these things work and finaly get my machine working again.
 
 Sorry Juro Pro, but I'll never be your client again.
 
-# Some Information About The Machine
+## Some Information About The Machine
 The information presented here are what anyone with fundamental knowledge of electronics could
 find out, by just unscrewing the machine. There will be no reverse engineering of any
 communication ar any trial of cracking the microcotnrollers to reveal their code. Just what
@@ -48,6 +48,7 @@ the sensor.
 On the front panel PCB there is only one microcontroller driving the leds/displays and reading
 the pushbuttons' keypresses, that communicates to the main board through UART.
 
+## The Goal Of The Project
 Our goal is to replace the electronics (mostly microcontrollers and sensors) and make a _new_
 working machine with the ability to keep a log of the environmental parameters and present them
 on a small LCD display. But first things first. Lets make it a working machine with the
