@@ -1,0 +1,39 @@
+;*********************************************************************************************
+;* Board.h                                                                                   *
+;*-------------------------------------------------------------------------------------------*
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* In this file all the hardware connections are described. In that way, any change of the   *
+;* connections on the board is reflected here, in order for the rest of the program to adapt *
+;* itself and still function.                                                                *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is defined as 4
+
+.ifndef __BOARD_DEFS__
+;----------------------------------------
+; Keyboard Definitions
+;========================================
+Board_KeyPort:			.EQU	1
+Board_KeyHum:			.EQU	BIT0				;Humidity key
+Board_KeyTim:			.EQU	BIT1				;Timer key
+Board_KeyPwr:			.EQU	BIT2				;Power key
+Board_KeySpd:			.EQU	BIT3				;Speed key
+Board_KeyAni:			.EQU	BIT4				;Anion key
+
+
+						.include "AutoDefs.h43"
+.endif												;__BOARD_DEFS__
