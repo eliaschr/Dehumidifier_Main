@@ -1,0 +1,106 @@
+;*********************************************************************************************
+;* KeybAutoDefs.h43                                                                          *
+;*-------------------------------------------------------------------------------------------*
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
+;* Example of automatic definitions is the computation of interrupt vectors according to     *
+;* the timer module used for the keyboard.                                                   *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+
+.ifndef __KEYBOARD_AUTO_DEFS__
+.ifndef __KEYBOARD_H43__
+	.emsg "Keyboard.h43 must have been included in the file before KeybAutoDefs.h43"
+.endif
+
+__KEYBOARD_AUTO_DEFS__:	.equ	1					;Need to define this in order to avoid
+													; double inclusions
+;----------------------------------------
+; Keyboard Definitions
+;========================================
+.if KEYBTIMER == 0									;Lets define the keyboard timer registers
+KBDTCTL:				.equ	TA0CTL
+KBDTCCTL0:				.equ	TA0CCTL0
+KBDTCCTL1:				.equ	TA0CCTL1
+KBDTCCTL2:				.equ	TA0CCTL2
+KBDTR:					.equ	TA0R
+KBDTCCR0:				.equ	TA0CCR0
+KBDTCCR1:				.equ	TA0CCR1
+KBDTCCR2:				.equ	TA0CCR2
+KBDTEX0:				.equ	TA0EX0
+KBDTIV:					.equ	TA0IV
+KBDTVECTOR0:			.equ	TIMER0_A0_VECTOR
+KBDTVECTOR1:			.equ	TIMER0_A1_VECTOR
+.elseif KEYBTIMER == 1
+KBDTCTL:				.equ	TA1CTL
+KBDTCCTL0:				.equ	TA1CCTL0
+KBDTCCTL1:				.equ	TA1CCTL1
+KBDTCCTL2:				.equ	TA1CCTL2
+KBDTR:					.equ	TA1R
+KBDTCCR0:				.equ	TA1CCR0
+KBDTCCR1:				.equ	TA1CCR1
+KBDTCCR2:				.equ	TA1CCR2
+KBDTEX0:				.equ	TA1EX0
+KBDTIV:					.equ	TA1IV
+KBDTVECTOR0:			.equ	TIMER1_A0_VECTOR
+KBDTVECTOR1:			.equ	TIMER1_A1_VECTOR
+.elseif KEYBTIMER == 2
+KBDTCTL:				.equ	TA2CTL
+KBDTCCTL0:				.equ	TA2CCTL0
+KBDTCCTL1:				.equ	TA2CCTL1
+;KBDTCCTL2:				.equ	TA2CCTL2			;Timer A2 does not have CC2
+KBDTR:					.equ	TA2R
+KBDTCCR0:				.equ	TA2CCR0
+KBDTCCR1:				.equ	TA2CCR1
+;KBDTCCR2:				.equ	TA2CCR2				;Timer A2 does not have CC2
+KBDTEX0:				.equ	TA2EX0
+KBDTIV:					.equ	TA2IV
+KBDTVECTOR0:			.equ	TIMER2_A0_VECTOR
+KBDTVECTOR1:			.equ	TIMER2_A1_VECTOR
+.elseif KEYBTIMER == 3
+KBDTCTL:				.equ	TA3CTL
+KBDTCCTL0:				.equ	TA3CCTL0
+KBDTCCTL1:				.equ	TA3CCTL1
+;KBDTCCTL2:				.equ	TA3CCTL2			;Timer A3 does not have CC2
+KBDTR:					.equ	TA3R
+KBDTCCR0:				.equ	TA3CCR0
+KBDTCCR1:				.equ	TA3CCR1
+;KBDTCCR2:				.equ	TA3CCR2				;Timer A3 does not have CC2
+KBDTEX0:				.equ	TA3EX0
+KBDTIV:					.equ	TA3IV
+KBDTVECTOR0:			.equ	TIMER3_A0_VECTOR
+KBDTVECTOR1:			.equ	TIMER3_A1_VECTOR
+.elseif KEYBTIMER == 4
+KBDTCTL:				.equ	TA4CTL
+KBDTCCTL0:				.equ	TA4CCTL0
+KBDTCCTL1:				.equ	TA4CCTL1
+KBDTCCTL2:				.equ	TA4CCTL2
+KBDTR:					.equ	TA4R
+KBDTCCR0:				.equ	TA4CCR0
+KBDTCCR1:				.equ	TA4CCR1
+KBDTCCR2:				.equ	TA4CCR2
+KBDTEX0:				.equ	TA4EX0
+KBDTIV:					.equ	TA4IV
+KBDTVECTOR0:			.equ	TIMER4_A0_VECTOR
+KBDTVECTOR1:			.equ	TIMER4_A1_VECTOR
+.else
+	.emsg "KEYBTIMER definition in Keyboard.h43 file has to be between 0 and 4"
+.endif												;KEYBTIMER
+
+.endif												;__KEYBOARD_AUTO_DEFS__

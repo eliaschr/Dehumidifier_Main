@@ -1,5 +1,5 @@
 ;*********************************************************************************************
-;* Board.h                                                                                   *
+;* Board.h43                                                                                 *
 ;*-------------------------------------------------------------------------------------------*
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
@@ -21,18 +21,27 @@
 ;* connections on the board is reflected here, in order for the rest of the program to adapt *
 ;* itself and still function.                                                                *
 ;*********************************************************************************************
-;* Note: Correct format of the file is presented when tab space is defined as 4
+;* Note: Correct format of the file is presented when tab space is set to 4
 
 .ifndef __BOARD_DEFS__
+
+__BOARD_DEFS__:			.equ	1					;Need to set this in order to avoid double
+													; inclusions.
 ;----------------------------------------
 ; Keyboard Definitions
 ;========================================
-Board_KeyPort:			.EQU	1
-Board_KeyHum:			.EQU	BIT0				;Humidity key
-Board_KeyTim:			.EQU	BIT1				;Timer key
-Board_KeyPwr:			.EQU	BIT2				;Power key
-Board_KeySpd:			.EQU	BIT3				;Speed key
-Board_KeyAni:			.EQU	BIT4				;Anion key
+Board_KeyPort:			.equ	1
+Board_Key0:				.equ	BIT0				;Abstruct key 0
+Board_Key1:				.equ	BIT1				;Abstruct key 1
+Board_Key2:				.equ	BIT2				;Abstruct key 2
+Board_Key3:				.equ	BIT3				;Abstruct key 3
+Board_Key4:				.equ	BIT4				;Abstruct key 4
+
+Board_KeyHum:			.equ	Board_Key0			;Humidity key
+Board_KeyTim:			.equ	Board_Key1			;Timer key
+Board_KeyPwr:			.equ	Board_Key2			;Power key
+Board_KeySpd:			.equ	Board_Key3			;Speed key
+Board_KeyAni:			.equ	Board_Key4			;Anion key
 
 
 						.include "AutoDefs.h43"

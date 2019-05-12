@@ -22,6 +22,9 @@
 ;* Note: Correct format of the file is presented when tab space is defined as 4
 
 .ifndef __MAIN_DEFINITIONS__
+
+__MAIN_DEFINITIONS__:		.equ	1				;Need to define this in order to avoid
+													; double inclusions
 ;----------------------------------------
 ; Definitions
 ;========================================

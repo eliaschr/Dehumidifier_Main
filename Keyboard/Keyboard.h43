@@ -1,0 +1,80 @@
+;*********************************************************************************************
+;* Cursor Keyboard Library                                                                   *
+;*********************************************************************************************
+;* Keyboard.h43                                                                              *
+;*-------------------------------------------------------------------------------------------*
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* In this file all the necessary definitions for the keyboard library are set and the       *
+;* functions that need to be available to the rest of the program are made global.           *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+
+;*===========================================================================================*
+;* Functions of the Library:                                                                 *
+;* KBDPINIT   : Initializes the ports used for keyboard controlling and reading              *
+;* KBDREAD    : Reads a key from the keyboard and returns its code                           *
+;* KBDEINT    : Enables interrupt from keyboard port                                         *
+;* KBDDINT    : Disables interrupts from keyboard port                                       *
+;* KBDReadKey : Reads a key from the keyboard buffer, if there is any                        *
+;* KBDKeyPress: The Interrupt Service Routine of a key press                                 *
+;* KBRepInt   : The Interrupt Service Routine when a key is still repeated                   *
+;*********************************************************************************************
+
+.ifndef __KEYBOARD_H43__
+
+__KEYBOARD_H43__:	.equ	1					;Must define this in order to avoid double
+												; inclutsions
+;----------------------------------------
+; Global Definitions
+;========================================
+;The code in this file expexts the following definitions
+;Board_KeyHum									;Humidity key
+;Board_KeyTim									;Timer key
+;Board_KeyPwr									;Power key
+;Board_KeySpd									;Speed key
+;Board_KeyAni									;Anion key
+;
+
+KEYBTIMER:			.equ	1					;The TimerA module to be used for keyboard
+KBUFSIZE:			.equ	020h				;The size of Keyboard Buffer. Must be a power
+												; of 2
+KEYHUMID:			.equ	Board_KeyHum		;Keycode for key 'Humidity'
+KEYTIMER:			.equ	Board_KeyTim		;Keycode for key 'Timer'
+KEYPOWER:			.equ	Board_KeyPwr		;Keycode for key 'Power'
+KEYSPEED:			.equ	Board_KeySpd		;Keycode for key 'Fan Speed'
+KEYANION:			.equ	Board_KeyAni		;Keycode for key 'Anionizer'
+
+KeyDebounc:			.equ	00147h				;The Timer Clock Ticks for key debouncing
+Key1stRep:			.equ	04000h				;The Timer clock ticks for the first key
+												; repetition
+KeyUpdRep:			.equ	01000h				;The Timer clock ticks for subsequent
+												; repetitions of a key
+
+;----------------------------------------
+; Global Functions
+;========================================
+					.global	KBDPInit
+					.global KBDEINT
+					.global KBDDINT
+					.global	KBDReadKey
+					.global KBDKeyPress
+					.global KBRepInt
+					.global KBPwrInt
+					.global P1Dispatch
+
+.endif											;__KEYBOARD_H43__
