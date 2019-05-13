@@ -191,12 +191,12 @@ KBDSetExit:	MOV.B	#000h,R4				;Clear R4
 ; the interrupt from Port 1 or Port 2. In this case a dispatcher routine is needed
 ; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : R4, R5, R15
+; REGS USED     : R4
 ; REGS AFFECTED : None
-; STACK USAGE   : 8 = 6 (3x Push) + 1x call
-; VARS USED     : KBD_INTE, KBD_INTF, KBD_INTES, KBD_KMASK, KBUFSIZE, KeyDebounc, KBuffLen,
-;                 KBStPoint, KeyBuffer, Key1stRep, LastKey, KBD_DIN
-; OTHER FUNCS   : KBDREAD
+; STACK USAGE   : 4 = 2x Push
+; VARS USED     : KBD_DIN, KBD_INTE, KBD_INTES, KBD_INTF, KBD_KMASK, KBD_KEYPWR, KBDTCCTL1,
+;                 KBDTCCR1, KBDTCTL, KBDTR, KBUFSIZE, Key1stRep, KeyDebounc, LastKey
+; OTHER FUNCS   : None
 KBDKeyPress:
 			BIT.B	#KBD_KMASK,&KBD_INTF	;Does this interrupt come from keyboard?
 			JZ		NoKeyPress				;No => Ignore this interrupt, Exit
@@ -273,8 +273,9 @@ NKPNoStop:	BIC.B	#KBD_IMASK,&KBD_INTF	;Reset any pending keyboard interrupts
 ; REGS USED     : R4, R15
 ; REGS AFFECTED : None
 ; STACK USAGE   : 4 = 2x Push
-; VARS USED     : KBD_COLIN, KBD_KMASK, KBUFSIZE, LastKey, KBuffLen, KBStPoint, KeyBuffer,
-;                 KeyUpdRep
+; VARS USED     : KBD_DIN, KBD_INTE, KBD_INTES, KBD_KEYPWR, KBD_KMASK, KBDTCCR1, KBDTCCTL1,
+;                 KBDTCTL, KBDTR, KBUFSIZE, KBStPoint, KBuffLen, Key1stRep, KeyBuffer,
+;                 KeyUpdRep, LastDelay, LastKey
 ; OTHER FUNCS   : None
 KBRepInt:
 			PUSH	R4						;Store R4, we are going to need it
@@ -301,22 +302,22 @@ KBTNoStore:	MOV		#KeyUpdRep,R4			;Setup the repeat time interval
 			JNE		KBTStoreD				;Yes => then store this value
 			MOV		#Key1stRep,R4			;else, set the first repetition time
 KBTStoreD:	MOV		R4,&LastDelay			;Store this value to Last Delay used
-			MOV		R4,&TACCR1				;Set the Update Repetition time
+			MOV		R4,&KBDTCCR1			;Set the Update Repetition time
 			POP		R4
 			BIC		#SCG0+SCG1+OSCOFF+CPUOFF,0(SP)	;Wake up the system to use the new key
-			ADD		&TAR,&TACCR1			;Add the 'Now' value of TimerA
-			BIC		#CCIFG,&TACCTL1			;Clear the interval expiration flag
+			ADD		&KBDTR,&KBDTCCR1		;Add the 'Now' value of TimerA
+			BIC		#CCIFG,&KBDTCCTL1		;Clear the interval expiration flag
 			RETI
 
 KBTimStop:
-			BIT.B	#POWERINT,&KBD_INTE		;Is the Power Button Interrupt enabled?
+			BIT.B	#KBD_KEYPWR,&KBD_INTE	;Is the Power Button Interrupt enabled?
 			JZ		NKPStop					;No => Stop timer
-			BIT.B	#POWERINT,&KBD_INTS		;Does it need the TimerA?
+			BIT.B	#KBD_KEYPWR,&KBD_INTES	;Does it need the TimerA?
 			JC		KBTNoTStop				;Yes => Do not stop TimerA
-			BIC		#MC1,&TACTL				;Stop TimerA from counting
-			MOV		#00000h,&TAR			;Clear TimerA counter register
+			BIC		#MC1,&KBDTCTL			;Stop TimerA from counting
+			MOV		#00000h,&KBDTR			;Clear TimerA counter register
 KBTNoTStop:
-			BIC		#CCIFG+CCIE,&TACCTL1	;Clear the interval expiration flag and
+			BIC		#CCIFG+CCIE,&KBDTCCTL1	;Clear the interval expiration flag and
 											; disable TimerA Compare 1 interrupt
 			MOV		#00000h,&LastKey		;Also, clear the 'Last Pressed Key'
 			POP		R4
@@ -343,7 +344,7 @@ KBPwrInt:	BIT.B	#KBD_KEYPWR,&KBD_INTES	;Make, or Break?
 											; first expiration checked for this key
 			ADD		&KBDTR,&KBDTCCR0		;Add now
 			BIC		#CCIFG,&KBDTCCTL0		;Clear timer expiration flag of Compare 2
-			BIS		#CCIE,&KBDTCCTL0		;Enable Power down interrupt
+			BIS		#CCIE,&KBDTCCTL0		;Enable Power Key interrupt
 			BIS.B	#KBD_KEYPWR,&KBD_INTES	;Next interrupt is on Power button depressing
 			BIC.B	#KBD_KEYPWR,&KBD_INTF	;Clear any pending interrupt from power button
 			BIS		#MC1,&KBDTCTL			;Start TimerA Continuous Counting
