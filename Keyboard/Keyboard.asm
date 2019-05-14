@@ -121,7 +121,9 @@ KBDPInit:	BIC.B	#KBD_KMASK,&KBD_SEL0	;Keyboard input pins are used as simple I/O
 			BIC.B	#KBD_KMASK,&KBD_DIR		;Keyboard pins function as inputs
 			BIC.B	#KBD_KMASK,&KBD_INTE	;Disable interrupts from this port pin
 			BIS.B	#KBD_KMASK,&KBD_INTES	;Interrupt is fired by a High-To-Low transition
-			BIC.B	#KBD_KEYPWR,&KBD_INTES	;Interrupt of power button is fired by Low-to-Hi
+			;An example of a power key that provides the power through it, it usualy uses
+			; the rising edge to fire an interrupt
+;			BIC.B	#KBD_KEYPWR,&KBD_INTES	;Interrupt of power button is fired by Low-to-Hi
 											; transition
 			BIC.B	#KBD_KMASK,&KBD_INTF	;Interrupt flag is reset: No Pending Interrupt
 			BIS.B	#KBD_KEYPWR,&KBD_INTE	;Enable the interrupt for Power Down key
@@ -217,18 +219,22 @@ KBDKeyPress:
 			;eliaschr@NOTE: In case simultaneous presses are not allowed, uncomment the
 			; following lines. Another option is to implement whatever filtering algorithm
 			; needed here
-;			PUSH	R5						;Need R5 to scan for the accepted keypresses
-;			MOV.B	#KBD_KEY0,R5			;R5 contains the first key mask
-;KBRChkNxt:	CMP.B	R4,R5					;Pressed key same as R5?
-;			JZ		KBRFound				;Yes => Found, so exit
-;			CMP.B	#KBD_KEYEND,R5			;else, Does R5 contain the last key code?
-;			JZ		KBRNotFnd				;Yes => then no clear key found
-;			ADD		R5,R5					;Shift R5 to the next key code
-;			JMP		KBRChkNxt				;Repeat check
-;KBRNotFnd:	XOR		R4,R4					;No key found or more than one keys are pressed,
+			PUSH	R5						;Need R5 to scan for the accepted keypresses
+			MOV.B	R4,R5					;Get the current keypress
+			BIC.B	#~KBD_MULTIMASK,R5		;Clear all the keys that do not 
+			MOV.B	#KBD_KEY0,R5			;R5 contains the first key mask
+			BIT.B	#KBD_MULTIMASK,R5		;Does the key belong to multipress ones?
+			JNZ		KBRAccept				;Yes => Skip checking of this key
+KBRChkNxt:	CMP.B	R4,R5					;Pressed key same as R5?
+			JZ		KBRFound				;Yes => Found, so exit
+			CMP.B	#KBD_KEYEND,R5			;else, Does R5 contain the last key code?
+			JZ		KBRNotFnd				;Yes => then no clear key found
+KBRAccept:	ADD		R5,R5					;Shift R5 to the next key code
+			JMP		KBRChkNxt				;Repeat check
+KBRNotFnd:	XOR		R4,R4					;No key found or more than one keys are pressed,
 											; so clear R4
-;			POP	R5							;Restore the used register, not needed anymore
-;			JMP		KBDBreakK				;All keys are depressed
+			POP	R5							;Restore the used register, not needed anymore
+			JMP		KBDBreakK				;All keys are depressed
 KBRFound:
 			;POP	R5						;Restore the used register, not needed anymore
 
@@ -253,13 +259,13 @@ NoKeyPress:
 KBDBreakK:	POP		R4
 			MOV		#00000h,&LastKey		;Clear last key pressed
 			BIC		#CCIE+CCIFG,&KBDTCCTL1	;Stop the interrupts from debouncing CCR
-			BIT.B	#KBD_KEYPWR,&KBD_INTE	;Is the Power Button Interrupt enabled?
-			JZ		NKPStop					;No => Stop timer
-			BIT.B	#KBD_KEYPWR,&KBD_INTES	;Does it need the TimerA?
-			JC		NKPNoStop				;Yes => Do not stop TimerA
+;			BIT.B	#KBD_KEYPWR,&KBD_INTE	;Is the Power Button Interrupt enabled?
+;			JZ		NKPStop					;No => Stop timer
+;			BIT.B	#KBD_KEYPWR,&KBD_INTES	;Does it need the TimerA?
+;			JC		NKPNoStop				;Yes => Do not stop TimerA
 NKPStop:	BIC 	#MC1,&KBDTCTL			;Stop TimerA running
 			MOV		#00000h,&KBDTR			;Clear TimerA counter register
-NKPNoStop:	BIC.B	#KBD_IMASK,&KBD_INTF	;Reset any pending keyboard interrupts
+NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
 			RETI							;And return to interrupted process
 
 

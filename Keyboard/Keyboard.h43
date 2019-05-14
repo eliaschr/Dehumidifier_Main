@@ -59,6 +59,12 @@ KEYPOWER:			.equ	Board_KeyPwr		;Keycode for key 'Power'
 KEYSPEED:			.equ	Board_KeySpd		;Keycode for key 'Fan Speed'
 KEYANION:			.equ	Board_KeyAni		;Keycode for key 'Anionizer'
 
+KBD_LONGMASK:		.equ	(KEYPOWER)			;Mask of keys that accept Long Pressing
+KBD_SINGLEMASK:		.equ	(KEYPOWER | KEYSPEED | KEYANION)	;Mask of keys that are single
+												; press keys (Not repeatable)
+KBD_MULTIMASK		.equ	(KEYSPEED | KEYSPEED)	;Mask of keys that accept simultaneous
+												; pressing with other keys
+
 KeyDebounc:			.equ	00147h				;The Timer Clock Ticks for key debouncing
 Key1stRep:			.equ	04000h				;The Timer clock ticks for the first key
 												; repetition

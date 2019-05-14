@@ -56,3 +56,8 @@ working machine with the ability to keep a log of the environmental parameters a
 them on a small LCD display. But first things first. Lets make it a working machine with the
 resources provided by the maker company (Leds/Displays/Pushbuttons, Compressor, Fan, Anionizer
 e.t.c.) and then add-on the rest of the needs.
+
+The main board will be based on a Texas Instruments' MSP430 microcontroller. Since we need to
+be able to keep a log of the environmental parameters during the usage of the machine, it
+would be a nice idea to use a microcontroller with FRAM. In my lab there is a MSP430FR5994
+Launchpad lying arround, so... this one will be the development victim :)
