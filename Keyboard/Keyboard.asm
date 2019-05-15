@@ -95,6 +95,7 @@ KBD_KEYPWR:	.equ	KEYPOWER				;Selection of Power Key
 			.bss	KBuffLen, 2				;Length of keystrokes in keyboard buffer
 			.bss	LastKey, 2				;Last key press read (to ensure stability)
 			.bss	LastDelay, 2			;Last time interval used for key acceptance
+			.bss	PDCounter, 2			;The Countdown while trying to switch on/off
 
 			.global KeyBuffer				;Only for testing purposes. CCS needs to have it
 											; global in order to watch it in memory pane
@@ -193,7 +194,7 @@ KBDSetExit:	MOV.B	#000h,R4				;Clear R4
 ; the interrupt from Port 1 or Port 2. In this case a dispatcher routine is needed
 ; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : R4
+; REGS USED     : R4, R5
 ; REGS AFFECTED : None
 ; STACK USAGE   : 4 = 2x Push
 ; VARS USED     : KBD_DIN, KBD_INTE, KBD_INTES, KBD_INTF, KBD_KMASK, KBD_KEYPWR, KBDTCCTL1,
@@ -216,29 +217,39 @@ KBDKeyPress:
 
 			;Now R4 contains the bitmap of the pressed keys.
 
-			;eliaschr@NOTE: In case simultaneous presses are not allowed, uncomment the
-			; following lines. Another option is to implement whatever filtering algorithm
-			; needed here
-			PUSH	R5						;Need R5 to scan for the accepted keypresses
-			MOV.B	R4,R5					;Get the current keypress
-			BIC.B	#~KBD_MULTIMASK,R5		;Clear all the keys that do not 
+			;The following code performs some filtering on accepted keystrokes. If an invalid
+			; keystroke is recognised then R4 is cleared to simulate no keypress
+			BIT.B	#KBD_MULTIMASK,R4		;Is there any key of the multipressed allowed ones
+											; activated?
+			JZ		KBRChkNorm				;No => OK, Check the normal keys one by one
+			;At least one of the Nultipress group of keys is active. It is invalid to have one
+			; active key at the same time that belongs to single press group.
+			BIT.B	#~KBD_MULTIMASK,R4		;Is there any non-multi press key active?
+			JNZ		KBRNotFnd				;Yes => Act as if no key is pressed (invalid
+											; combination)
+			JMP		KBRFound				;else, accept the keypress
+			;The following code checks the keypresses that belong to the single press group.
+			; Of course, multi pressed group is also acceptable (but this is filtered earlier)
+KBRChkNorm:	PUSH	R5						;Need R5 to scan for the accepted keypresses
 			MOV.B	#KBD_KEY0,R5			;R5 contains the first key mask
-			BIT.B	#KBD_MULTIMASK,R5		;Does the key belong to multipress ones?
-			JNZ		KBRAccept				;Yes => Skip checking of this key
 KBRChkNxt:	CMP.B	R4,R5					;Pressed key same as R5?
-			JZ		KBRFound				;Yes => Found, so exit
+			JZ		KBRFoundR5				;Yes => Found, so exit
 			CMP.B	#KBD_KEYEND,R5			;else, Does R5 contain the last key code?
-			JZ		KBRNotFnd				;Yes => then no clear key found
+			JZ		KBRNotFndR5				;Yes => then no clear key found
 KBRAccept:	ADD		R5,R5					;Shift R5 to the next key code
 			JMP		KBRChkNxt				;Repeat check
+			
+KBRNotFndR5:POP	R5							;Restore the used register, not needed anymore
 KBRNotFnd:	XOR		R4,R4					;No key found or more than one keys are pressed,
 											; so clear R4
-			POP	R5							;Restore the used register, not needed anymore
 			JMP		KBDBreakK				;All keys are depressed
-KBRFound:
-			;POP	R5						;Restore the used register, not needed anymore
+			
+KBRFoundR5:
+			POP	R5							;Restore the used register, not needed anymore
 
-			;R4 Contains the accepted keypress code or Zero if there are more than one keys
+			;Filtering of correct key combination is done. KBRFound is reached only when a
+			; valid key combination is active
+KBRFound:	;R4 Contains the accepted keypress code or Zero if there are more than one keys
 			; pressed
 			CMP		R4,&LastKey				;Do we have the same keypress as before?
 			MOV		R4,&LastKey				;Store the found keycode in the LastKey variable
@@ -259,10 +270,6 @@ NoKeyPress:
 KBDBreakK:	POP		R4
 			MOV		#00000h,&LastKey		;Clear last key pressed
 			BIC		#CCIE+CCIFG,&KBDTCCTL1	;Stop the interrupts from debouncing CCR
-;			BIT.B	#KBD_KEYPWR,&KBD_INTE	;Is the Power Button Interrupt enabled?
-;			JZ		NKPStop					;No => Stop timer
-;			BIT.B	#KBD_KEYPWR,&KBD_INTES	;Does it need the TimerA?
-;			JC		NKPNoStop				;Yes => Do not stop TimerA
 NKPStop:	BIC 	#MC1,&KBDTCTL			;Stop TimerA running
 			MOV		#00000h,&KBDTR			;Clear TimerA counter register
 NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
@@ -270,8 +277,28 @@ NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
 
 
 ;----------------------------------------
+; Keyboard Timer CCR1 Interrupt (TimerA type)
+; Interrupt of key debouncing and repetition
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+KBDTimerISR:
+			ADD		&KBDTIV,PC				;Jump to the correct element of the ISR table
+			RETI							;Vector 0: No Interrupt
+			JMP		KBRepInt				;Vector 2: Timer CCR1 CCIFG
+			RETI							;Vector 4: Timer CCR2 CCIFG
+			RETI							;Vector 6: Reserved
+			RETI							;Vector 8: Reserved
+;			JMP		WakeMeUp				;Vector A: TAIFG
+
+
+;----------------------------------------
 ; KBRepInt Interrupt Service Routine
-; This is an Interrupt Service Routine, that is called by the TimerA Compare 1 interrupt
+; This is an Interrupt Service Routine, that is called by the Keyboard Timer CCR1 interrupt
 ; vector. It inserts another 'Last Key' in the keyboard buffer at the right time intervals as
 ; long as this key is still pressed.
 ; INPUT         : None
@@ -285,25 +312,50 @@ NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
 ; OTHER FUNCS   : None
 KBRepInt:
 			PUSH	R4						;Store R4, we are going to need it
+			;First check if there is any key pressed
 			MOV.B	&KBD_DIN,R4				;Get the key that is being pressed now
-			AND		#KBD_KMASK,R4			;Filter only the key bits
-			XOR		#KBD_KMASK,R4			;Invert all bits. That is the real key code
+			AND.B	#KBD_KMASK,R4			;Filter only the key bits
+			XOR.B	#KBD_KMASK,R4			;Invert all bits. That is the real key code
 			JZ		KBTimStop				;If there is no key pressed then stop repetition
-			CMP		&LastKey,R4				;else, is this key the same as the previous?
-			JNZ		KBTimStop				;No => Stop repetition
+			;Now lets see if the keypress is the same as earlier. Only the key bits must be
+			; checked; the special bits (as Long Press flag) must be filtered out
+			PUSH	R15						;Need R15 to compare the filter key combination
+			MOV.B	&LastKey,R15			;Get the last key
+			AND.B	#KBD_KMASK,R15			;Keep only the keypress code
+			CMP.B	R15,R4					;Is this key the same as the previous?
+			JNZ		KBTimStopR15			;No => Stop repetition
+			;Try to store the keypress in the buffer. The key to be stored is the same as the
+			; one at LastKey variable, to include the special flags, as those reflect a state
+			; that is not changed
 			CMP		#KBUFSIZE,&KBuffLen		;Is the keyboard buffer full?
-			JZ		KBTNoStore				;Ignore this key, but continue the repetition
-			PUSH	R15						;Store also R15
+			JZ		KBTNoStoreR15			;Ignore this key, but continue the repetition
 			MOV		&KBStPoint,R15			;Get the starting offset of the keyboard buffer
 			ADD		&KBuffLen,R15			;Add the number of the occupied cells
 			AND		#KBUFSIZE-1,R15			;MOD because this is a circular buffer
 			ADD		#KeyBuffer,R15			;Add the starting memory of the buffer. Now R15
 											; points to the first free cell in the keyboard
 											; circular buffer
-			MOV.B	R4,0(R15)				;Store key again
+			MOV.B	&LastKey,0(R15)			;Store key again
 			INC		&KBuffLen				;Increment the buffer size
-			POP		R15						;Restore used registers
-KBTNoStore:	MOV		#KeyUpdRep,R4			;Setup the repeat time interval
+KBTNoStoreR15:
+			POP		R15						;Restore R15
+			;Another key is inserted in the keyboard buffer
+KBTNoStore:			
+			;In case of a non-repeatable key there should be no retriggering of the interrupt
+			BIT.B	#KBD_SINGLEMASK & ~KBD_LONGMASK,R4	;So, filter single press keys
+			JNZ		KBTimStop				;If any => DO NOT RETRIGGER CCR1
+			;In case of a Long-press key (single press or not) after debouncing we have to
+			; use CCR0 to evaluate the long press.
+			BIT.B	#KBD_LONGMASK,R4		;Long press evaluation needed?
+			JZ		KBTSetupLP				;No => 
+			BIT.B	#KBD_LPFLAG,&LastKey	;Did we perform long press already?
+			JZ		KBTRetrigger			;Yes => Perform a normal retrigger
+			;Setup CCR0 to perform Long press evaluation
+			
+			
+			
+KBTRetrigger:
+			MOV		#KeyUpdRep,R4			;Setup the repeat time interval
 			CMP		#00000h,&LastDelay		;Is the Last Delay used?
 			JNE		KBTStoreD				;Yes => then store this value
 			MOV		#Key1stRep,R4			;else, set the first repetition time
@@ -315,6 +367,8 @@ KBTStoreD:	MOV		R4,&LastDelay			;Store this value to Last Delay used
 			BIC		#CCIFG,&KBDTCCTL1		;Clear the interval expiration flag
 			RETI
 
+KBTimStopR15:
+			POP		R15						;Restore R15
 KBTimStop:
 			BIT.B	#KBD_KEYPWR,&KBD_INTE	;Is the Power Button Interrupt enabled?
 			JZ		NKPStop					;No => Stop timer
@@ -409,5 +463,11 @@ P1DEnd:		;MOV.B	#00000h,&KBD_INTF		;Clear interrupt flags of this port
 ;----------------------------------------
 ; Interrupt Vectors
 ;========================================
-			.sect	KBD_Vector			;MSP430 Port 1 Interrupt Vector
+			.sect	KBD_Vector				;MSP430 Port 1 Interrupt Vector
 			.short	P1Dispatch
+
+			.sect	KBDTVECTOR1				;Keyboard Timer Vector for CCR1 etc. (Debouncing,
+			.short	KBDTimerISR				; Repetition)
+
+			.sect	KBDTVECTOR0				;Keyboard Timer Vector for CCR0 (Long press)
+			.short	WakeMeUp

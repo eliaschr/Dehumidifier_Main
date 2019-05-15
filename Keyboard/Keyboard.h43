@@ -58,6 +58,9 @@ KEYTIMER:			.equ	Board_KeyTim		;Keycode for key 'Timer'
 KEYPOWER:			.equ	Board_KeyPwr		;Keycode for key 'Power'
 KEYSPEED:			.equ	Board_KeySpd		;Keycode for key 'Fan Speed'
 KEYANION:			.equ	Board_KeyAni		;Keycode for key 'Anionizer'
+;eliaschr@NOTE: KEY_LONGPRESS should fall outside the KBD_KMASK
+KEY_LPFLAG:			.equ	BIT7				;Flag in the keycode to specify a long press
+												; of the pressed key
 
 KBD_LONGMASK:		.equ	(KEYPOWER)			;Mask of keys that accept Long Pressing
 KBD_SINGLEMASK:		.equ	(KEYPOWER | KEYSPEED | KEYANION)	;Mask of keys that are single
