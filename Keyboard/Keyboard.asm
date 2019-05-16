@@ -73,6 +73,10 @@ KBD_KMASK:	.equ	(KBD_KEY0 | KBD_KEY1 | KBD_KEY2 | KBD_KEY3 | KBD_KEY4)
 KBD_KEYEND:	.equ	KBD_KEY4				;Final key to check
 KBD_KEYPWR:	.equ	KEYPOWER				;Selection of Power Key
 
+KBD_1sFACT:	.equ	08000h					;Factor for counting 1 second of Timer
+KBD_LPCOUNT:.equ	3						;Number of times the CCR0 will be triggered to
+											; evaluate Long Key press
+
 ;KBD_COLIN:	.equ	P1IN					;The input port of data from keyboard
 ;KBD_COLDIR:	.equ	KBD_COLIN+2				;Keyboard data port direction register
 ;KBD_COLSEL:	.equ	KBD_COLIN+3				;Keyboard data port function select register
@@ -95,7 +99,7 @@ KBD_KEYPWR:	.equ	KEYPOWER				;Selection of Power Key
 			.bss	KBuffLen, 2				;Length of keystrokes in keyboard buffer
 			.bss	LastKey, 2				;Last key press read (to ensure stability)
 			.bss	LastDelay, 2			;Last time interval used for key acceptance
-			.bss	PDCounter, 2			;The Countdown while trying to switch on/off
+			.bss	LPCounter, 2			;The Long Press conter of seconds
 
 			.global KeyBuffer				;Only for testing purposes. CCS needs to have it
 											; global in order to watch it in memory pane
@@ -242,8 +246,17 @@ KBRAccept:	ADD		R5,R5					;Shift R5 to the next key code
 KBRNotFndR5:POP	R5							;Restore the used register, not needed anymore
 KBRNotFnd:	XOR		R4,R4					;No key found or more than one keys are pressed,
 											; so clear R4
-			JMP		KBDBreakK				;All keys are depressed
-			
+
+			;A total key break means that the timer should be stopped
+KBDBreakK:	POP		R4
+NKPStop:	BIC 	#MC1,&KBDTCTL			;Stop TimerA running
+			BIC		#CCIE+CCIFG,&KBDTCCTL1	;Stop the interrupts from debouncing CCR
+			BIC		#CCIE+CCIFG,&KBDTCCTL0	;Stop the interrupts from Long Press CCR
+			MOV		#00000h,&KBDTR			;Clear TimerA counter register
+			MOV		#00000h,&LastKey		;Clear last key pressed
+NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
+			RETI							;And return to interrupted process
+
 KBRFoundR5:
 			POP	R5							;Restore the used register, not needed anymore
 
@@ -258,6 +271,7 @@ KBRFound:	;R4 Contains the accepted keypress code or Zero if there are more than
 			MOV		#KeyDebounc,&KBDTCCR1	;Key debounce time set to 10ms
 			MOV		#00000h,&LastDelay		;Clear the Last Delay used variable
 			ADD		&KBDTR,&KBDTCCR1		;... from now
+			BIC		#CCIFG+CCIE,&KBDTCCTL0	;Long press interrupts are not in use for the time
 			BIC		#CCIFG,&KBDTCCTL1		;Clear the expiration flag of Compare 1
 			BIS		#CCIE,&KBDTCCTL1		;Enable its interrupt
 			BIS		#MC1,&KBDTCTL			;Start timer in continuous counting mode
@@ -265,15 +279,6 @@ KBDSameKey:
 			POP		R4						;Restore registers
 NoKeyPress:
 			RETI							;Exit interrupt
-
-			;A total key break means that the timer should be stopped
-KBDBreakK:	POP		R4
-			MOV		#00000h,&LastKey		;Clear last key pressed
-			BIC		#CCIE+CCIFG,&KBDTCCTL1	;Stop the interrupts from debouncing CCR
-NKPStop:	BIC 	#MC1,&KBDTCTL			;Stop TimerA running
-			MOV		#00000h,&KBDTR			;Clear TimerA counter register
-NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
-			RETI							;And return to interrupted process
 
 
 ;----------------------------------------
@@ -285,7 +290,7 @@ NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
 ; VARS USED     : None
-; OTHER FUNCS   : None
+; OTHER FUNCS   : KBRepInt
 KBDTimerISR:
 			ADD		&KBDTIV,PC				;Jump to the correct element of the ISR table
 			RETI							;Vector 0: No Interrupt
@@ -293,7 +298,7 @@ KBDTimerISR:
 			RETI							;Vector 4: Timer CCR2 CCIFG
 			RETI							;Vector 6: Reserved
 			RETI							;Vector 8: Reserved
-;			JMP		WakeMeUp				;Vector A: TAIFG
+			RETI							;Vector A: TAIFG
 
 
 ;----------------------------------------
@@ -306,9 +311,10 @@ KBDTimerISR:
 ; REGS USED     : R4, R15
 ; REGS AFFECTED : None
 ; STACK USAGE   : 4 = 2x Push
-; VARS USED     : KBD_DIN, KBD_INTE, KBD_INTES, KBD_KEYPWR, KBD_KMASK, KBDTCCR1, KBDTCCTL1,
-;                 KBDTCTL, KBDTR, KBUFSIZE, KBStPoint, KBuffLen, Key1stRep, KeyBuffer,
-;                 KeyUpdRep, LastDelay, LastKey
+; VARS USED     : KBD_1sFACT, KBD_DIN, KBD_INTE, KBD_INTES, KBD_KEYPWR, KBD_KMASK,
+;                 KBD_LONGMASK, KBD_LPFLAG, KBD_SINGLEMASK, KBDTCCR0, KBDTCCR1, KBDTCCTL0,
+;                 KBDTCCTL1, KBDTCTL, KBDTR, KBUFSIZE, KBStPoint, KBuffLen, Key1stRep,
+;                 KeyBuffer, KeyUpdRep, LastDelay, LastKey, LPCounter
 ; OTHER FUNCS   : None
 KBRepInt:
 			PUSH	R4						;Store R4, we are going to need it
@@ -337,9 +343,13 @@ KBRepInt:
 											; circular buffer
 			MOV.B	&LastKey,0(R15)			;Store key again
 			INC		&KBuffLen				;Increment the buffer size
+			BIC		#SCG0+SCG1+OSCOFF+CPUOFF,4(SP)	;Wake up the system to use the new key
+											;Need 4 bytes offset since R15 and R4 are still in
+											; the stack.
+
+			;Another key is inserted in the keyboard buffer
 KBTNoStoreR15:
 			POP		R15						;Restore R15
-			;Another key is inserted in the keyboard buffer
 KBTNoStore:			
 			;In case of a non-repeatable key there should be no retriggering of the interrupt
 			BIT.B	#KBD_SINGLEMASK & ~KBD_LONGMASK,R4	;So, filter single press keys
@@ -347,13 +357,24 @@ KBTNoStore:
 			;In case of a Long-press key (single press or not) after debouncing we have to
 			; use CCR0 to evaluate the long press.
 			BIT.B	#KBD_LONGMASK,R4		;Long press evaluation needed?
-			JZ		KBTSetupLP				;No => 
+			JZ		KBTRetrigger			;No => Then we need to retrigger the repetition
 			BIT.B	#KBD_LPFLAG,&LastKey	;Did we perform long press already?
-			JZ		KBTRetrigger			;Yes => Perform a normal retrigger
+			JNZ		KBTRetrigger			;Yes => Perform a normal retrigger
 			;Setup CCR0 to perform Long press evaluation
+			MOV		#00000h,&LPCounter		;Clear the long press coutner.
+			MOV		#KBD_1sFACT,R4
+			MOV		R4,&LastDelay			;Set the last delay factor used
+			ADD		#KBDTR,R4				;Add now
+			MOV		R4,&KBDTCCR0			;Set CCR0 for 1 second counting
+			BIC		#CCIFG,&KBDTCCTL0		;Clear any pending interrupt from CCR0
+			BIS		#CCIE,&KBDTCCTL0		;Enable CCR0 interrupt
+			BIC		#CCIE+CCIFG,&KBDTCCTL1	;Stop interrupts from CCR1 (No debouncing or rep.)
+			;BIS	#MC1,&KBDTCTL			;Should start timer counting, but it is already
+											; running. This line is for clarity only
+			POP		R4						;Restore R4
+			RETI							;Return to interrupted process
 			
-			
-			
+			;The code enters this part if it needs to retrigger the keypress (Repetition)
 KBTRetrigger:
 			MOV		#KeyUpdRep,R4			;Setup the repeat time interval
 			CMP		#00000h,&LastDelay		;Is the Last Delay used?
@@ -362,78 +383,89 @@ KBTRetrigger:
 KBTStoreD:	MOV		R4,&LastDelay			;Store this value to Last Delay used
 			MOV		R4,&KBDTCCR1			;Set the Update Repetition time
 			POP		R4
-			BIC		#SCG0+SCG1+OSCOFF+CPUOFF,0(SP)	;Wake up the system to use the new key
 			ADD		&KBDTR,&KBDTCCR1		;Add the 'Now' value of TimerA
 			BIC		#CCIFG,&KBDTCCTL1		;Clear the interval expiration flag
+			BIC		#CCIE+CCIFG,&KBDTCCTL0	;Stop interrupts from CCR0 (Long pressing)
 			RETI
 
+			;When the keypress is wrong, the timer should be stopped
 KBTimStopR15:
 			POP		R15						;Restore R15
 KBTimStop:
-			BIT.B	#KBD_KEYPWR,&KBD_INTE	;Is the Power Button Interrupt enabled?
-			JZ		NKPStop					;No => Stop timer
-			BIT.B	#KBD_KEYPWR,&KBD_INTES	;Does it need the TimerA?
-			JC		KBTNoTStop				;Yes => Do not stop TimerA
 			BIC		#MC1,&KBDTCTL			;Stop TimerA from counting
-			MOV		#00000h,&KBDTR			;Clear TimerA counter register
-KBTNoTStop:
 			BIC		#CCIFG+CCIE,&KBDTCCTL1	;Clear the interval expiration flag and
 											; disable TimerA Compare 1 interrupt
+			BIC		#CCIFG+CCIE,&KBDTCCTL0	;Clear the long press expiration flag and
+											; disable TimerA Compare 0 interrupt
+			MOV		#00000h,&KBDTR			;Clear TimerA counter register
 			MOV		#00000h,&LastKey		;Also, clear the 'Last Pressed Key'
 			POP		R4
 			RETI
 
 
 ;----------------------------------------
-; KBPwrInt Interrupt Service Routine (Called as simple function - Serviced by the dispatcher)
-; This is an Interrupt Service Routine, that is called by Power Key press, while the CPU is
-; powered up. It starts a counter, which when reaches the limit of 3 seconds, and the power
-; key is still pressed, it switches off the circuitry, and enters an internal sleep!
+; LongPrInt
+; This is an Interrupt Service Routine, that counts the time until it reaches the Long Key
+; pressing limit. Since the period of the timer cannot reach the Long Press value, a counter
+; is implemented to count the number of times the ISR has been triggered. When it reaches the
+; specified value, it considers the key press as a long one and according to the type of the
+; key used, it may trigger CCR1 again, to enable repetition
 ; INPUT         : None
 ; OUTPUT        : None
 ; REGS USED     : None
 ; REGS AFFECTED : None
-; STACK USAGE   : None
-; VARS USED     :
-; OTHER FUNCS   : None
-KBPwrInt:	BIT.B	#KBD_KEYPWR,&KBD_INTES	;Make, or Break?
-			JC		KBPIBreak				;Set => Break
-			MOV		#PWOFFCNT +1,&PDCounter	;Setup the power off counter (+1 is for additional
-											; debouncing time interrupt of Timer)
-			MOV		#KeyDebounc,KBDTCCR0	;Setup TACCR0 for key debouncing time. This is the
-											; first expiration checked for this key
-			ADD		&KBDTR,&KBDTCCR0		;Add now
-			BIC		#CCIFG,&KBDTCCTL0		;Clear timer expiration flag of Compare 2
-			BIS		#CCIE,&KBDTCCTL0		;Enable Power Key interrupt
-			BIS.B	#KBD_KEYPWR,&KBD_INTES	;Next interrupt is on Power button depressing
-			BIC.B	#KBD_KEYPWR,&KBD_INTF	;Clear any pending interrupt from power button
-			BIS		#MC1,&KBDTCTL			;Start TimerA Continuous Counting
-;			BIC		#SCG0+SCG1+OSCOFF+CPUOFF,2(SP)	;Wake up the system if needed (uncomment)
-			RET
-
-KBPIBreak:	CMP		#PWOFFCNT +1,&PDCounter	;Is the key debouncing time expired?
-			JEQ		KBPIB_NoKey				;No => Do not assume a Power Key pressing
+; STACK USAGE   : 4 = 2x Push
+; VARS USED     : KBD_1sFACT, KBD_DIN, KBD_KMASK, KBD_LPFlag, KBD_SINGLEMASK, KBDTCCR0,
+;                 KBDTCCTL0, KBDTCCTL1, KBStPoint, KBuffLen, KBUFSIZE, KeyBuffer, KeyUpdRep,
+;                 LastKey, LPCounter
+; OTHER FUNCS   : KBTimStop, KBTStoreD
+LongPrInt:
+			PUSH	R4						;Store R4, we are going to need it
+			;First check if there is any key pressed
+			MOV.B	&KBD_DIN,R4				;Get the key that is being pressed now
+			AND.B	#KBD_KMASK,R4			;Filter only the key bits
+			XOR.B	#KBD_KMASK,R4			;Invert all bits. That is the real key code
+			JZ		KBTimStop				;No keypress => Stop Keyboard Timer
+			CMP		R4,&LastKey				;Should be equal (No LP Flag, yet)
+			JNE		LPI_Stop				;Not equal to the last key => Stop Keyboard Timer
+			
+			;We have the same keypress...
+			DEC		&LPCounter				;Decrease the long press timer counter
+			JZ		LPI_Accept				;Reached 0? => Accept the long press
+			ADD		#KBD_1sFACT,&KBDTCCR0	;Add another second interval
+			BIC		#CCIFG,&KBDTCCTL0		;Clear spurious interrupt from LP Timer CCR0
+			;Timer keeps running. The ISR will be retriggered after 1 sec
+			POP		R4						;Restore R4
+			RETI							;Return to interrupted process
+			
+			;At this point, the key is pressed for the correct long-press time. Need to store
+			; the key in the buffer, update the last key variable, check if the key is set as
+			; single press and if not, re-enable CCR1 and wake the system up to consume the
+			; keypress.
+LPI_Accept:	BIS.B	#KBD_LPFlag,R4			;Raise Long Press flag of the key
+			MOV		R4,&LastKey				;Update LastKey value
+			PUSH	R15						;Need R15 to store the keypress in buffer
 			CMP		#KBUFSIZE,&KBuffLen		;Is the keyboard buffer full?
-			JZ		KBPIB_NoPress			;Yes => Ignore the key pressing
-			PUSH	R15
+			JZ		LPI_SkipKeyR15			;Ignore this key, but continue the repetition
 			MOV		&KBStPoint,R15			;Get the starting offset of the keyboard buffer
 			ADD		&KBuffLen,R15			;Add the number of the occupied cells
 			AND		#KBUFSIZE-1,R15			;MOD because this is a circular buffer
 			ADD		#KeyBuffer,R15			;Add the starting memory of the buffer. Now R15
 											; points to the first free cell in the keyboard
 											; circular buffer
-			MOV.B	#KBD_KEYPWR,0(R15)		;Store the current key press in buffer
-			INC		&KBuffLen				;One more keypress in the key buffer
-			POP		R15
-			BIC		#SCG0+SCG1+OSCOFF+CPUOFF,2(SP)	;Wake up the system to use the new key
-KBPIB_NoKey:MOV		#0FFFFh,&PDCounter		;Reset Power Down counter
-			BIC.B	#KBD_KEYPWR,&KBD_INTES	;Next interrupt is when Power button is pressed
-			BIC.B	#KBD_KEYPWR,&KBD_INTF	;Reset pending interrupt from Power button
-			BIC		#CCIE+CCIFG,&KBDTCCTL0	;Stop interrupts from Timer Counter 0
-			BIC		#MC1,&KBDTCTL
-			MOV		#00000h,&KBDTR
-KBPIB_NoPress:
-			RET
+			MOV.B	&LastKey,0(R15)			;Store long Pressed key
+			INC		&KBuffLen				;Increment the buffer size
+			BIC		#SCG0+SCG1+OSCOFF+CPUOFF,4(SP)	;Wake up the system to use the new key
+											;Need 4 bytes offset since R15 and R4 are still in
+											; the stack.
+LPI_SkipKeyR15:
+			POP		R15						;Restore R15
+			AND.B	#KBD_SINGLEMASK,R4		;Filter only the single press mask to find out if
+											; the key belongs to the single pressed group
+			JNZ		KBTimStop				;Yes => Do not repeat the key (Stop timer)
+			MOV		#KeyUpdRep,R4			;Setup the repeat time interval
+			BIS		#CCIE,&KBDTCCTL1		;Enable interrupts from CCR1
+			JMP		KBTStoreD				;Prepare the repetition timer
 
 
 ;----------------------------------------
