@@ -1,37 +1,64 @@
 ;*********************************************************************************************
 ;* Cursor Keyboard Library                                                                   *
 ;*-------------------------------------------------------------------------------------------*
-;* Library of procedures for connecting a keyboard of 4 cursors to a MSP430 uP, using        *
-;* 5 port bits. One is the enable and the other four get the pressed keys. The library       *
-;* must be included to the main program listing to gain access to the library functions      *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
 ;*-------------------------------------------------------------------------------------------*
+;* Library of procedures for connecting a keyboard of 5 buttons to a MSP430 uP, using        *
+;* 5 port bits. One for each key. The keyboard supports non-repetitive and repetitive keys,  *
+;* long pressing and multipressing.                                                          *
+;*===========================================================================================*
 ;* Names And Values:                                                                         *
-;* KBD_COLIN  : is the port of Data bus of the LCD Module                                    *
-;* KBD_COLDIR : is the register that specifies the direction of data port                    *
-;* KBD_COLSEL : is the Function Select register for the data port                            *
-;* KBD_INTF   : is the register that monitors the interrupt flags from keyboard              *
-;* KBD_INTS   : is the register that selects the interrupt edge level trigger                *
-;* KBD_INTE   : is the keyboard associated interrupt enable register                         *
-;* KBD_ROWOUT : is the row port register                                                     *
-;* KBD_ROWDIR : is the row port direction register                                           *
-;* KBD_ROWSEL : is the row port function select register                                     *
-;* KBD_ROWS   : is the mask of the row bits for row port                                     *
-;* KBD_KEY0   : is the mask for row 0 selection                                              *
-;* KBD_KEY1   : is the mask for row 1 selection                                              *
-;* KBD_KEY2   : is the mask for row 2 selection                                              *
-;* KBD_KEY3   : is the mask for row 3 selection                                              *
-;* KBD_KEY4   : is the mask for row 4 selection                                              *
-;* KBD_KEYPWR : is the value of Power button single press                                    *
-;* KBD_KEYEND : is the final KBD_KEYx value to be checked while keyboard scanning            *
+;* ------------------                                                                        *
+;* KBD_KEY0   : First key of the keyboard mask (Lower bit).                                  *
+;* KBD_KEY1   : Second key                                                                   *
+;* KBD_KEY2   : Third key                                                                    *
+;* KBD_KEY3   : Fourth key                                                                   *
+;* KBD_KEY4   : Fifth key                                                                    *
+;* KBD_KMASK  : The mask of all the keys that belong to keyboard                             *
+;* KBD_KEYEND : The last key (Most Significant bit)                                          *
+;* KBD_KEYPWR : The key ID for Power Button                                                  *
+;* KBD_1sFACT : Number of Timer clock ticks that define 1 second delay                       *
+;* KBD_LPCOUNT: Number of seconds until a long press is considered                           *
+;*                                                                                           *
+;*===========================================================================================*
+;* Variables:                                                                                *
+;* -----------                                                                               *
+;* KeyBuffer : Cyclic buffer that holds the keystrokes until they are consumed               *
+;* KBStPoint : Starting offset of first keystroke in buffer. The buffer is a circular one.   *
+;* KBuffLen  : Length of keystrokes in keyboard buffer                                       *
+;* LastKey   : Last key press read (to ensure stability)                                     *
+;* LastDelay : Last time interval used for key acceptance                                    *
+;* LPCounter : The Long Press conter of seconds                                              *
+;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
-;* KBDPINIT   : Initializes the ports used for keyboard controlling and reading              *
-;* KBDREAD    : Reads a key from the keyboard and returns its code                           *
-;* KBDEINT    : Enables interrupt from keyboard port                                         *
-;* KBDDINT    : Disables interrupts from keyboard port                                       *
-;* KBDReadKey : Reads a key from the keyboard buffer, if there is any                        *
-;* KBDKeyPress: The Interrupt Service Routine of a key press                                 *
-;* KBRepInt   : The Interrupt Service Routine when a key is still repeated                   *
+;* KBDPInit    : Initializes the ports used for keyboard controlling and reading             *
+;* KBDTInit    : Initializes the timer used for keyboard timings                             *
+;* KeyboardInit: Initializes the resourses of the uC needed for correct functioning of the   *
+;*               keyboard                                                                    *
+;* KBDEINT     : Enables interrupts from keyboard port                                       *
+;* KBDDINT     : Disables interrupts from keyboard port                                      *
+;* KBDREAD     : Reads a key from the keyboard and returns its code                          *
+;* KBDReadKey  : Reads a key from the keyboard buffer, if there is any                       *
+;* KBDKeyPress : The Interrupt Service Routine of a key press (I/O port pins)                *
+;* KBRepInt    : The Interrupt Service Routine for key Debouncing and Repetition             *
+;* KBDTimerISR : The Interrupt Service Routine of the associated timer module's CCR1         *
+;* LongPrInt   : The Interrupt Service Routine of the associated timer module's CCR0         *
+;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
 			.include "Definitions.h43"		;Global definitions
@@ -77,19 +104,6 @@ KBD_1sFACT:	.equ	08000h					;Factor for counting 1 second of Timer
 KBD_LPCOUNT:.equ	3						;Number of times the CCR0 will be triggered to
 											; evaluate Long Key press
 
-;KBD_COLIN:	.equ	P1IN					;The input port of data from keyboard
-;KBD_COLDIR:	.equ	KBD_COLIN+2				;Keyboard data port direction register
-;KBD_COLSEL:	.equ	KBD_COLIN+3				;Keyboard data port function select register
-
-;KBD_INTDIR:	.equ	P1DIR					;Keyboard Interrupt Port direction register
-;KBD_INTF:	.equ	KBD_INTDIR+1			;Keyboard data port interrupt flags
-;KBD_INTS:	.equ	KBD_INTDIR+2			;Keyboard data port interrupt edge select
-;KBD_INTE:	.equ	KBD_INTDIR+3			;Keyboard data port interrupt enable
-;KBD_ISEL:	.equ	KBD_INTDIR+4			;Keyboard Interrupt Port selection register
-;KBD_IMASK:	.equ	01Fh					;The interrupt pin mask when a key is pressed
-;KBD_PWRMSK:	.equ	POWERINT				;The interrupt pin mask for power button
-;KBD_MSKALL:	.equ	KBD_IMASK+KBD_PWRMSK	;Mask for all keyboard interrupt pins
-
 
 ;*********************************************************************************************
 ; Variables Definitions
@@ -109,9 +123,14 @@ KBD_LPCOUNT:.equ	3						;Number of times the CCR0 will be triggered to
 ; Functions
 ;========================================
 			.text
+;Interrupt Service Routines must be global
+			.global KBDKeyPress
+			.global KBRepInt
+			.global LongPrInt
+			.global	KBDTimerISR
 
 ;----------------------------------------
-; KBDPINIT
+; KBDPInit
 ; Initializes the port pins the keyboard is connected to.
 ; INPUT         : None
 ; OUTPUT        : None
@@ -132,6 +151,41 @@ KBDPInit:	BIC.B	#KBD_KMASK,&KBD_SEL0	;Keyboard input pins are used as simple I/O
 											; transition
 			BIC.B	#KBD_KMASK,&KBD_INTF	;Interrupt flag is reset: No Pending Interrupt
 			BIS.B	#KBD_KEYPWR,&KBD_INTE	;Enable the interrupt for Power Down key
+			RET
+
+
+;----------------------------------------
+; KeyboardInit
+; Initializes the port pins the keyboard is connected to.
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : 2 = 1 Call
+; VARS USED     : None
+; OTHER FUNCS   : KBDPInit, KBDTInit
+KeyboardInit:
+			CALL	#KBDPInit
+			;JMP	KBDTInit				;Since KBDTInit follows there is not need to use
+											; this instruction. It"s just placed here for
+											; clarity.
+
+
+;----------------------------------------
+; KBDTInit
+; Initializes the port pins the keyboard is connected to.
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : KBDTCTL, KBDTCCTL0, KBDTCCTL1, KBDTR
+; OTHER FUNCS   : None
+KBDTInit:
+			BIS		#TASSEL0,&KBDTCTL		;Keyboard Timer clocking from ACLK (32768 Hz)
+			BIC		#CCIE+CCIFG,&KBDTCCTL0	;Clear interrupts from CC0
+			BIC		#CCIE+CCIFG,&KBDTCCTL1	;Clear interrupts from CC1
+			CLR		&KBDTR					;Clear Keyboard Timer counter register
 			RET
 
 
@@ -453,7 +507,7 @@ LPI_Accept:	BIS.B	#KBD_LPFlag,R4			;Raise Long Press flag of the key
 			ADD		#KeyBuffer,R15			;Add the starting memory of the buffer. Now R15
 											; points to the first free cell in the keyboard
 											; circular buffer
-			MOV.B	&LastKey,0(R15)			;Store long Pressed key
+			MOV.B	R4,0(R15)				;Store long Pressed key
 			INC		&KBuffLen				;Increment the buffer size
 			BIC		#SCG0+SCG1+OSCOFF+CPUOFF,4(SP)	;Wake up the system to use the new key
 											;Need 4 bytes offset since R15 and R4 are still in
@@ -469,37 +523,13 @@ LPI_SkipKeyR15:
 
 
 ;----------------------------------------
-; P1Dispatch Interrupt Service Routine
-; This is the dispatcher for directing the shared interrupt of Port1 to the corresponding
-; interrupt handler, according to the interrupt source. When the interrupt source is the power
-; button, the process called is the KBPwrInt. When the source is the keyboard then the
-; function called if the KBDKeyPress!
-; INPUT         : None
-; OUTPUT        : None
-; REGS USED     : None
-; REGS AFFECTED : None
-; STACK USAGE   : 2 (Call of the KBPwrInt)
-; VARS USED     :
-; OTHER FUNCS   : None
-P1Dispatch:	BIT.B	#KBD_KEYPWR,&KBD_INTE	;Is the Power Button Interrupt enabled?
-			JZ		P1DKbdInt
-			BIT.B	#KBD_KEYPWR,&KBD_INTF	;Test for Power Key interrupt flag
-			JZ		P1DKbdInt
-			CALL	#KBPwrInt
-P1DKbdInt:	BIT.B	#KBD_KMASK,&KBD_INTE	;Is the keyboard interrupt enabled?
-			JNZ		KBDKeyPress
-P1DEnd:		;MOV.B	#00000h,&KBD_INTF		;Clear interrupt flags of this port
-			RETI
-
-
-;----------------------------------------
 ; Interrupt Vectors
 ;========================================
 			.sect	KBD_Vector				;MSP430 Port 1 Interrupt Vector
-			.short	P1Dispatch
+			.short	KBDKeyPress
 
 			.sect	KBDTVECTOR1				;Keyboard Timer Vector for CCR1 etc. (Debouncing,
 			.short	KBDTimerISR				; Repetition)
 
 			.sect	KBDTVECTOR0				;Keyboard Timer Vector for CCR0 (Long press)
-			.short	WakeMeUp
+			.short	LongPrInt

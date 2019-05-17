@@ -22,6 +22,32 @@
 ;* Example of automatic definitions is the computation of interrupt vectors according to     *
 ;* the timer module used for the keyboard.                                                   *
 ;*********************************************************************************************
+
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;* The timerA module to be used for the keyboard functionality can be defined by the         *
+;* developer. That means the code cannot use static TimerA registers. Instead it names the   *
+;* registers differently and the purpose of this file is to define the names used by the     *
+;* library to be the ones of the TimerA module the developer specified in KEYBTIMER.         *
+;* KBDTCTL    :	TimerA Control register                                                      *
+;* KBDTCCTL0  :	TimerA CCR0 Control Regiater                                                 *
+;* KBDTCCTL1  :	TimerA CCR1 Control Register                                                 *
+;* KBDTCCTL2  :	TimerA CCR2 Control Register (though the library does not use CCR2 at all,   *
+;*              and due to the fact that not all TimerA modules utilise CCR2, it is defined  *
+;*              whenever possible for completeness)                                          *
+;* KBDTR      :	TimerA Counter Register                                                      *
+;* KBDTCCR0   :	TimerA CCR0 Register                                                         *
+;* KBDTCCR1   :	TimerA CCR1 Register                                                         *
+;* KBDTCCR2   :	TimerA CCR2 Register (though the library does not use CCR2 at all, and due   *
+;*              to the fact that not all TimerA modules utilise CCR2, it is defined whenever *
+;*              possible for completeness)                                                   *
+;* KBDTEX0    :	TimerA Expansion Register                                                    *
+;* KBDTIV     :	TimerA Interrupt Vector Register                                             *
+;* KBDTVECTOR0:	TimerA Interrupt Vector to be used for CCR0 interrupts                       *
+;* KBDTVECTOR1:	TimerA Interrupt Vector to be used for CCRx/TAIFG interrupts                 *
+;*                                                                                           *
+;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
 
 .ifndef __KEYBOARD_AUTO_DEFS__

@@ -22,23 +22,55 @@
 ;* In this file all the necessary definitions for the keyboard library are set and the       *
 ;* functions that need to be available to the rest of the program are made global.           *
 ;*********************************************************************************************
-;* Note: Correct format of the file is presented when tab space is set to 4
 
 ;*===========================================================================================*
-;* Functions of the Library:                                                                 *
-;* KBDPINIT   : Initializes the ports used for keyboard controlling and reading              *
-;* KBDREAD    : Reads a key from the keyboard and returns its code                           *
-;* KBDEINT    : Enables interrupt from keyboard port                                         *
-;* KBDDINT    : Disables interrupts from keyboard port                                       *
-;* KBDReadKey : Reads a key from the keyboard buffer, if there is any                        *
-;* KBDKeyPress: The Interrupt Service Routine of a key press                                 *
-;* KBRepInt   : The Interrupt Service Routine when a key is still repeated                   *
+;* Definitions of the Library (Set by the developper):                                       *
+;* ----------------------------------------------------                                      *
+;* KEYBTIMER : Number of TimerA to be used for the keyboard. Thiw timer is used excusively   *
+;*             for keyboard functionality only and cannot be used by other resources of the  *
+;*             system.                                                                       *
+;* KBUFSIZE  : The size of a cyclic buffer that is used to store keypresses until they are   *
+;*             consumed by the main loop. This value MUST be a power of 2                    *
+;* KeyDebounc: Debouncing time of a key, in TimerA clock ticks. A key must be stable for     *
+;*             this time interval in order to be accepted keystroke and avoid debouncing     *
+;* Key1stRep : First repetition interval setting. A repeatable key, after debouncing         *
+;*             interval, must stay this time pressed, specified in timer clock ticks, in     *
+;*             order to perform its first repetitive keypress                                *
+;* KeyUpdRep : Following repetitions interval, specified in timer clock ticks. It defines    *
+;*             the time that a key must stay pressed, after the first repetition interval,   *
+;*             to perform succesive repetitions of its keypress.                             *
+;*                                                                                           *
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;* KEYHUMID      : Humidity button keypress ID                                               *
+;* KEYTIMER      : Timer button keypress ID                                                  *
+;* KEYPOWER      : Power button keypress ID                                                  *
+;* KEYSPEED      : Speed button keypress ID                                                  *
+;* KEYANION      : Anionizer button keypress ID                                              *
+;* KEY_LPFLAG    : Bit flag in keycode ID that specifies a long press keystroke. This bit    *
+;*                 must be different from the bits that define the rest of the keys          *
+;* KBD_LONGMASK  : Mask of key IDs that accept a Long Press keystroke                        *
+;* KBD_SINGLEMASK: Mask of key IDs that are not repetitive                                   *
+;* KBD_MULTIMASK : Mask of key IDs that are allowed to be pressed together with other keys.  *
+;*                                                                                           *
+;*===========================================================================================*
+;* Global functions of the Library:                                                          *
+;* ---------------------------------                                                         *
+;* KeyboardInit: Initializes the resources used by the keyboard (Timer and Port Pins)        *
+;* KBDPInit    : Initializes the ports used for keyboard controlling and reading             *
+;* KBDtInit    : Initializes the timer used for keyboard controlling                         *
+;* KBDEINT     : Enables interrupt from keyboard port                                        *
+;* KBDDINT     : Disables interrupts from keyboard port                                      *
+;* KBDReadKey  : Reads a key from the keyboard buffer, if there is any                       *
+;* KBDKeyPress : The Interrupt Service Routine of a key press                                *
 ;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
 
 .ifndef __KEYBOARD_H43__
 
 __KEYBOARD_H43__:	.equ	1					;Must define this in order to avoid double
-												; inclutsions
+												; inclusions
 ;----------------------------------------
 ; Global Definitions
 ;========================================
@@ -77,13 +109,11 @@ KeyUpdRep:			.equ	01000h				;The Timer clock ticks for subsequent
 ;----------------------------------------
 ; Global Functions
 ;========================================
+					.global	KeyboardInit
 					.global	KBDPInit
+					.global	KBRTInit
 					.global KBDEINT
 					.global KBDDINT
 					.global	KBDReadKey
-					.global KBDKeyPress
-					.global KBRepInt
-					.global KBPwrInt
-					.global P1Dispatch
 
 .endif											;__KEYBOARD_H43__
