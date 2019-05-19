@@ -1,6 +1,7 @@
 ;*********************************************************************************************
-;* KeybAutoDefs.h43                                                                          *
+;* Keyboard Library                                                                          *
 ;*-------------------------------------------------------------------------------------------*
+;* KeybAutoDefs.h43                                                                          *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -22,6 +23,10 @@
 ;* Example of automatic definitions is the computation of interrupt vectors according to     *
 ;* the timer module used for the keyboard.                                                   *
 ;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Keyboard Library"
+			.width	94
+			.tab	4
 
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
@@ -48,7 +53,6 @@
 ;* KBDTVECTOR1:	TimerA Interrupt Vector to be used for CCRx/TAIFG interrupts                 *
 ;*                                                                                           *
 ;*********************************************************************************************
-;* Note: Correct format of the file is presented when tab space is set to 4
 
 	.if ($isdefed("__KEYBOARD_AUTO_DEFS__") == 0)
 	.if ($isdefed("__KEYBOARD_H43__") == 0)

@@ -1,6 +1,7 @@
 ;*********************************************************************************************
-;* AutoDefs.h43                                                                              *
+;* Automatic Definitions based on Board.h43                                                  *
 ;*-------------------------------------------------------------------------------------------*
+;* AutoDefs.h43                                                                              *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -23,6 +24,10 @@
 ;* the pins a resource is connected to.                                                      *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Automatic Definitions based on Board.h43"
+			.width	94
+			.tab	4
+
 
 	.if ($isdefed("__BOARD_AUTO_DEFS__") == 0)
 	.if ($isdefed("__BOARD_DEFS__") == 0)
@@ -133,5 +138,220 @@ KBD_Vector:				.equ	PORT8_VECTOR
 	.else
 		.emsg "Board_KeyPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_KeyPort
+
+;----------------------------------------
+; Leds and Displays Definitions
+;========================================
+;The led/displays subsystem uses two ports. One port is the driver of the Leds/Segments of
+; the displays. Each pin on this port selects which leds of the current group light up (logic
+; 1) or stays off (logic 0). The second port is the Control port that selects which group is
+; to be used. The leds and displays are all connected in a Common Cathode scheme. One common
+; pin selects the leds, one selects the first display and another one selects the second
+; display. The selected group is enabled when its associated common pin drives logic 0.
+
+;First lets define the registers of the "Data" port (selects which led to light up in a group)
+; Not all of the registers are used, but they are set here for completeness
+	.if (Board_LedPort == 1)
+LEDP_DIN:				.equ	P1IN				;Data input register from leds
+LEDP_DOUT:				.equ	P1OUT				;Data output register for leds
+LEDP_DIR:				.equ	P1DIR				;Direction selection register for led pins
+LEDP_REN:				.equ	P1REN				;Resistor setup register for led pins
+LEDP_SEL0:				.equ	P1SEL0				;Special function selection registers
+LEDP_SEL1:				.equ	P1SEL1
+LEDP_INTE:				.equ	P1IE				;Interrupt enable register for leds
+LEDP_INTES:				.equ	P1IES				;Interrupt edge selector register
+LEDP_INTF:				.equ	P1IFG				;Interrupt flags register
+LEDP_INTV:				.equ	P1IV				;Interrupt vector register
+LEDP_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+	.elseif (Board_LedPort == 2)
+LEDP_DIN:				.equ	P2IN
+LEDP_DOUT:				.equ	P2OUT
+LEDP_DIR:				.equ	P2DIR
+LEDP_REN:				.equ	P2REN
+LEDP_SEL0:				.equ	P2SEL0
+LEDP_SEL1:				.equ	P2SEL1
+LEDP_INTE:				.equ	P2IE
+LEDP_INTES:				.equ	P2IES
+LEDP_INTF:				.equ	P2IFG
+LEDP_INTV:				.equ	P2IV
+LEDP_Vector:			.equ	PORT2_VECTOR
+	.elseif (Board_LedPort == 3)
+LEDP_DIN:				.equ	P3IN
+LEDP_DOUT:				.equ	P3OUT
+LEDP_DIR:				.equ	P3DIR
+LEDP_REN:				.equ	P3REN
+LEDP_SEL0:				.equ	P3SEL0
+LEDP_SEL1:				.equ	P3SEL1
+LEDP_INTE:				.equ	P3IE
+LEDP_INTES:				.equ	P3IES
+LEDP_INTF:				.equ	P3IFG
+LEDP_INTV:				.equ	P3IV
+LEDP_Vector:			.equ	PORT3_VECTOR
+	.elseif (Board_LedPort == 4)
+LEDP_DIN:				.equ	P4IN
+LEDP_DOUT:				.equ	P4OUT
+LEDP_DIR:				.equ	P4DIR
+LEDP_REN:				.equ	P4REN
+LEDP_SEL0:				.equ	P4SEL0
+LEDP_SEL1:				.equ	P4SEL1
+LEDP_INTE:				.equ	P4IE
+LEDP_INTES:				.equ	P4IES
+LEDP_INTF:				.equ	P4IFG
+LEDP_INTV:				.equ	P4IV
+LEDP_Vector:			.equ	PORT4_VECTOR
+	.elseif (Board_LedPort == 5)
+LEDP_DIN:				.equ	P5IN
+LEDP_DOUT:				.equ	P5OUT
+LEDP_DIR:				.equ	P5DIR
+LEDP_REN:				.equ	P5REN
+LEDP_SEL0:				.equ	P5SEL0
+LEDP_SEL1:				.equ	P5SEL1
+LEDP_INTE:				.equ	P5IE
+LEDP_INTES:				.equ	P5IES
+LEDP_INTF:				.equ	P5IFG
+LEDP_INTV:				.equ	P5IV
+LEDP_Vector:			.equ	PORT5_VECTOR
+	.elseif (Board_LedPort == 6)
+LEDP_DIN:				.equ	P6IN
+LEDP_DOUT:				.equ	P6OUT
+LEDP_DIR:				.equ	P6DIR
+LEDP_REN:				.equ	P6REN
+LEDP_SEL0:				.equ	P6SEL0
+LEDP_SEL1:				.equ	P6SEL1
+LEDP_INTE:				.equ	P6IE
+LEDP_INTES:				.equ	P6IES
+LEDP_INTF:				.equ	P6IFG
+LEDP_INTV:				.equ	P6IV
+LEDP_Vector:			.equ	PORT6_VECTOR
+	.elseif (Board_LedPort == 7)
+LEDP_DIN:				.equ	P7IN
+LEDP_DOUT:				.equ	P7OUT
+LEDP_DIR:				.equ	P7DIR
+LEDP_REN:				.equ	P7REN
+LEDP_SEL0:				.equ	P7SEL0
+LEDP_SEL1:				.equ	P7SEL1
+LEDP_INTE:				.equ	P7IE
+LEDP_INTES:				.equ	P7IES
+LEDP_INTF:				.equ	P7IFG
+LEDP_INTV:				.equ	P7IV
+LEDP_Vector:			.equ	PORT7_VECTOR
+	.elseif (Board_LedPort == 8)
+LEDP_DIN:				.equ	P8IN
+LEDP_DOUT:				.equ	P8OUT
+LEDP_DIR:				.equ	P8DIR
+LEDP_REN:				.equ	P8REN
+LEDP_SEL0:				.equ	P8SEL0
+LEDP_SEL1:				.equ	P8SEL1
+LEDP_INTE:				.equ	P8IE
+LEDP_INTES:				.equ	P8IES
+LEDP_INTF:				.equ	P8IFG
+LEDP_INTV:				.equ	P8IV
+LEDP_Vector:			.equ	PORT8_VECTOR
+	.else
+		.emsg "Board_LedPort definition in Board.h43 file has to be between 1 and 8"
+	.endif											;Board_LedPort
+
+;Now lets define the registers of the "Group Selector" port.
+; Not all of the registers are used, but they are set here for completeness
+	.if (Board_ComCtlPort == 1)
+LEDC_DIN:				.equ	P1IN				;Data input register of led groups
+LEDC_DOUT:				.equ	P1OUT				;Data output register for led groups
+LEDC_DIR:				.equ	P1DIR				;Direction selection register for groups
+LEDC_REN:				.equ	P1REN				;Resistor setup register for group pins
+LEDC_SEL0:				.equ	P1SEL0				;Special function selection registers
+LEDC_SEL1:				.equ	P1SEL1
+LEDC_INTE:				.equ	P1IE				;Interrupt enable register for led groups
+LEDC_INTES:				.equ	P1IES				;Interrupt edge selector register
+LEDC_INTF:				.equ	P1IFG				;Interrupt flags register
+LEDC_INTV:				.equ	P1IV				;Interrupt vector register
+LEDC_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+	.elseif (Board_ComCtlPort == 2)
+LEDC_DIN:				.equ	P2IN
+LEDC_DOUT:				.equ	P2OUT
+LEDC_DIR:				.equ	P2DIR
+LEDC_REN:				.equ	P2REN
+LEDC_SEL0:				.equ	P2SEL0
+LEDC_SEL1:				.equ	P2SEL1
+LEDC_INTE:				.equ	P2IE
+LEDC_INTES:				.equ	P2IES
+LEDC_INTF:				.equ	P2IFG
+LEDC_INTV:				.equ	P2IV
+LEDC_Vector:			.equ	PORT2_VECTOR
+	.elseif (Board_ComCtlPort == 3)
+LEDC_DIN:				.equ	P3IN
+LEDC_DOUT:				.equ	P3OUT
+LEDC_DIR:				.equ	P3DIR
+LEDC_REN:				.equ	P3REN
+LEDC_SEL0:				.equ	P3SEL0
+LEDC_SEL1:				.equ	P3SEL1
+LEDC_INTE:				.equ	P3IE
+LEDC_INTES:				.equ	P3IES
+LEDC_INTF:				.equ	P3IFG
+LEDC_INTV:				.equ	P3IV
+LEDC_Vector:			.equ	PORT3_VECTOR
+	.elseif (Board_ComCtlPort == 4)
+LEDC_DIN:				.equ	P4IN
+LEDC_DOUT:				.equ	P4OUT
+LEDC_DIR:				.equ	P4DIR
+LEDC_REN:				.equ	P4REN
+LEDC_SEL0:				.equ	P4SEL0
+LEDC_SEL1:				.equ	P4SEL1
+LEDC_INTE:				.equ	P4IE
+LEDC_INTES:				.equ	P4IES
+LEDC_INTF:				.equ	P4IFG
+LEDC_INTV:				.equ	P4IV
+LEDC_Vector:			.equ	PORT4_VECTOR
+	.elseif (Board_ComCtlPort == 5)
+LEDC_DIN:				.equ	P5IN
+LEDC_DOUT:				.equ	P5OUT
+LEDC_DIR:				.equ	P5DIR
+LEDC_REN:				.equ	P5REN
+LEDC_SEL0:				.equ	P5SEL0
+LEDC_SEL1:				.equ	P5SEL1
+LEDC_INTE:				.equ	P5IE
+LEDC_INTES:				.equ	P5IES
+LEDC_INTF:				.equ	P5IFG
+LEDC_INTV:				.equ	P5IV
+LEDC_Vector:			.equ	PORT5_VECTOR
+	.elseif (Board_ComCtlPort == 6)
+LEDC_DIN:				.equ	P6IN
+LEDC_DOUT:				.equ	P6OUT
+LEDC_DIR:				.equ	P6DIR
+LEDC_REN:				.equ	P6REN
+LEDC_SEL0:				.equ	P6SEL0
+LEDC_SEL1:				.equ	P6SEL1
+LEDC_INTE:				.equ	P6IE
+LEDC_INTES:				.equ	P6IES
+LEDC_INTF:				.equ	P6IFG
+LEDC_INTV:				.equ	P6IV
+LEDC_Vector:			.equ	PORT6_VECTOR
+	.elseif (Board_ComCtlPort == 7)
+LEDC_DIN:				.equ	P7IN
+LEDC_DOUT:				.equ	P7OUT
+LEDC_DIR:				.equ	P7DIR
+LEDC_REN:				.equ	P7REN
+LEDC_SEL0:				.equ	P7SEL0
+LEDC_SEL1:				.equ	P7SEL1
+LEDC_INTE:				.equ	P7IE
+LEDC_INTES:				.equ	P7IES
+LEDC_INTF:				.equ	P7IFG
+LEDC_INTV:				.equ	P7IV
+LEDC_Vector:			.equ	PORT7_VECTOR
+	.elseif (Board_ComCtlPort == 8)
+LEDC_DIN:				.equ	P8IN
+LEDC_DOUT:				.equ	P8OUT
+LEDC_DIR:				.equ	P8DIR
+LEDC_REN:				.equ	P8REN
+LEDC_SEL0:				.equ	P8SEL0
+LEDC_SEL1:				.equ	P8SEL1
+LEDC_INTE:				.equ	P8IE
+LEDC_INTES:				.equ	P8IES
+LEDC_INTF:				.equ	P8IFG
+LEDC_INTV:				.equ	P8IV
+LEDC_Vector:			.equ	PORT8_VECTOR
+	.else
+		.emsg "Board_ComCtlPort definition in Board.h43 file has to be between 1 and 8"
+	.endif											;Board_ComCtlPort
+
 
 	.endif											;__BOARD_AUTO_DEFS__

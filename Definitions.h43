@@ -1,6 +1,7 @@
 ;*********************************************************************************************
-;* Definitions.h43                                                                           *
+;* Global Definitions                                                                        *
 ;*-------------------------------------------------------------------------------------------*
+;* Definitions.h43                                                                           *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -20,6 +21,9 @@
 ;* Global definitions the rest of the files should be aware of.                              *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is defined as 4
+			.title	"Global Definitions"
+			.width	94
+			.tab	4
 
 	.if  ($isdefed("__MAIN_DEFINITIONS__") == 0)
 

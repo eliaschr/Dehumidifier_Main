@@ -1,0 +1,64 @@
+;*********************************************************************************************
+;* Leds and Displays Library                                                                 *
+;*-------------------------------------------------------------------------------------------*
+;* Leds.h43                                                                                  *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* In this file all the necessary definitions for the leds and displays handling library are *
+;* set and the functions that need to be available to the rest of the program are made       *
+;* global.                                                                                   *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Leds and Displays Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library (Set by the developper):                                       *
+;* ----------------------------------------------------                                      *
+;*                                                                                           *
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Global functions of the Library:                                                          *
+;* ---------------------------------                                                         *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if  ($isdefed("__LED_DISPLAYS_H43__") == 0)
+
+__LED_DISPLAYS_H43__:	.equ	1				;Must define this in order to avoid double
+												; inclusions
+;----------------------------------------
+; Global Definitions
+;========================================
+LEDTIMER:				.equ	3				;Timer to be used for LED scanning
+
+LEDCOM:					.equ	Board_LedCom	;The common pin of the Leds group
+DISP0COMMON:			.equ	Board_DispCom0	;The common pin of the first 7-Segment Display
+DISP1COMMON:			.equ	Board_DispCom1	;The common pin of the second 7-Segment
+												; Display
+
+;----------------------------------------
+; Global Functions
+;========================================
+						.global	LedsPInit		;Initialize port pins used by Leds/Displays
+
+
+	.endif										;__LED_DISPLAYS_H43__

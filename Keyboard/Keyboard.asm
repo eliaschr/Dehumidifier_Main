@@ -1,6 +1,7 @@
 ;*********************************************************************************************
-;* Cursor Keyboard Library                                                                   *
+;* Keyboard Library                                                                          *
 ;*-------------------------------------------------------------------------------------------*
+;* Keyboard.asm                                                                              *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -20,6 +21,12 @@
 ;* Library of procedures for connecting a keyboard of 5 buttons to a MSP430 uP, using        *
 ;* 5 port bits. One for each key. The keyboard supports non-repetitive and repetitive keys,  *
 ;* long pressing and multipressing.                                                          *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Keyboard Library"
+			.width	94
+			.tab	4
+
 ;*===========================================================================================*
 ;* Names And Values:                                                                         *
 ;* ------------------                                                                        *
@@ -528,7 +535,7 @@ LPI_SkipKeyR15:
 ;----------------------------------------
 ; Interrupt Vectors
 ;========================================
-			.sect	KBD_Vector				;MSP430 Port 1 Interrupt Vector
+			.sect	KBD_Vector				;MSP430 Keyboard Port Interrupt Vector
 			.short	KBDKeyPress
 
 			.sect	KBDTVECTOR1				;Keyboard Timer Vector for CCR1 etc. (Debouncing,

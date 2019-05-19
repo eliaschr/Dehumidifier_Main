@@ -1,6 +1,7 @@
 ;*********************************************************************************************
-;* Board.h43                                                                                 *
+;* Board Connections to Other Hardware                                                       *
 ;*-------------------------------------------------------------------------------------------*
+;* Board.h43                                                                                 *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -22,6 +23,9 @@
 ;* itself and still function.                                                                *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Board Connections and Definitions"
+			.width	94
+			.tab	4
 
 	.if ($isdefed("__BOARD_DEFS__") == 0)
 
@@ -30,7 +34,7 @@ __BOARD_DEFS__:			.equ	1					;Need to set this in order to avoid double
 ;----------------------------------------
 ; Keyboard Definitions
 ;========================================
-Board_KeyPort:			.equ	1
+Board_KeyPort:			.equ	1					;Defines the port the keys are connected
 Board_Key0:				.equ	BIT0				;Abstruct key 0
 Board_Key1:				.equ	BIT1				;Abstruct key 1
 Board_Key2:				.equ	BIT2				;Abstruct key 2
@@ -42,6 +46,44 @@ Board_KeyTim:			.equ	Board_Key1			;Timer key
 Board_KeyPwr:			.equ	Board_Key2			;Power key
 Board_KeySpd:			.equ	Board_Key3			;Speed key
 Board_KeyAni:			.equ	Board_Key4			;Anion key
+;All the keys are active low
+
+
+;----------------------------------------
+; Leds Definitions
+;========================================
+Board_LedPort:			.equ	2					;Port the led controls are connected
+Board_ComCtlPort:		.equ	3					;Port the Common pins are connected
+													; Displays are common cathode ones
+Board_Led0:				.equ	BIT0				;Abstruct led 0
+Board_Led1:				.equ	BIT1				;Abstruct led 1
+Board_Led2:				.equ	BIT2				;Abstruct led 2
+Board_Led3:				.equ	BIT3				;Abstruct led 3
+Board_Led4:				.equ	BIT4				;Abstruct led 4
+Board_Led5:				.equ	BIT5				;Abstruct led 5
+Board_Led6:				.equ	BIT6				;Abstruct led 6
+Board_Led7:				.equ	BIT7				;Abstruct led 7
+
+Board_LedCom:			.equ	BIT0				;Common Cathode of Leds
+Board_DispCom0:			.equ	BIT1				;Common Cathode of 7-segment Display 0
+Board_DispCom1:			.equ	BIT2				;Common Cathode of 7-segment Display 1
+
+Board_LedPower:			.equ	Board_Led0			;Power On led
+Board_LedPump:			.equ	Board_Led1			;Compresson On led
+Board_LedTank:			.equ	Board_Led2			;Tank Full led
+Board_LedTimer:			.equ	Board_Led3			;Timer On led
+Board_LedLow:			.equ	Board_Led4			;Low Speed Fan led
+Board_LedHigh:			.equ	Board_Led5			;High Speed Fan led
+Board_LedAnion:			.equ	Board_Led6			;Anionizer On led
+
+Board_DispA:			.equ	Board_Led0			;Display Segment a
+Board_DispB:			.equ	Board_Led1			;Display Segment b
+Board_DispC:			.equ	Board_Led2			;Display Segment c
+Board_DispD:			.equ	Board_Led3			;Display Segment d
+Board_DispE:			.equ	Board_Led4			;Display Segment e
+Board_DispF:			.equ	Board_Led5			;Display Segment f
+Board_DispG:			.equ	Board_Led6			;Display Segment g
+Board_DispDp:			.equ	Board_Led7			;Display Segment point
 
 
 						.include "AutoDefs.h43"

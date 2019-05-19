@@ -1,8 +1,7 @@
 ;*********************************************************************************************
-;* Cursor Keyboard Library                                                                   *
-;*********************************************************************************************
-;* Keyboard.h43                                                                              *
+;* Keyboard Library                                                                          *
 ;*-------------------------------------------------------------------------------------------*
+;* Keyboard.h43                                                                              *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -22,6 +21,10 @@
 ;* In this file all the necessary definitions for the keyboard library are set and the       *
 ;* functions that need to be available to the rest of the program are made global.           *
 ;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Keyboard Library"
+			.width	94
+			.tab	4
 
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developper):                                       *
@@ -65,7 +68,6 @@
 ;* KBDReadKey  : Reads a key from the keyboard buffer, if there is any                       *
 ;* KBDKeyPress : The Interrupt Service Routine of a key press                                *
 ;*********************************************************************************************
-;* Note: Correct format of the file is presented when tab space is set to 4
 
 	.if  ($isdefed("__KEYBOARD_H43__") == 0)
 
@@ -82,7 +84,7 @@ __KEYBOARD_H43__:	.equ	1					;Must define this in order to avoid double
 ;Board_KeyAni									;Anion key
 ;
 
-KEYBTIMER:			.equ	1					;The TimerA module to be used for keyboard
+KEYBTIMER:			.equ	2					;The TimerA module to be used for keyboard
 KBUFSIZE:			.equ	020h				;The size of Keyboard Buffer. Must be a power
 												; of 2
 KEYHUMID:			.equ	Board_KeyHum		;Keycode for key 'Humidity'

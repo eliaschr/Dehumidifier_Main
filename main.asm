@@ -3,6 +3,7 @@
 ;* ----------------------------------------------------------------------------------------- *
 ;*                                       Main Board                                          *
 ;*===========================================================================================*
+;* main.asm                                                                                  *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -22,7 +23,12 @@
 ;* The main controller of the Dehumidifier. The System takes measurements of the environ-    *
 ;* mental parameters and controls the high power actuators enable the compressor, fan and    *
 ;* ionizer of a Juro Pro Oxygen16L Dehumidifier                                              *
-;*===========================================================================================*
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Main Functions and Entry Point"
+			.width	94
+			.tab	4
+
 			.cdecls C,LIST,"msp430.h"			;Include device header file
 			.include "Board.h43"				;Board connections
 			.include "Definitions.h43"			;General definitions of the project
