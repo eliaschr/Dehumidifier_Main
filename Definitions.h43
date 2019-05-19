@@ -21,7 +21,7 @@
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is defined as 4
 
-.ifndef __MAIN_DEFINITIONS__
+	.if  ($isdefed("__MAIN_DEFINITIONS__") == 0)
 
 __MAIN_DEFINITIONS__:		.equ	1				;Need to define this in order to avoid
 													; double inclusions
@@ -30,4 +30,4 @@ __MAIN_DEFINITIONS__:		.equ	1				;Need to define this in order to avoid
 ;========================================
 
 
-.endif												;__MAIN_DEFINITIONS__
+	.endif											;__MAIN_DEFINITIONS__

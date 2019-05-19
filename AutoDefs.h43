@@ -24,17 +24,17 @@
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
 
-.ifndef __BOARD_AUTO_DEFS__
-.ifndef __BOARD_DEFS__
-	.emsg "Board.h43 should be included before AutoDefs.h43"
-.endif
+	.if ($isdefed("__BOARD_AUTO_DEFS__") == 0)
+	.if ($isdefed("__BOARD_DEFS__") == 0)
+		.emsg "Board.h43 should be included before AutoDefs.h43"
+	.endif
 
 __BOARD_AUTO_DEFS__:	.equ	1					;Need to define this in order to avoid
 													; double inclusions
 ;----------------------------------------
 ; Keyboard Definitions
 ;========================================
-.if Board_KeyPort == 1								;Lets define the keyboard registers needed
+	.if (Board_KeyPort == 1)						;Lets define the keyboard registers needed
 KBD_DIN:				.equ	P1IN				;Data input register from keyboard
 KBD_DOUT:				.equ	P1OUT				;Data output register for keyboard
 KBD_DIR:				.equ	P1DIR				;Direction selection register for key pins
@@ -46,7 +46,7 @@ KBD_INTES:				.equ	P1IES				;Interrupt edge selector register
 KBD_INTF:				.equ	P1IFG				;Interrupt flags reflecting the keypresses
 KBD_INTV:				.equ	P1IV				;Interrupt vector register
 KBD_Vector:				.equ	PORT1_VECTOR		;Interrupt Vector Segment
-.elseif Board_KeyPort == 2
+	.elseif (Board_KeyPort == 2)
 KBD_DIN:				.equ	P2IN
 KBD_DOUT:				.equ	P2OUT
 KBD_DIR:				.equ	P2DIR
@@ -58,7 +58,7 @@ KBD_INTES:				.equ	P2IES
 KBD_INTF:				.equ	P2IFG
 KBD_INTV:				.equ	P2IV
 KBD_Vector:				.equ	PORT2_VECTOR
-.elseif Board_KeyPort == 3
+	.elseif (Board_KeyPort == 3)
 KBD_DIN:				.equ	P3IN
 KBD_DOUT:				.equ	P3OUT
 KBD_DIR:				.equ	P3DIR
@@ -70,7 +70,7 @@ KBD_INTES:				.equ	P3IES
 KBD_INTF:				.equ	P3IFG
 KBD_INTV:				.equ	P3IV
 KBD_Vector:				.equ	PORT3_VECTOR
-.elseif Board_KeyPort == 4
+	.elseif (Board_KeyPort == 4)
 KBD_DIN:				.equ	P4IN
 KBD_DOUT:				.equ	P4OUT
 KBD_DIR:				.equ	P4DIR
@@ -82,7 +82,7 @@ KBD_INTES:				.equ	P4IES
 KBD_INTF:				.equ	P4IFG
 KBD_INTV:				.equ	P4IV
 KBD_Vector:				.equ	PORT4_VECTOR
-.elseif Board_KeyPort == 5
+	.elseif (Board_KeyPort == 5)
 KBD_DIN:				.equ	P5IN
 KBD_DOUT:				.equ	P5OUT
 KBD_DIR:				.equ	P5DIR
@@ -94,7 +94,7 @@ KBD_INTES:				.equ	P5IES
 KBD_INTF:				.equ	P5IFG
 KBD_INTV:				.equ	P5IV
 KBD_Vector:				.equ	PORT5_VECTOR
-.elseif Board_KeyPort == 6
+	.elseif (Board_KeyPort == 6)
 KBD_DIN:				.equ	P6IN
 KBD_DOUT:				.equ	P6OUT
 KBD_DIR:				.equ	P6DIR
@@ -106,7 +106,7 @@ KBD_INTES:				.equ	P6IES
 KBD_INTF:				.equ	P6IFG
 KBD_INTV:				.equ	P6IV
 KBD_Vector:				.equ	PORT6_VECTOR
-.elseif Board_KeyPort == 7
+	.elseif (Board_KeyPort == 7)
 KBD_DIN:				.equ	P7IN
 KBD_DOUT:				.equ	P7OUT
 KBD_DIR:				.equ	P7DIR
@@ -118,7 +118,7 @@ KBD_INTES:				.equ	P7IES
 KBD_INTF:				.equ	P7IFG
 KBD_INTV:				.equ	P7IV
 KBD_Vector:				.equ	PORT7_VECTOR
-.elseif Board_KeyPort == 8
+	.elseif (Board_KeyPort == 8)
 KBD_DIN:				.equ	P8IN
 KBD_DOUT:				.equ	P8OUT
 KBD_DIR:				.equ	P8DIR
@@ -130,8 +130,8 @@ KBD_INTES:				.equ	P8IES
 KBD_INTF:				.equ	P8IFG
 KBD_INTV:				.equ	P8IV
 KBD_Vector:				.equ	PORT8_VECTOR
-.else
-	.emsg "Board_KeyPort definition in Board.h43 file has to be between 1 and 8"
-.endif												;Board_KeyPort
+	.else
+		.emsg "Board_KeyPort definition in Board.h43 file has to be between 1 and 8"
+	.endif											;Board_KeyPort
 
-.endif												;__BOARD_AUTO_DEFS__
+	.endif											;__BOARD_AUTO_DEFS__

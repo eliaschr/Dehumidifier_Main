@@ -61,6 +61,7 @@
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
+			.include "Board.h43"			;Hardware Connections
 			.include "Definitions.h43"		;Global definitions
 			.include "Keyboard.h43"			;Local definitions
 			.include "KeybAutoDefs.h43"		;Auto definitions according to settings in
@@ -412,7 +413,7 @@ KBTNoStore:
 			; use CCR0 to evaluate the long press.
 			BIT.B	#KBD_LONGMASK,R4		;Long press evaluation needed?
 			JZ		KBTRetrigger			;No => Then we need to retrigger the repetition
-			BIT.B	#KBD_LPFLAG,&LastKey	;Did we perform long press already?
+			BIT.B	#KEY_LPFLAG,&LastKey	;Did we perform long press already?
 			JNZ		KBTRetrigger			;Yes => Perform a normal retrigger
 			;Setup CCR0 to perform Long press evaluation
 			MOV		#00000h,&LPCounter		;Clear the long press coutner.
@@ -469,8 +470,8 @@ KBTimStop:
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : 4 = 2x Push
-; VARS USED     : KBD_1sFACT, KBD_DIN, KBD_KMASK, KBD_LPFlag, KBD_SINGLEMASK, KBDTCCR0,
-;                 KBDTCCTL0, KBDTCCTL1, KBStPoint, KBuffLen, KBUFSIZE, KeyBuffer, KeyUpdRep,
+; VARS USED     : KBD_1sFACT, KBD_DIN, KBD_KMASK, KBD_SINGLEMASK, KBDTCCR0, KBDTCCTL0,
+;                 KBDTCCTL1, KBStPoint, KBuffLen, KBUFSIZE, KEY_LPFlag, KeyBuffer, KeyUpdRep,
 ;                 LastKey, LPCounter
 ; OTHER FUNCS   : KBTimStop, KBTStoreD
 LongPrInt:
@@ -481,7 +482,7 @@ LongPrInt:
 			XOR.B	#KBD_KMASK,R4			;Invert all bits. That is the real key code
 			JZ		KBTimStop				;No keypress => Stop Keyboard Timer
 			CMP		R4,&LastKey				;Should be equal (No LP Flag, yet)
-			JNE		LPI_Stop				;Not equal to the last key => Stop Keyboard Timer
+			JNE		KBTimStop				;Not equal to the last key => Stop Keyboard Timer
 			
 			;We have the same keypress...
 			DEC		&LPCounter				;Decrease the long press timer counter
@@ -496,7 +497,7 @@ LongPrInt:
 			; the key in the buffer, update the last key variable, check if the key is set as
 			; single press and if not, re-enable CCR1 and wake the system up to consume the
 			; keypress.
-LPI_Accept:	BIS.B	#KBD_LPFlag,R4			;Raise Long Press flag of the key
+LPI_Accept:	BIS.B	#KEY_LPFLAG,R4			;Raise Long Press flag of the key
 			MOV		R4,&LastKey				;Update LastKey value
 			PUSH	R15						;Need R15 to store the keypress in buffer
 			CMP		#KBUFSIZE,&KBuffLen		;Is the keyboard buffer full?
@@ -520,6 +521,8 @@ LPI_SkipKeyR15:
 			MOV		#KeyUpdRep,R4			;Setup the repeat time interval
 			BIS		#CCIE,&KBDTCCTL1		;Enable interrupts from CCR1
 			JMP		KBTStoreD				;Prepare the repetition timer
+			NOP								;Silicon Errata CPU40: JMP at the end of a section
+											; should be followed by a NOP
 
 
 ;----------------------------------------

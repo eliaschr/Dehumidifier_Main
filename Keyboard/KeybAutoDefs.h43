@@ -50,17 +50,17 @@
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
 
-.ifndef __KEYBOARD_AUTO_DEFS__
-.ifndef __KEYBOARD_H43__
-	.emsg "Keyboard.h43 must have been included in the file before KeybAutoDefs.h43"
-.endif
+	.if ($isdefed("__KEYBOARD_AUTO_DEFS__") == 0)
+	.if ($isdefed("__KEYBOARD_H43__") == 0)
+		.emsg "Keyboard.h43 must have been included in the file before KeybAutoDefs.h43"
+	.endif
 
 __KEYBOARD_AUTO_DEFS__:	.equ	1					;Need to define this in order to avoid
 													; double inclusions
 ;----------------------------------------
 ; Keyboard Definitions
 ;========================================
-.if KEYBTIMER == 0									;Lets define the keyboard timer registers
+	.if (KEYBTIMER == 0)							;Lets define the keyboard timer registers
 KBDTCTL:				.equ	TA0CTL
 KBDTCCTL0:				.equ	TA0CCTL0
 KBDTCCTL1:				.equ	TA0CCTL1
@@ -73,7 +73,7 @@ KBDTEX0:				.equ	TA0EX0
 KBDTIV:					.equ	TA0IV
 KBDTVECTOR0:			.equ	TIMER0_A0_VECTOR
 KBDTVECTOR1:			.equ	TIMER0_A1_VECTOR
-.elseif KEYBTIMER == 1
+	.elseif (KEYBTIMER == 1)
 KBDTCTL:				.equ	TA1CTL
 KBDTCCTL0:				.equ	TA1CCTL0
 KBDTCCTL1:				.equ	TA1CCTL1
@@ -86,7 +86,7 @@ KBDTEX0:				.equ	TA1EX0
 KBDTIV:					.equ	TA1IV
 KBDTVECTOR0:			.equ	TIMER1_A0_VECTOR
 KBDTVECTOR1:			.equ	TIMER1_A1_VECTOR
-.elseif KEYBTIMER == 2
+	.elseif (KEYBTIMER == 2)
 KBDTCTL:				.equ	TA2CTL
 KBDTCCTL0:				.equ	TA2CCTL0
 KBDTCCTL1:				.equ	TA2CCTL1
@@ -99,7 +99,7 @@ KBDTEX0:				.equ	TA2EX0
 KBDTIV:					.equ	TA2IV
 KBDTVECTOR0:			.equ	TIMER2_A0_VECTOR
 KBDTVECTOR1:			.equ	TIMER2_A1_VECTOR
-.elseif KEYBTIMER == 3
+	.elseif (KEYBTIMER == 3)
 KBDTCTL:				.equ	TA3CTL
 KBDTCCTL0:				.equ	TA3CCTL0
 KBDTCCTL1:				.equ	TA3CCTL1
@@ -112,7 +112,7 @@ KBDTEX0:				.equ	TA3EX0
 KBDTIV:					.equ	TA3IV
 KBDTVECTOR0:			.equ	TIMER3_A0_VECTOR
 KBDTVECTOR1:			.equ	TIMER3_A1_VECTOR
-.elseif KEYBTIMER == 4
+	.elseif (KEYBTIMER == 4)
 KBDTCTL:				.equ	TA4CTL
 KBDTCCTL0:				.equ	TA4CCTL0
 KBDTCCTL1:				.equ	TA4CCTL1
@@ -125,8 +125,8 @@ KBDTEX0:				.equ	TA4EX0
 KBDTIV:					.equ	TA4IV
 KBDTVECTOR0:			.equ	TIMER4_A0_VECTOR
 KBDTVECTOR1:			.equ	TIMER4_A1_VECTOR
-.else
-	.emsg "KEYBTIMER definition in Keyboard.h43 file has to be between 0 and 4"
-.endif												;KEYBTIMER
+	.else
+		.emsg "KEYBTIMER definition in Keyboard.h43 file has to be between 0 and 4"
+	.endif											;KEYBTIMER
 
-.endif												;__KEYBOARD_AUTO_DEFS__
+	.endif											;__KEYBOARD_AUTO_DEFS__

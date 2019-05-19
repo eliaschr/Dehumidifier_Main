@@ -67,7 +67,7 @@
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
 
-.ifndef __KEYBOARD_H43__
+	.if  ($isdefed("__KEYBOARD_H43__") == 0)
 
 __KEYBOARD_H43__:	.equ	1					;Must define this in order to avoid double
 												; inclusions
@@ -116,4 +116,4 @@ KeyUpdRep:			.equ	01000h				;The Timer clock ticks for subsequent
 					.global KBDDINT
 					.global	KBDReadKey
 
-.endif											;__KEYBOARD_H43__
+	.endif										;__KEYBOARD_H43__

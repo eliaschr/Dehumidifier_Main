@@ -23,7 +23,7 @@
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
 
-.ifndef __BOARD_DEFS__
+	.if ($isdefed("__BOARD_DEFS__") == 0)
 
 __BOARD_DEFS__:			.equ	1					;Need to set this in order to avoid double
 													; inclusions.
@@ -45,4 +45,4 @@ Board_KeyAni:			.equ	Board_Key4			;Anion key
 
 
 						.include "AutoDefs.h43"
-.endif												;__BOARD_DEFS__
+	.endif											;__BOARD_DEFS__
