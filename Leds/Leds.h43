@@ -51,14 +51,36 @@ __LED_DISPLAYS_H43__:	.equ	1				;Must define this in order to avoid double
 LEDTIMER:				.equ	3				;Timer to be used for LED scanning
 
 LEDCOM:					.equ	Board_LedCom	;The common pin of the Leds group
-DISP0COMMON:			.equ	Board_DispCom0	;The common pin of the first 7-Segment Display
-DISP1COMMON:			.equ	Board_DispCom1	;The common pin of the second 7-Segment
+DISP0COM:				.equ	Board_DispCom0	;The common pin of the first 7-Segment Display
+DISP1COM:				.equ	Board_DispCom1	;The common pin of the second 7-Segment
 												; Display
+DISP_A:					.equ	Board_DispA		;Segment A of a display
+DISP_B:					.equ	Board_DispB		;Segment B of a display
+DISP_C:					.equ	Board_DispC		;Segment C of a display
+DISP_D:					.equ	Board_DispD		;Segment D of a display
+DISP_E:					.equ	Board_DispE		;Segment E of a display
+DISP_F:					.equ	Board_DispF		;Segment F of a display
+DISP_G:					.equ	Board_DispG		;Segment G of a display
+DISP_DP:				.equ	Board_DispDp	;Display point of a display
+
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
 						.global	LedsPInit		;Initialize port pins used by Leds/Displays
+						.global	LedsEnable		;Starts the scanning of the leds
+						.global	LedsDisable		;Stops the scanning of the leds and lights
+												; them off
+						.global	LedsOn			;Lights up Leds
+						.global	LedsOff			;Lights off Leds
+						.global	LedsVal			;Set the Leds status
+						.global	LedsBlinkAdd	;Adds some leds in the blinking mask
+						.global	LedsBlinkOff	;Removes some leds from the blinking mask
+						.global	LedsBlinkSet	;Sets the mask of the leds to be blinking
+						.global	Disp0BlinkOn	;Starts the blinking of display 1
+						.global	Disp0BlinkOff	;Stops display 1 blinking
+						.global	Disp1BlinkOn	;Starts the blinking of display 2
+						.global	Disp1BlinkOff	;Stops display 2 blinking
 
 
 	.endif										;__LED_DISPLAYS_H43__

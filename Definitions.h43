@@ -32,6 +32,7 @@ __MAIN_DEFINITIONS__:		.equ	1				;Need to define this in order to avoid
 ;----------------------------------------
 ; Definitions
 ;========================================
+ACLKFreq:	.equ	32768							;AClk Clock Frequency in Hz
 
 
 	.endif											;__MAIN_DEFINITIONS__

@@ -45,9 +45,10 @@ __LED_DISPLAYS_AUTO_DEFS__:.equ	1				;Need to define this in order to avoid
 ;----------------------------------------
 ; Some Led Definitions
 ;========================================
-LEDP_MASK:	.equ	0xFF					;All pins of the port are used for the leds
-LEDC_MASK:	.equ	(LEDCOM | DISP0COMMON | DISP1COMMON)
-											;The mask of all pins used for the group selection
+LEDP_MASK:	.equ	0xFF						;All pins of the port are used for the leds
+LEDC_MASK:	.equ	(LEDCOM | DISP0COM | DISP1COM)
+												;The mask of all pins used for the group
+												; selection
 
 
 
