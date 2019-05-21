@@ -53,6 +53,7 @@ LEDTIMER:				.equ	3				;Timer to be used for LED scanning
 LEDCOM:					.equ	Board_LedCom	;The common pin of the Leds group
 DISP0COM:				.equ	Board_DispCom0	;The common pin of the first 7-Segment Display
 DISP1COM:				.equ	Board_DispCom1	;The common pin of the second 7-Segment
+
 												; Display
 DISP_A:					.equ	Board_DispA		;Segment A of a display
 DISP_B:					.equ	Board_DispB		;Segment B of a display
@@ -62,6 +63,9 @@ DISP_E:					.equ	Board_DispE		;Segment E of a display
 DISP_F:					.equ	Board_DispF		;Segment F of a display
 DISP_G:					.equ	Board_DispG		;Segment G of a display
 DISP_DP:				.equ	Board_DispDp	;Display point of a display
+
+DIGIT_EMPTY:			.equ	10				;The digit to send to displays in order to
+												; clear them
 
 
 ;----------------------------------------
@@ -81,6 +85,8 @@ DISP_DP:				.equ	Board_DispDp	;Display point of a display
 						.global	Disp0BlinkOff	;Stops display 1 blinking
 						.global	Disp1BlinkOn	;Starts the blinking of display 2
 						.global	Disp1BlinkOff	;Stops display 2 blinking
+						.global	Disp0SetDigit	;Sets the display 0 digit
+						.global	Disp1SetDigit	;Sets the display 1 digit
 
 
 	.endif										;__LED_DISPLAYS_H43__

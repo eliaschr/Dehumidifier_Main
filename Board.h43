@@ -55,6 +55,8 @@ Board_KeyAni:			.equ	Board_Key4			;Anion key
 Board_LedPort:			.equ	2					;Port the led controls are connected
 Board_ComCtlPort:		.equ	3					;Port the Common pins are connected
 													; Displays are common cathode ones
+Board_NoScanLedPort:	.equ	4					;Port for the two leds that will not take
+													; place at the scanning process
 Board_Led0:				.equ	BIT0				;Abstruct led 0
 Board_Led1:				.equ	BIT1				;Abstruct led 1
 Board_Led2:				.equ	BIT2				;Abstruct led 2
@@ -63,6 +65,8 @@ Board_Led4:				.equ	BIT4				;Abstruct led 4
 Board_Led5:				.equ	BIT5				;Abstruct led 5
 Board_Led6:				.equ	BIT6				;Abstruct led 6
 Board_Led7:				.equ	BIT7				;Abstruct led 7
+Board_LedNS0:			.equ	BIT0				;Abstruct no scanning led 0
+Board_LedNS1:			.equ	BIT1				;Abstruct no scanning led 1
 
 Board_LedCom:			.equ	BIT0				;Common Cathode of Leds
 Board_DispCom0:			.equ	BIT1				;Common Cathode of 7-segment Display 0
@@ -75,6 +79,9 @@ Board_LedTimer:			.equ	Board_Led3			;Timer On led
 Board_LedLow:			.equ	Board_Led4			;Low Speed Fan led
 Board_LedHigh:			.equ	Board_Led5			;High Speed Fan led
 Board_LedAnion:			.equ	Board_Led6			;Anionizer On led
+
+Board_LedNSTank:		.equ	Board_LedNS0		;Non scanning led for Tank Full
+Board_LedNSAnion:		.equ	Board_LedNS1		;Non scanning led for Anionizer
 
 Board_DispA:			.equ	Board_Led0			;Display Segment a
 Board_DispB:			.equ	Board_Led1			;Display Segment b

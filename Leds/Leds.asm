@@ -66,6 +66,9 @@ LEDOFFS:	.equ	0
 DISP0OFFS:	.equ	(LEDOFFS +1)
 DISP1OFFS:	.equ	(DISP0OFFS +1)
 
+;Following is the mask of the leds used at no scanning port
+LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
+
 
 ;*********************************************************************************************
 ; Variables Definitions
@@ -79,12 +82,12 @@ DISP1OFFS:	.equ	(DISP0OFFS +1)
 ;----------------------------------------
 ; Constants
 ;========================================
-			.const
+			.sect ".const"
 			;Lets define an array of the successive commons to be enabled during scanning
 LedGrpArr:	.byte	LEDCOM, DISP0COM, DISP1COM
 			;Construct the values to be used for each digit on the displays
 LedDigits:	.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_E | DISP_F				;0
-			.byte	DISB_B | DISP_C													;1
+			.byte	DISP_B | DISP_C													;1
 			.byte	DISP_A | DISP_B | DISP_G | DISP_D | DISP_E						;2
 			.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_G						;3
 			.byte	DISP_B | DISP_C | DISP_F | DISP_G								;4
@@ -112,13 +115,16 @@ LedDigits:	.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_E | DISP_F				;0
 ; REGS USED     : None (Normally R4, R5)
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : LEDC_DIR, LEDC_MASK, LEDC_DOUT, LEDP_DIR, LEDP_MASK, LEDP_DOUT
+; VARS USED     : LEDC_DIR, LEDC_MASK, LEDC_DOUT, LEDNS_DIR, LEDNS_DOUT, LEDNS_MASK, LEDP_DIR,
+;                 LEDP_MASK, LEDP_DOUT
 ; OTHER FUNCS   : None
 LedsPInit:
 			BIC.B	#LEDP_MASK,&LEDP_DOUT	;All leds in a group should stay off
 			BIS.B	#LEDP_MASK,&LEDP_DIR	;All pins are outputs
 			BIS.B	#LEDC_MASK,&LEDC_DOUT	;No group is selected
 			BIS.B	#LEDC_MASK,&LEDC_DIR	;All group pins are outputs
+			BIS.B	#LEDNS_MASK,&LEDNS_DOUT	;Both No-Scanning leds must be off (inverse logic)
+			BIS.B	#LEDNS_MASK,&LEDNS_DIR	;Both led pins are outputs
 
 			;Normally, the following lines should be used to initialize the local variables.
 			; But the main function already has reset the RAM space, so it is not needed.
@@ -140,10 +146,12 @@ LedsPInit:
 ; Initializes the associated timer module and starts it counting.
 ; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : None
+; REGS USED     : R4
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : LedBuffer, LEDC_DOUT, LEDP_DOUT, LEDCOM, LEDCYCLE, LedPointer, LEDTCCR0,
+; VARS USED     : Board_LedAnion, Board_LedNSAnion, Board_LedNSTank, Board_LedTank, LedBuffer,
+;                 LEDC_DOUT, LEDNS_DOUT, LEDNS_MASK, LEDP_DOUT, LEDCOM, LEDCYCLE, LedPointer,
+;                 LEDTCCR0,
 ;                 LEDTCCTL0, LEDTCTL
 ; OTHER FUNCS   : None
 LedsEnable:
@@ -151,7 +159,17 @@ LedsEnable:
 			MOV		#LEDCYCLE,&LEDTCCR0			;Period of the timing. Defines the scanning
 												; rate
 			BIC.B	#LEDCOM,&LEDC_DOUT			;Enable the leds group
-			MOV.B	&LedBuffer,&LEDP_DOUT		;Output the state of the leds of this group
+			MOV.B	&LedBuffer,R4				;Get the value. Need it later
+			MOV.B	R4,&LEDP_DOUT				;Output the state of the leds of this group
+			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Non scanning leds are off
+			BIT.B	#Board_LedTank,R4			;Is the Tank Full led on?
+			JZ		LEn_SkipTank				;No => keep the respective Non-scan led off
+			BIC.B	#Board_LedNSTank,&LEDNS_DOUT;else, light it up
+LEn_SkipTank:
+			BIT.B	#Board_LedAnion,R4			;Is the Anion led on?
+			JZ		LEn_SkipAnion				;No => keep the respective Non-scan led off
+			BIC.B	#Board_LedNSAnion,&LEDNS_DOUT;else, Light it up
+LEn_SkipAnion:
 			INC		&LedPointer					;Next time we will output the next group
 			BIC		#CCIFG,&LEDTCCTL0			;Clear any spurious interrupt
 			BIS		#CCIE,&LEDTCCTL0			;Enable CCR0 interrupt
@@ -167,13 +185,15 @@ LedsEnable:
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : LEDC_DOUT, LEDC_MASK, LEDP_DOUT, LEDP_MASK, LedPointer, LEDTCCTL0, LEDTCTL
+; VARS USED     : LEDC_DOUT, LEDC_MASK, LEDNS_DOUT, LEDNS_MASK, LEDP_DOUT, LEDP_MASK,
+;                 LedPointer, LEDTCCTL0, LEDTCTL
 ; OTHER FUNCS   : None
 LedsDisable:
 			BIC		#MC0|MC1,&LEDTCTL			;Stop timer
 			BIC		#CCIE|CCIFG,&LEDTCCTL0		;Clear interrupts and disable them from CCR0
 			BIS.B	#LEDC_MASK,&LEDC_DOUT		;Disable all groups
 			BIC.B	#LEDP_MASK,&LEDP_DOUT		;Also light off all leds of the groups
+			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Light off the no scanning leds
 			MOV		#00000h,&LedPointer			;Reset group pointer
 			RET
 
@@ -204,7 +224,7 @@ LedsOn:
 ; VARS USED     : LedBuffer, LEDOFFS
 ; OTHER FUNCS   : None
 LedsOff:
-			BIC.B	R4,&(LedBuffer + LEDOFFS)	;Clear the leds to be light off
+			BIC.B	R4,&(LedBuffer + LEDOFFS)	;Clear the leds to be off
 			RET
 
 
@@ -333,6 +353,38 @@ Disp1BlinkOff:
 
 
 ;----------------------------------------
+; Disp0SetDigit
+; Sets the leds blink status as described at the input parameter
+; INPUT         : R4 contains the digit to be desplayed on display 0
+; OUTPUT        : None
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : DISP0OFFS, LedBuffer, LedDigits
+; OTHER FUNCS   : None
+Disp0SetDigit:
+			MOV.B	LedDigits(R4),&(LedBuffer +DISP0OFFS);Get the digit value and store it at
+												; Disp0 data buffer
+			RET
+
+
+;----------------------------------------
+; Disp1SetDigit
+; Sets the leds blink status as described at the input parameter
+; INPUT         : R4 contains the digit to be desplayed on display 0
+; OUTPUT        : None
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : DISP1OFFS, LedBuffer, LedDigits
+; OTHER FUNCS   : None
+Disp1SetDigit:
+			MOV.B	LedDigits(R4),&(LedBuffer +DISP0OFFS);Get the digit value and store it at
+												; Disp0 data buffer
+			RET
+
+
+;----------------------------------------
 ; Interrupt Service Routines
 ;========================================
 
@@ -344,8 +396,10 @@ Disp1BlinkOff:
 ; REGS USED     : R4, R5, R6
 ; REGS AFFECTED : None
 ; STACK USAGE   : 6 = 3x Push
-; VARS USED     : LEDBUFSIZE, LEDC_DOUT, LEDC_MASK, LEDP_DOUT, LedBlinkMask, LedBlnkCnt,
-;                 LEDBLNKITVL, LEDBLNKON, LedBuffer, LedGrpArr, LedPointer
+; VARS USED     : Board_LedAnion, Board_LedNSAnion, Board_LedNSTank, Board_LedTank,
+;                 LEDBUFSIZE, LEDC_DOUT, LEDC_MASK, LEDNS_DOUT, LEDNS_MASK, LEDOFFS,
+;                 LEDP_DOUT, LedBlinkMask, LedBlnkCnt, LEDBLNKITVL, LEDBLNKON, LedBuffer,
+;                 LedGrpArr, LedPointer
 ; OTHER FUNCS   : None
 LedScan:
 			BIC.B	#LEDC_MASK,&LEDC_DOUT		;Disable all led groups
@@ -362,7 +416,18 @@ LedScan:
 LSISR_SkipOff:
 			MOV.B	R6,&LEDP_DOUT				;Setup the leds of the group to be used
 			BIC.B	LedGrpArr(R4),&LEDC_DOUT	;Enable the group in question
-			INC		R4							;Next time will use the nect group
+			;Now have to decide for the non scanning leds also (Inverse logic on them)
+			CMP.B	#LEDOFFS,R4					;Do we have data for the Leds?
+			JNZ		LSISR_NoNS					;No => Then we do not care about No Scan leds
+			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Light off both leds temporarily
+			BIT.B	#Board_LedTank,R6			;Is the Tank led on?
+			JZ		LSISR_NoTank				;No => keep it off
+			BIC.B	#Board_LedNSTank,&LEDNS_DOUT;else Light it up
+LSISR_NoTank:
+			BIT.B	#Board_LedAnion,R6			;Is the Anion led on?
+			JZ		LSISR_NoNS					;No => keep it off, too
+			BIC.B	#Board_LedNSAnion,&LEDNS_DOUT;else, light it up
+LSISR_NoNS:	INC		R4							;Next time will use the next group
 			CMP		#LEDBUFSIZE,R4				;Reached the end of the buffer
 			JLO		LSISR_NoReset				;No => OK. Keep on
 			MOV		#00000h,R4					;else, restart

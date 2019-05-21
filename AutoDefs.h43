@@ -142,12 +142,15 @@ KBD_Vector:				.equ	PORT8_VECTOR
 ;----------------------------------------
 ; Leds and Displays Definitions
 ;========================================
-;The led/displays subsystem uses two ports. One port is the driver of the Leds/Segments of
+;The led/displays subsystem uses three ports. One port is the driver of the Leds/Segments of
 ; the displays. Each pin on this port selects which leds of the current group light up (logic
 ; 1) or stays off (logic 0). The second port is the Control port that selects which group is
 ; to be used. The leds and displays are all connected in a Common Cathode scheme. One common
 ; pin selects the leds, one selects the first display and another one selects the second
 ; display. The selected group is enabled when its associated common pin drives logic 0.
+; The third port is for two leds, Anion and Tank Full, that do not take place at the scanning
+; process. This is necessary if there will be no hack on the panel board, since these two leds
+; have their anodes connected to power lane
 
 ;First lets define the registers of the "Data" port (selects which led to light up in a group)
 ; Not all of the registers are used, but they are set here for completeness
@@ -352,6 +355,110 @@ LEDC_Vector:			.equ	PORT8_VECTOR
 	.else
 		.emsg "Board_ComCtlPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_ComCtlPort
+
+
+;Now lets define the registers for the "No Scanning" leds.
+; Not all of the registers are used, but they are set here for completeness
+	.if (Board_NoScanLedPort == 1)
+LEDNS_DIN:				.equ	P1IN				;Data input register of No-Scan leds
+LEDNS_DOUT:				.equ	P1OUT				;Data output register for
+LEDNS_DIR:				.equ	P1DIR				;Direction selection register for No-Scan
+													; leds
+LEDNS_REN:				.equ	P1REN				;Resistor setup register for No-Scan leds
+LEDNS_SEL0:				.equ	P1SEL0				;Special function selection registers
+LEDNS_SEL1:				.equ	P1SEL1
+LEDNS_INTE:				.equ	P1IE				;Interrupt enable register for led groups
+LEDNS_INTES:			.equ	P1IES				;Interrupt edge selector register
+LEDNS_INTF:				.equ	P1IFG				;Interrupt flags register
+LEDNS_INTV:				.equ	P1IV				;Interrupt vector register
+LEDNS_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+	.elseif (Board_NoScanLedPort == 2)
+LEDNS_DIN:				.equ	P2IN
+LEDNS_DOUT:				.equ	P2OUT
+LEDNS_DIR:				.equ	P2DIR
+LEDNS_REN:				.equ	P2REN
+LEDNS_SEL0:				.equ	P2SEL0
+LEDNS_SEL1:				.equ	P2SEL1
+LEDNS_INTE:				.equ	P2IE
+LEDNS_INTES:			.equ	P2IES
+LEDNS_INTF:				.equ	P2IFG
+LEDNS_INTV:				.equ	P2IV
+LEDNS_Vector:			.equ	PORT2_VECTOR
+	.elseif (Board_NoScanLedPort == 3)
+LEDNS_DIN:				.equ	P3IN
+LEDNS_DOUT:				.equ	P3OUT
+LEDNS_DIR:				.equ	P3DIR
+LEDNS_REN:				.equ	P3REN
+LEDNS_SEL0:				.equ	P3SEL0
+LEDNS_SEL1:				.equ	P3SEL1
+LEDNS_INTE:				.equ	P3IE
+LEDNS_INTES:			.equ	P3IES
+LEDNS_INTF:				.equ	P3IFG
+LEDNS_INTV:				.equ	P3IV
+LEDNS_Vector:			.equ	PORT3_VECTOR
+	.elseif (Board_NoScanLedPort == 4)
+LEDNS_DIN:				.equ	P4IN
+LEDNS_DOUT:				.equ	P4OUT
+LEDNS_DIR:				.equ	P4DIR
+LEDNS_REN:				.equ	P4REN
+LEDNS_SEL0:				.equ	P4SEL0
+LEDNS_SEL1:				.equ	P4SEL1
+LEDNS_INTE:				.equ	P4IE
+LEDNS_INTES:			.equ	P4IES
+LEDNS_INTF:				.equ	P4IFG
+LEDNS_INTV:				.equ	P4IV
+LEDNS_Vector:			.equ	PORT4_VECTOR
+	.elseif (Board_NoScanLedPort == 5)
+LEDNS_DIN:				.equ	P5IN
+LEDNS_DOUT:				.equ	P5OUT
+LEDNS_DIR:				.equ	P5DIR
+LEDNS_REN:				.equ	P5REN
+LEDNS_SEL0:				.equ	P5SEL0
+LEDNS_SEL1:				.equ	P5SEL1
+LEDNS_INTE:				.equ	P5IE
+LEDNS_INTES:			.equ	P5IES
+LEDNS_INTF:				.equ	P5IFG
+LEDNS_INTV:				.equ	P5IV
+LEDNS_Vector:			.equ	PORT5_VECTOR
+	.elseif (Board_NoScanLedPort == 6)
+LEDNS_DIN:				.equ	P6IN
+LEDNS_DOUT:				.equ	P6OUT
+LEDNS_DIR:				.equ	P6DIR
+LEDNS_REN:				.equ	P6REN
+LEDNS_SEL0:				.equ	P6SEL0
+LEDNS_SEL1:				.equ	P6SEL1
+LEDNS_INTE:				.equ	P6IE
+LEDNS_INTES:			.equ	P6IES
+LEDNS_INTF:				.equ	P6IFG
+LEDNS_INTV:				.equ	P6IV
+LEDNS_Vector:			.equ	PORT6_VECTOR
+	.elseif (Board_NoScanLedPort == 7)
+LEDNS_DIN:				.equ	P7IN
+LEDNS_DOUT:				.equ	P7OUT
+LEDNS_DIR:				.equ	P7DIR
+LEDNS_REN:				.equ	P7REN
+LEDNS_SEL0:				.equ	P7SEL0
+LEDNS_SEL1:				.equ	P7SEL1
+LEDNS_INTE:				.equ	P7IE
+LEDNS_INTES:			.equ	P7IES
+LEDNS_INTF:				.equ	P7IFG
+LEDNS_INTV:				.equ	P7IV
+LEDNS_Vector:			.equ	PORT7_VECTOR
+	.elseif (Board_NoScanLedPort == 8)
+LEDNS_DIN:				.equ	P8IN
+LEDNS_DOUT:				.equ	P8OUT
+LEDNS_DIR:				.equ	P8DIR
+LEDNS_REN:				.equ	P8REN
+LEDNS_SEL0:				.equ	P8SEL0
+LEDNS_SEL1:				.equ	P8SEL1
+LEDNS_INTE:				.equ	P8IE
+LEDNS_INTES:			.equ	P8IES
+LEDNS_INTF:				.equ	P8IFG
+LEDNS_INTV:				.equ	P8IV
+LEDNS_Vector:			.equ	PORT8_VECTOR
+	.else
+		.emsg "Board_NoScanLedPort definition in Board.h43 file has to be between 1 and 8"
+	.endif											;Board_NoScanLedPort
 
 
 	.endif											;__BOARD_AUTO_DEFS__
