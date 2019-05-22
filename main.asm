@@ -177,7 +177,7 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#LedsPInit					;Initialize the ports used by the leds
 			CALL	#InitSys					;Initialize clock, RAM and variables, eint
 
-
+			CALL	#LedsTest					;Lets test the leds
 
 ;-------------------------------------------
 ; Stack Pointer definition

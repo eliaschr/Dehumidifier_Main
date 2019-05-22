@@ -214,6 +214,24 @@ KBDEINT:	BIS.B	#KBD_KMASK,&KBD_INTES	;Interrupt is fired by a High-To-Low transi
 
 
 ;----------------------------------------
+; KBDEINTKEYS
+; Enables the keyboard interrupt.
+; INPUT         : R4 contains the mask of the keys to be enabled
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : KBD_INTE, KBD_INTES, KBD_INTF, KBD_KMASK
+; OTHER FUNCS   : None
+KBDEINT:	BIC.B	#~KBD_KMASK,R4			;Mask the keyboard bits (No other bits should be
+											; altered
+			BIS.B	R4,&KBD_INTES			;Interrupt is fired by a High-To-Low transition
+			BIC.B	R4,&KBD_INTF			;Interrupt flag is reset: No Pending Interrupt
+			BIS.B	R4,&KBD_INTE			;Enable interrupts coming from this port pins
+			RET
+
+
+;----------------------------------------
 ; KBDDINT
 ; Disables the keyboard interrupt.
 ; INPUT         : None
@@ -267,9 +285,11 @@ KBDSetExit:	MOV.B	#000h,R4				;Clear R4
 ;                 KBDTCCR1, KBDTCTL, KBDTR, KBUFSIZE, Key1stRep, KeyDebounc, LastKey
 ; OTHER FUNCS   : None
 KBDKeyPress:
-			BIT.B	#KBD_KMASK,&KBD_INTF	;Does this interrupt come from keyboard?
-			JZ		NoKeyPress				;No => Ignore this interrupt, Exit
 			PUSH	R4
+			MOV.B	&KBD_INTF,R4			;Get the flags that fired the interrupt
+			AND.B	&KBD_INTE,R4			;Filter only the enabled ones
+			BIT.B	#KBD_KMASK,R4			;Does this interrupt come from keyboard?
+			JZ		NoKeyPress				;No => Ignore this interrupt, Exit
 			MOV.B	&KBD_DIN,R4				;Get the current status of the keys
 			AND.B	#KBD_KMASK,R4			;Filter only the bits of the keys
 			BIC.B	#KBD_KMASK,&KBD_INTES	;Set temporarilly all keyboard interrupts to be
@@ -338,8 +358,9 @@ KBRFound:	;R4 Contains the accepted keypress code or Zero if there are more than
 			BIS		#CCIE,&KBDTCCTL1		;Enable its interrupt
 			BIS		#MC1,&KBDTCTL			;Start timer in continuous counting mode
 KBDSameKey:
-			POP		R4						;Restore registers
 NoKeyPress:
+			POP		R4						;Restore registers
+
 			RETI							;Exit interrupt
 
 

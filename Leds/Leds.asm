@@ -58,6 +58,8 @@ LEDFreq:	.equ	60						;The scanning frequency of the led groups in Hz
 LEDBLNKON:	.equ	30						;The number of scan counts a blinking led stays on
 LEDBLNKITVL:.equ	60						;The number of scan counts a blinking led repeats
 											; blinking (Interval)
+LEDTESTTIME:.equ	20						;Number of scan itterations a led will be lit
+											; during test
 LEDCYCLE:	.equ	(ACLKFreq / (LEDFreq * LEDBUFSIZE))
 											;The CCR0 setting to achieve the scanning timing
 											
@@ -65,6 +67,7 @@ LEDCYCLE:	.equ	(ACLKFreq / (LEDFreq * LEDBUFSIZE))
 LEDOFFS:	.equ	0
 DISP0OFFS:	.equ	(LEDOFFS +1)
 DISP1OFFS:	.equ	(DISP0OFFS +1)
+LEDGROUPS:	.equ	(DISP1OFFS +1)			;Number of groups supported
 
 ;Following is the mask of the leds used at no scanning port
 LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
@@ -75,6 +78,8 @@ LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
 ;-------------------------------------------
 			.bss	LedPointer, 2			;Pointer to the current group byte in buffer
 			.bss	LedBlnkCnt,	2			;Led blinker counter
+			.bss	LedTestCntr, 2			;Led Test Scanning Counter
+			.bss	LedTestPtr, 2			;Pointer to data during led test
 			.bss	LedBuffer, LEDBUFSIZE	;Buffer that holds the led status of all groups
 			.bss	LedBlinkMask, LEDBUFSIZE;Mask of the leds to be blinking for each group
 
@@ -85,6 +90,7 @@ LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
 			.sect ".const"
 			;Lets define an array of the successive commons to be enabled during scanning
 LedGrpArr:	.byte	LEDCOM, DISP0COM, DISP1COM
+
 			;Construct the values to be used for each digit on the displays
 LedDigits:	.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_E | DISP_F				;0
 			.byte	DISP_B | DISP_C													;1
@@ -97,6 +103,27 @@ LedDigits:	.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_E | DISP_F				;0
 			.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_E | DISP_F | DISP_G	;8
 			.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_F | DISP_G				;9
 			.byte	00h																;Empty
+
+;Helper definitions to add a group and flashing value in the test array
+LEDGRP:		.equ	(LEDOFFS << 8)
+DISP0GRP:	.equ	(DISP0OFFS << 8)
+DISP1GRP:	.equ	(DISP1OFFS << 8)
+FLASHTEST:	.equ	BITF
+LedTestArr:	;Test leds, one by one and then all together
+			.byte	LEDGRP|LEDHUMID, LEDGRP|LEDPOWER, LEDGRP|LEDTANK, LEDGRP|LEDTIMER
+			.byte	LEDGRP|LEDLOW, LEDGRP|LEDHIGH, LEDGRP|LEDANION
+			.byte	LEDGRP|LEDHUMID|LEDPOWER|LEDTANK|LEDTIMER|LEDLOW|LEDHIGH|LEDANION
+			.byte	LEDGRP					;All leds off
+			;Test display 0 leds one by one and then all
+			.byte	DISP0GRP|DISP_A, DISP0GRP|DISP_B, DISP0GRP|DISP_C, DISP0GRP|DISP_D
+			.byte	DISP0GRP|DISP_E, DISP0GRP|DISP_F, DISP0GRP|DISP_G, DISP0GRP|DISP_DP
+			.byte	DISP0GRP				;Display 0 off
+			;Test display 1 leds one by one and then all
+			.byte	DISP1GRP|DISP_A, DISP1GRP|DISP_B, DISP1GRP|DISP_C, DISP1GRP|DISP_D
+			.byte	DISP1GRP|DISP_E, DISP1GRP|DISP_F, DISP1GRP|DISP_G, DISP1GRP|DISP_DP
+			.byte	DISP1GRP				;Display 1 off
+LedTestEnd:	.byte	000h					;Marks the end of the testing array
+LedTestFunc:.word	LedsVal, Disp0SetLeds, Disp1SetLeds
 
 
 ;----------------------------------------
@@ -149,10 +176,9 @@ LedsPInit:
 ; REGS USED     : R4
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : Board_LedAnion, Board_LedNSAnion, Board_LedNSTank, Board_LedTank, LedBuffer,
-;                 LEDC_DOUT, LEDNS_DOUT, LEDNS_MASK, LEDP_DOUT, LEDCOM, LEDCYCLE, LedPointer,
-;                 LEDTCCR0,
-;                 LEDTCCTL0, LEDTCTL
+; VARS USED     : LedBuffer, LEDANION, LEDC_DOUT, LEDCOM, LEDCYCLE, LEDNS_DOUT, LEDNS_MASK,
+;                 LEDNSANION, LEDNSTANK, LEDP_DOUT, LedPointer, LEDTANK, LEDTCCR0, LEDTCCTL0,
+;                 LEDTCTL
 ; OTHER FUNCS   : None
 LedsEnable:
 			MOV		#TASSEL_1 | TACLR,&LEDTCTL	;Reset Led Timer and source it from AClk (32K)
@@ -162,13 +188,13 @@ LedsEnable:
 			MOV.B	&LedBuffer,R4				;Get the value. Need it later
 			MOV.B	R4,&LEDP_DOUT				;Output the state of the leds of this group
 			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Non scanning leds are off
-			BIT.B	#Board_LedTank,R4			;Is the Tank Full led on?
+			BIT.B	#LEDTANK,R4					;Is the Tank Full led on?
 			JZ		LEn_SkipTank				;No => keep the respective Non-scan led off
-			BIC.B	#Board_LedNSTank,&LEDNS_DOUT;else, light it up
+			BIC.B	#LEDNSTANK,&LEDNS_DOUT		;else, light it up
 LEn_SkipTank:
-			BIT.B	#Board_LedAnion,R4			;Is the Anion led on?
+			BIT.B	#LEDANION,R4				;Is the Anion led on?
 			JZ		LEn_SkipAnion				;No => keep the respective Non-scan led off
-			BIC.B	#Board_LedNSAnion,&LEDNS_DOUT;else, Light it up
+			BIC.B	#LEDNSANION,&LEDNS_DOUT		;else, Light it up
 LEn_SkipAnion:
 			INC		&LedPointer					;Next time we will output the next group
 			BIC		#CCIFG,&LEDTCCTL0			;Clear any spurious interrupt
@@ -245,7 +271,7 @@ LedsVal:
 			
 ;----------------------------------------
 ; LedsBlinkAdd
-; Sets the leds blink status as described at the input parameter
+; Starts blinking the leds defined at the input parameter
 ; INPUT         : R4 contains the led blink mask to be added
 ; OUTPUT        : None
 ; REGS USED     : R4
@@ -260,8 +286,8 @@ LedsBlinkAdd:
 
 ;----------------------------------------
 ; LedsBlinkOff
-; Sets the leds blink status as described at the input parameter
-; INPUT         : R4 contains the led blink mask to be added
+; Stops led blinking of the defined leds
+; INPUT         : R4 contains the led blink mask to be removed
 ; OUTPUT        : None
 ; REGS USED     : R4
 ; REGS AFFECTED : None
@@ -290,10 +316,10 @@ LedsBlinkSet:
 
 ;----------------------------------------
 ; Disp0BlinkOn
-; Sets the leds blink status as described at the input parameter
-; INPUT         : R4 contains the led blink mask to be used
+; Starts blinking of Display 0
+; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : R4
+; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
 ; VARS USED     : DISP0OFFS, LedBlinkMask
@@ -306,7 +332,7 @@ Disp0BlinkOn:
 
 ;----------------------------------------
 ; Disp0BlinkOff
-; Sets the leds blink status as described at the input parameter
+; Stops Display 0 blinking
 ; INPUT         : R4 contains the led blink mask to be used
 ; OUTPUT        : None
 ; REGS USED     : R4
@@ -322,10 +348,10 @@ Disp0BlinkOff:
 
 ;----------------------------------------
 ; Disp1BlinkOn
-; Sets the leds blink status as described at the input parameter
-; INPUT         : R4 contains the led blink mask to be used
+; Starts blinking Display 1
+; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : R4
+; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
 ; VARS USED     : DISP1OFFS, LedBlinkMask
@@ -338,10 +364,10 @@ Disp1BlinkOn:
 
 ;----------------------------------------
 ; Disp1BlinkOff
-; Sets the leds blink status as described at the input parameter
-; INPUT         : R4 contains the led blink mask to be used
+; Stops Display 1 blinking
+; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : R4
+; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
 ; VARS USED     : DISP1OFFS, LedBlinkMask
@@ -354,7 +380,7 @@ Disp1BlinkOff:
 
 ;----------------------------------------
 ; Disp0SetDigit
-; Sets the leds blink status as described at the input parameter
+; Sets the digit to be displayed by Display 0
 ; INPUT         : R4 contains the digit to be desplayed on display 0
 ; OUTPUT        : None
 ; REGS USED     : R4
@@ -369,9 +395,9 @@ Disp0SetDigit:
 
 
 ;----------------------------------------
-; Disp1SetDigit
-; Sets the leds blink status as described at the input parameter
-; INPUT         : R4 contains the digit to be desplayed on display 0
+; Disp1SetLeds
+; Sets the digit to be displayed by Display  1
+; INPUT         : R4 contains the digit to be desplayed on display 1
 ; OUTPUT        : None
 ; REGS USED     : R4
 ; REGS AFFECTED : None
@@ -380,7 +406,59 @@ Disp0SetDigit:
 ; OTHER FUNCS   : None
 Disp1SetDigit:
 			MOV.B	LedDigits(R4),&(LedBuffer +DISP0OFFS);Get the digit value and store it at
-												; Disp0 data buffer
+												; Disp1 data buffer
+			RET
+
+
+;----------------------------------------
+; Disp0SetLeds
+; Sets the leds of Display 0 according to the input parameter
+; INPUT         : R4 contains the leds status of display 0
+; OUTPUT        : None
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : DISP0OFFS, LedBuffer
+; OTHER FUNCS   : None
+Disp0SetLeds:
+			MOV.B	R4,&(LedBuffer +DISP0OFFS)	;Set the Display 0 led mask
+			RET
+
+
+;----------------------------------------
+; Disp1SetLeds
+; Sets the leds of Display 0 according to the input parameter
+; INPUT         : R4 contains the leds status of display 1
+; OUTPUT        : None
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : DISP1OFFS, LedBuffer
+; OTHER FUNCS   : None
+Disp1SetLeds:
+			MOV.B	R4,&(LedBuffer +DISP0OFFS)	;Set the Display 1 led mask
+			RET
+
+
+;----------------------------------------
+; LedsTest
+; Starts a led test.
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : LEDCYCLE, LEDTCCR1, LEDTCCTL1, LedTestCntr, LedTestGrp, LedTestPtr
+; OTHER FUNCS   : None
+LedsTest:
+			MOV		#00000h,&LedTestCntr		;Reset the counter of itterations
+			MOV		#00000h,&LedTestPtr			;Reset the pointer to start indications from
+												; the beggining
+			MOV		#LEDCYCLE/2,&LEDTCCR1		;Triggering of Testing interrupt will be at
+												; half of the scanning cycle
+			MOV.B	&LedTestArr,&LedBuffer		;Initialize the first state
+			BIC		#CCIFG,&LEDTCCTL1			;Clear any spurious interrutps
+			BIS		#CCIE,&LEDTCCTL1			;Enable Tesing interrupt
 			RET
 
 
@@ -396,10 +474,9 @@ Disp1SetDigit:
 ; REGS USED     : R4, R5, R6
 ; REGS AFFECTED : None
 ; STACK USAGE   : 6 = 3x Push
-; VARS USED     : Board_LedAnion, Board_LedNSAnion, Board_LedNSTank, Board_LedTank,
-;                 LEDBUFSIZE, LEDC_DOUT, LEDC_MASK, LEDNS_DOUT, LEDNS_MASK, LEDOFFS,
-;                 LEDP_DOUT, LedBlinkMask, LedBlnkCnt, LEDBLNKITVL, LEDBLNKON, LedBuffer,
-;                 LedGrpArr, LedPointer
+; VARS USED     : LEDANION, LedBlinkMask,  LedBlnkCnt, LEDBLNKITVL, LEDBLNKON, LedBuffer,
+;                 LEDBUFSIZE, LEDC_DOUT, LEDC_MASK, LedGrpArr, LEDNS_DOUT, LEDNS_MASK,
+;                 LEDNSANION, LEDNSTANK, LEDOFFS, LEDP_DOUT, LedPointer
 ; OTHER FUNCS   : None
 LedScan:
 			BIC.B	#LEDC_MASK,&LEDC_DOUT		;Disable all led groups
@@ -420,13 +497,13 @@ LSISR_SkipOff:
 			CMP.B	#LEDOFFS,R4					;Do we have data for the Leds?
 			JNZ		LSISR_NoNS					;No => Then we do not care about No Scan leds
 			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Light off both leds temporarily
-			BIT.B	#Board_LedTank,R6			;Is the Tank led on?
+			BIT.B	#LEDTANK,R6					;Is the Tank led on?
 			JZ		LSISR_NoTank				;No => keep it off
-			BIC.B	#Board_LedNSTank,&LEDNS_DOUT;else Light it up
+			BIC.B	#LEDNSTANK,&LEDNS_DOUT		;else Light it up
 LSISR_NoTank:
-			BIT.B	#Board_LedAnion,R6			;Is the Anion led on?
+			BIT.B	#LEDANION,R6				;Is the Anion led on?
 			JZ		LSISR_NoNS					;No => keep it off, too
-			BIC.B	#Board_LedNSAnion,&LEDNS_DOUT;else, light it up
+			BIC.B	#LEDNSANION,&LEDNS_DOUT		;else, light it up
 LSISR_NoNS:	INC		R4							;Next time will use the next group
 			CMP		#LEDBUFSIZE,R4				;Reached the end of the buffer
 			JLO		LSISR_NoReset				;No => OK. Keep on
@@ -447,8 +524,52 @@ LSISR_SkipCnt:
 
 
 ;----------------------------------------
+; LedTester
+; Interrupt Service Routine for Led testing, triggered by CCR1 of the Led Timer
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : 
+; OTHER FUNCS   : None
+LedTester:
+			INC		&LedTestCntr				;Increment the number of itterations
+			CMP		#LEDTESTTIME,&LedTestCntr
+												;Is it time to change the led values?
+			JLO		LTISR_Skip					;No => then just exit
+			MOV		#00000h,&LedTestCntr		;Clear again the number of itteration
+			
+			PUSH	R4
+			PUSH	R5
+			PUSH	R15
+			MOV		&LedTestPtr,R5				;Get current pointer
+			INC		R5							;Next test
+			MOV		R5,&LedTestPtr				;Store it
+			ADD		#LedTestArr,R5				;Add the starting of the table
+			MOV		@R5,R4						;Get the value to be set
+			SWPB	R4							;Group to low byte
+			AND.B	#00Fh,R4					;Filter out the flashing flags
+			
+			
+			MOV		#LedsVal,R15				;Pointer to Led Group setting function
+			CMP.B	#LEDGRP,R4					;Do we have to set the led group?
+			JEQ		LTI_SetIt					;Yes => then proceed to setting leds
+			MOV		#Disp0SetLeds,R15			;Pointer to Display 0 led setting
+			CMP.B	#DISP0GRP,R4				;Do we have to set Display 0?
+			JEQ		LTI_SetIt					;Yes => then set it
+			MOV		#Disp1SetLeds,R15			;else, we must set the leds of Display 1
+LTI_SetIt:	MOV		@R5,R4						;Refresh the value to be used
+			CALL	R15							;Call function pointed by R15
+			
+				
+LTISR_Skip:	RETI								;Return to caller
+
+;----------------------------------------
 ; Interrupt Vectors
 ;========================================
 			.sect	LEDTVECTOR0				;Led Timer Interrupt Vector to scan the led groups
 			.short	LedScan
 
+			.sect	LEDTVECTOR1				;Led testing interrupt vector
+			.short	LedTester

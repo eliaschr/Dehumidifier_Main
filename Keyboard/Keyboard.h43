@@ -64,6 +64,7 @@
 ;* KBDPInit    : Initializes the ports used for keyboard controlling and reading             *
 ;* KBDtInit    : Initializes the timer used for keyboard controlling                         *
 ;* KBDEINT     : Enables interrupt from keyboard port                                        *
+;* KBDEINTKEYS : Enables interrupt from specific keys of the keyboard                        *
 ;* KBDDINT     : Disables interrupts from keyboard port                                      *
 ;* KBDReadKey  : Reads a key from the keyboard buffer, if there is any                       *
 ;* KBDKeyPress : The Interrupt Service Routine of a key press                                *
@@ -115,6 +116,7 @@ KeyUpdRep:			.equ	01000h				;The Timer clock ticks for subsequent
 					.global	KBDPInit
 					.global	KBRTInit
 					.global KBDEINT
+					.global	KBDEINTKEYS
 					.global KBDDINT
 					.global	KBDReadKey
 

@@ -67,6 +67,16 @@ DISP_DP:				.equ	Board_DispDp	;Display point of a display
 DIGIT_EMPTY:			.equ	10				;The digit to send to displays in order to
 												; clear them
 
+LEDHUMID:				.equ	Board_LedPump	;Purifying led
+LEDPOWER:				.equ	Board_LedPower	;Power On led
+LEDTANK:				.equ	Board_LedTank	;Tank Full led
+LEDNSTANK:				.equ	Board_LedNSTank	;Tank Full led - Non scanning led
+LEDTIMER:				.equ	Board_LedTimer	;Timer On led
+LEDLOW:					.equ	Board_LedLow	;Low Fan Speed led
+LEDHIGH:				.equ	Board_LedHigh	;High Fan Speed led
+LEDANION:				.equ	Board_LedAnion	;Anionizer On led
+LEDNSANION:				.equ	Board_LedNSAnion;Anionizer On led - Non scanning led
+
 
 ;----------------------------------------
 ; Global Functions
@@ -87,6 +97,8 @@ DIGIT_EMPTY:			.equ	10				;The digit to send to displays in order to
 						.global	Disp1BlinkOff	;Stops display 2 blinking
 						.global	Disp0SetDigit	;Sets the display 0 digit
 						.global	Disp1SetDigit	;Sets the display 1 digit
+						
+						.global	LedsTest		;Tests the led subsystem
 
 
 	.endif										;__LED_DISPLAYS_H43__
