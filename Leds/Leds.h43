@@ -48,7 +48,7 @@ __LED_DISPLAYS_H43__:	.equ	1				;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-LEDTIMER:				.equ	3				;Timer to be used for LED scanning
+LED_TIMERA:				.equ	3				;Timer to be used for LED scanning
 
 LEDCOM:					.equ	Board_LedCom	;The common pin of the Leds group
 DISP0COM:				.equ	Board_DispCom0	;The common pin of the first 7-Segment Display

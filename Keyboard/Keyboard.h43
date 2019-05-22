@@ -85,7 +85,7 @@ __KEYBOARD_H43__:	.equ	1					;Must define this in order to avoid double
 ;Board_KeyAni									;Anion key
 ;
 
-KEYBTIMER:			.equ	2					;The TimerA module to be used for keyboard
+KEYB_TIMER:			.equ	2					;The TimerA module to be used for keyboard
 KBUFSIZE:			.equ	020h				;The size of Keyboard Buffer. Must be a power
 												; of 2
 KEYHUMID:			.equ	Board_KeyHum		;Keycode for key 'Humidity'

@@ -223,7 +223,7 @@ KBDEINT:	BIS.B	#KBD_KMASK,&KBD_INTES	;Interrupt is fired by a High-To-Low transi
 ; STACK USAGE   : None
 ; VARS USED     : KBD_INTE, KBD_INTES, KBD_INTF, KBD_KMASK
 ; OTHER FUNCS   : None
-KBDEINT:	BIC.B	#~KBD_KMASK,R4			;Mask the keyboard bits (No other bits should be
+KBDEINTKEYS:BIC.B	#~KBD_KMASK,R4			;Mask the keyboard bits (No other bits should be
 											; altered
 			BIS.B	R4,&KBD_INTES			;Interrupt is fired by a High-To-Low transition
 			BIC.B	R4,&KBD_INTF			;Interrupt flag is reset: No Pending Interrupt

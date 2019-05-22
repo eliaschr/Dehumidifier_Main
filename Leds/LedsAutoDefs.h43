@@ -55,7 +55,7 @@ LEDC_MASK:	.equ	(LEDCOM | DISP0COM | DISP1COM)
 ;----------------------------------------
 ; Led Timer Definitions
 ;========================================
-	.if (LEDTIMER == 0)							;Lets define the keyboard timer registers
+	.if (LED_TIMERA == 0)							;Lets define the keyboard timer registers
 LEDTCTL:				.equ	TA0CTL
 LEDTCCTL0:				.equ	TA0CCTL0
 LEDTCCTL1:				.equ	TA0CCTL1
@@ -68,7 +68,7 @@ LEDTEX0:				.equ	TA0EX0
 LEDTIV:					.equ	TA0IV
 LEDTVECTOR0:			.equ	TIMER0_A0_VECTOR
 LEDTVECTOR1:			.equ	TIMER0_A1_VECTOR
-	.elseif (LEDTIMER == 1)
+	.elseif (LED_TIMERA == 1)
 LEDTCTL:				.equ	TA1CTL
 LEDTCCTL0:				.equ	TA1CCTL0
 LEDTCCTL1:				.equ	TA1CCTL1
@@ -81,7 +81,7 @@ LEDTEX0:				.equ	TA1EX0
 LEDTIV:					.equ	TA1IV
 LEDTVECTOR0:			.equ	TIMER1_A0_VECTOR
 LEDTVECTOR1:			.equ	TIMER1_A1_VECTOR
-	.elseif (LEDTIMER == 2)
+	.elseif (LED_TIMERA == 2)
 LEDTCTL:				.equ	TA2CTL
 LEDTCCTL0:				.equ	TA2CCTL0
 LEDTCCTL1:				.equ	TA2CCTL1
@@ -94,7 +94,7 @@ LEDTEX0:				.equ	TA2EX0
 LEDTIV:					.equ	TA2IV
 LEDTVECTOR0:			.equ	TIMER2_A0_VECTOR
 LEDTVECTOR1:			.equ	TIMER2_A1_VECTOR
-	.elseif (LEDTIMER == 3)
+	.elseif (LED_TIMERA == 3)
 LEDTCTL:				.equ	TA3CTL
 LEDTCCTL0:				.equ	TA3CCTL0
 LEDTCCTL1:				.equ	TA3CCTL1
@@ -107,7 +107,7 @@ LEDTEX0:				.equ	TA3EX0
 LEDTIV:					.equ	TA3IV
 LEDTVECTOR0:			.equ	TIMER3_A0_VECTOR
 LEDTVECTOR1:			.equ	TIMER3_A1_VECTOR
-	.elseif (LEDTIMER == 4)
+	.elseif (LED_TIMERA == 4)
 LEDTCTL:				.equ	TA4CTL
 LEDTCCTL0:				.equ	TA4CCTL0
 LEDTCCTL1:				.equ	TA4CCTL1
@@ -121,7 +121,7 @@ LEDTIV:					.equ	TA4IV
 LEDTVECTOR0:			.equ	TIMER4_A0_VECTOR
 LEDTVECTOR1:			.equ	TIMER4_A1_VECTOR
 	.else
-		.emsg "LEDTIMER definition in Leds.h43 file has to be between 0 and 4"
-	.endif											;LEDTIMER
+		.emsg "LED_TIMERA definition in Leds.h43 file has to be between 0 and 4"
+	.endif											;LED_TIMERA
 
 	.endif											;__LED_DISPLAYS_AUTO_DEFS__

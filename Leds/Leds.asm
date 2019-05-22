@@ -60,6 +60,8 @@ LEDBLNKITVL:.equ	60						;The number of scan counts a blinking led repeats
 											; blinking (Interval)
 LEDTESTTIME:.equ	20						;Number of scan itterations a led will be lit
 											; during test
+LEDTESTBLT:	.equ	180						;Number of scan itterations when blinking is
+											; tested
 LEDCYCLE:	.equ	(ACLKFreq / (LEDFreq * LEDBUFSIZE))
 											;The CCR0 setting to achieve the scanning timing
 											
@@ -80,6 +82,7 @@ LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
 			.bss	LedBlnkCnt,	2			;Led blinker counter
 			.bss	LedTestCntr, 2			;Led Test Scanning Counter
 			.bss	LedTestPtr, 2			;Pointer to data during led test
+			.bss	LedTestBlnk, 2			;Blinking flags
 			.bss	LedBuffer, LEDBUFSIZE	;Buffer that holds the led status of all groups
 			.bss	LedBlinkMask, LEDBUFSIZE;Mask of the leds to be blinking for each group
 
@@ -104,26 +107,28 @@ LedDigits:	.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_E | DISP_F				;0
 			.byte	DISP_A | DISP_B | DISP_C | DISP_D | DISP_F | DISP_G				;9
 			.byte	00h																;Empty
 
-;Helper definitions to add a group and flashing value in the test array
+;Helper definitions to add a group and blinking value in the test array
 LEDGRP:		.equ	(LEDOFFS << 8)
 DISP0GRP:	.equ	(DISP0OFFS << 8)
 DISP1GRP:	.equ	(DISP1OFFS << 8)
-FLASHTEST:	.equ	BITF
+BLINKTEST:	.equ	BITF
 LedTestArr:	;Test leds, one by one and then all together
-			.byte	LEDGRP|LEDHUMID, LEDGRP|LEDPOWER, LEDGRP|LEDTANK, LEDGRP|LEDTIMER
-			.byte	LEDGRP|LEDLOW, LEDGRP|LEDHIGH, LEDGRP|LEDANION
-			.byte	LEDGRP|LEDHUMID|LEDPOWER|LEDTANK|LEDTIMER|LEDLOW|LEDHIGH|LEDANION
-			.byte	LEDGRP					;All leds off
+			.word	LEDGRP|LEDHUMID, LEDGRP|LEDPOWER, LEDGRP|LEDTANK, LEDGRP|LEDTIMER
+			.word	LEDGRP|LEDLOW, LEDGRP|LEDHIGH, LEDGRP|LEDANION
+			.word	LEDGRP|LEDHUMID|LEDPOWER|LEDTANK|LEDTIMER|LEDLOW|LEDHIGH|LEDANION
+			.word	LEDGRP					;All leds off
 			;Test display 0 leds one by one and then all
-			.byte	DISP0GRP|DISP_A, DISP0GRP|DISP_B, DISP0GRP|DISP_C, DISP0GRP|DISP_D
-			.byte	DISP0GRP|DISP_E, DISP0GRP|DISP_F, DISP0GRP|DISP_G, DISP0GRP|DISP_DP
-			.byte	DISP0GRP				;Display 0 off
+			.word	DISP0GRP|DISP_A, DISP0GRP|DISP_B, DISP0GRP|DISP_C, DISP0GRP|DISP_D
+			.word	DISP0GRP|DISP_E, DISP0GRP|DISP_F, DISP0GRP|DISP_G, DISP0GRP|DISP_DP
+			.word	DISP0GRP				;Display 0 off
 			;Test display 1 leds one by one and then all
-			.byte	DISP1GRP|DISP_A, DISP1GRP|DISP_B, DISP1GRP|DISP_C, DISP1GRP|DISP_D
-			.byte	DISP1GRP|DISP_E, DISP1GRP|DISP_F, DISP1GRP|DISP_G, DISP1GRP|DISP_DP
-			.byte	DISP1GRP				;Display 1 off
-LedTestEnd:	.byte	000h					;Marks the end of the testing array
+			.word	DISP1GRP|DISP_A, DISP1GRP|DISP_B, DISP1GRP|DISP_C, DISP1GRP|DISP_D
+			.word	DISP1GRP|DISP_E, DISP1GRP|DISP_F, DISP1GRP|DISP_G, DISP1GRP|DISP_DP
+			.word	DISP1GRP				;Display 1 off
+LedTestEnd:	.word	000h					;Marks the end of the testing array
 LedTestFunc:.word	LedsVal, Disp0SetLeds, Disp1SetLeds
+			.word	LedsBlinkSet, Disp0BlinkOn, Disp1BlinkOn
+			.word	LedsBlinkOff, Disp0BlinkOff, Disp1BlinkOff
 
 
 ;----------------------------------------
@@ -448,12 +453,14 @@ Disp1SetLeds:
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : LEDCYCLE, LEDTCCR1, LEDTCCTL1, LedTestCntr, LedTestGrp, LedTestPtr
+; VARS USED     : LEDCYCLE, LEDTCCR1, LEDTCCTL1, LedTestBlnk, LedTestCntr, LedTestGrp,
+;                 LedTestPtr
 ; OTHER FUNCS   : None
 LedsTest:
 			MOV		#00000h,&LedTestCntr		;Reset the counter of itterations
 			MOV		#00000h,&LedTestPtr			;Reset the pointer to start indications from
 												; the beggining
+			MOV		#00000h,&LedTestBlnk		;Reset the blinking flag
 			MOV		#LEDCYCLE/2,&LEDTCCR1		;Triggering of Testing interrupt will be at
 												; half of the scanning cycle
 			MOV.B	&LedTestArr,&LedBuffer		;Initialize the first state
@@ -535,35 +542,62 @@ LSISR_SkipCnt:
 ; OTHER FUNCS   : None
 LedTester:
 			INC		&LedTestCntr				;Increment the number of itterations
-			CMP		#LEDTESTTIME,&LedTestCntr
+			BIT		#BLINKTEST,&LedTestBlnk		;Are we in blinking mode?
+			JZ		LTISR_NormT					;No => Need to test for normal time
+			CMP		#LEDTESTBLT,&LedTestCntr	;Is it time to change the led values?
+			JLO		LTISR_Skip					;No => then just exit
+			JMP		LTISR_Go					;else, change the values
+LTISR_NormT:CMP		#LEDTESTTIME,&LedTestCntr
 												;Is it time to change the led values?
 			JLO		LTISR_Skip					;No => then just exit
-			MOV		#00000h,&LedTestCntr		;Clear again the number of itteration
+LTISR_Go:	MOV		#00000h,&LedTestCntr		;Clear again the number of itteration
 			
-			PUSH	R4
+			;Need to update the indicators
+			PUSH	R4							;Store registers in stack
 			PUSH	R5
 			PUSH	R15
 			MOV		&LedTestPtr,R5				;Get current pointer
 			INC		R5							;Next test
 			MOV		R5,&LedTestPtr				;Store it
 			ADD		#LedTestArr,R5				;Add the starting of the table
+			CMP		#LedTestEnd,R5				;Did we reach the end of testing?
+			JHS		LTISR_End					;Stop the test and proceed...
+
+			;Lets get the function to use
 			MOV		@R5,R4						;Get the value to be set
-			SWPB	R4							;Group to low byte
+			SWPB	R4							;Move group number to low byte
 			AND.B	#00Fh,R4					;Filter out the flashing flags
-			
-			
-			MOV		#LedsVal,R15				;Pointer to Led Group setting function
-			CMP.B	#LEDGRP,R4					;Do we have to set the led group?
-			JEQ		LTI_SetIt					;Yes => then proceed to setting leds
-			MOV		#Disp0SetLeds,R15			;Pointer to Display 0 led setting
-			CMP.B	#DISP0GRP,R4				;Do we have to set Display 0?
-			JEQ		LTI_SetIt					;Yes => then set it
-			MOV		#Disp1SetLeds,R15			;else, we must set the leds of Display 1
-LTI_SetIt:	MOV		@R5,R4						;Refresh the value to be used
-			CALL	R15							;Call function pointed by R15
-			
-				
-LTISR_Skip:	RETI								;Return to caller
+			ADD		R4,R4						;Convert it to word count
+			MOV		R4,R15						;Get the function
+			ADD		#LedTestFunc,R15			;Point to the funcion element in array
+			MOV		@R5,R4						;Get the value again
+			CALL	@R15						;Call function pointed by R15
+			;Finally have to check if blibkibg is needed
+			BIC		#BLINKTEST,&LedTestBlnk		;Suppose no blinking
+			BIT		#BLINKTEST,R4				;Do we have to enable blinking?
+			JZ		LTISR_NoBlink				;No => then skip blinking
+			BIS		#BLINKTEST,&LedTestBlnk		;Set blinking mode
+			ADD		#LEDGROUPS*2,R15			;Point to blinking enable functions
+			CALL	@R15						;Call the associated blinking function
+			JMP		LTISR_Exit
+LTISR_NoBlink:
+			ADD		#LEDGROUPS*4,R15			;Point to blinking disable functions
+			MOV.B	#0FFh,R4					;Going to stop all leds from blinking
+			CALL	@R15						;Call the associated blinking function
+LTISR_Exit:
+			POP		R15							;Restore used registers
+			POP		R5
+			POP		R4
+LTISR_Skip:
+			RETI								;Return to caller
+
+LTISR_End:	BIC		#CCIE|CCIFG,&LEDTCCTL1		;Stop producing interrupts
+			POP		R15
+			POP		R5
+			POP		R4
+			BIC		#LPM4,0(SP)					;Wake the system up
+			RETI
+
 
 ;----------------------------------------
 ; Interrupt Vectors

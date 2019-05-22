@@ -179,6 +179,11 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 
 			CALL	#LedsTest					;Lets test the leds
 
+ReSleep:	BIS		#LPM1,SR					;Sleep...
+			NOP
+			JMP		ReSleep						;Nowhere to go...
+
+
 ;-------------------------------------------
 ; Stack Pointer definition
 ;===========================================

@@ -34,28 +34,28 @@ __BOARD_DEFS__:			.equ	1					;Need to set this in order to avoid double
 ;----------------------------------------
 ; Keyboard Definitions
 ;========================================
-Board_KeyPort:			.equ	1					;Defines the port the keys are connected
-Board_Key0:				.equ	BIT0				;Abstruct key 0
-Board_Key1:				.equ	BIT1				;Abstruct key 1
-Board_Key2:				.equ	BIT2				;Abstruct key 2
-Board_Key3:				.equ	BIT3				;Abstruct key 3
-Board_Key4:				.equ	BIT4				;Abstruct key 4
+Board_KeyPort:			.equ	4					;Defines the port the keys are connected
+Board_Key0:				.equ	BIT1				;Abstruct key 0
+Board_Key1:				.equ	BIT2				;Abstruct key 1
+Board_Key2:				.equ	BIT3				;Abstruct key 2
+Board_Key3:				.equ	BIT4				;Abstruct key 3
+Board_Key4:				.equ	BIT7				;Abstruct key 4
 
-Board_KeyHum:			.equ	Board_Key0			;Humidity key
-Board_KeyTim:			.equ	Board_Key1			;Timer key
-Board_KeyPwr:			.equ	Board_Key2			;Power key
-Board_KeySpd:			.equ	Board_Key3			;Speed key
-Board_KeyAni:			.equ	Board_Key4			;Anion key
+Board_KeyHum:			.equ	Board_Key4			;Humidity key
+Board_KeyTim:			.equ	Board_Key0			;Timer key
+Board_KeyPwr:			.equ	Board_Key1			;Power key
+Board_KeySpd:			.equ	Board_Key2			;Speed key
+Board_KeyAni:			.equ	Board_Key3			;Anion key
 ;All the keys are active low
 
 
 ;----------------------------------------
 ; Leds Definitions
 ;========================================
-Board_LedPort:			.equ	2					;Port the led controls are connected
-Board_ComCtlPort:		.equ	3					;Port the Common pins are connected
+Board_LedPort:			.equ	3					;Port the led controls are connected
+Board_ComCtlPort:		.equ	8					;Port the Common pins are connected
 													; Displays are common cathode ones
-Board_NoScanLedPort:	.equ	4					;Port for the two leds that will not take
+Board_NoScanLedPort:	.equ	5					;Port for the two leds that will not take
 													; place at the scanning process
 Board_Led0:				.equ	BIT0				;Abstruct led 0
 Board_Led1:				.equ	BIT1				;Abstruct led 1
@@ -68,29 +68,29 @@ Board_Led7:				.equ	BIT7				;Abstruct led 7
 Board_LedNS0:			.equ	BIT0				;Abstruct no scanning led 0
 Board_LedNS1:			.equ	BIT1				;Abstruct no scanning led 1
 
-Board_LedCom:			.equ	BIT0				;Common Cathode of Leds
-Board_DispCom0:			.equ	BIT1				;Common Cathode of 7-segment Display 0
-Board_DispCom1:			.equ	BIT2				;Common Cathode of 7-segment Display 1
+Board_LedCom:			.equ	BIT1				;Common Cathode of Leds
+Board_DispCom0:			.equ	BIT2				;Common Cathode of 7-segment Display 0
+Board_DispCom1:			.equ	BIT35				;Common Cathode of 7-segment Display 1
 
-Board_LedPower:			.equ	Board_Led0			;Power On led
-Board_LedPump:			.equ	Board_Led1			;Compresson On led
+Board_LedPower:			.equ	Board_Led5			;Power On led
+Board_LedPump:			.equ	Board_Led3			;Compresson On led
 Board_LedTank:			.equ	Board_Led2			;Tank Full led
-Board_LedTimer:			.equ	Board_Led3			;Timer On led
-Board_LedLow:			.equ	Board_Led4			;Low Speed Fan led
-Board_LedHigh:			.equ	Board_Led5			;High Speed Fan led
+Board_LedTimer:			.equ	Board_Led4			;Timer On led
+Board_LedLow:			.equ	Board_Led0			;Low Speed Fan led
+Board_LedHigh:			.equ	Board_Led1			;High Speed Fan led
 Board_LedAnion:			.equ	Board_Led6			;Anionizer On led
 
-Board_LedNSTank:		.equ	Board_LedNS0		;Non scanning led for Tank Full
-Board_LedNSAnion:		.equ	Board_LedNS1		;Non scanning led for Anionizer
+Board_LedNSTank:		.equ	Board_LedNS1		;Non scanning led for Tank Full
+Board_LedNSAnion:		.equ	Board_LedNS0		;Non scanning led for Anionizer
 
-Board_DispA:			.equ	Board_Led0			;Display Segment a
-Board_DispB:			.equ	Board_Led1			;Display Segment b
-Board_DispC:			.equ	Board_Led2			;Display Segment c
-Board_DispD:			.equ	Board_Led3			;Display Segment d
-Board_DispE:			.equ	Board_Led4			;Display Segment e
-Board_DispF:			.equ	Board_Led5			;Display Segment f
-Board_DispG:			.equ	Board_Led6			;Display Segment g
-Board_DispDp:			.equ	Board_Led7			;Display Segment point
+Board_DispA:			.equ	Board_Led1			;Display Segment a
+Board_DispB:			.equ	Board_Led0			;Display Segment b
+Board_DispC:			.equ	Board_Led7			;Display Segment c
+Board_DispD:			.equ	Board_Led4			;Display Segment d
+Board_DispE:			.equ	Board_Led6			;Display Segment e
+Board_DispF:			.equ	Board_Led2			;Display Segment f
+Board_DispG:			.equ	Board_Led3			;Display Segment g
+Board_DispDp:			.equ	Board_Led5			;Display Segment point
 
 
 						.include "AutoDefs.h43"
