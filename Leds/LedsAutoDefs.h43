@@ -55,7 +55,7 @@ LEDC_MASK:	.equ	(LEDCOM | DISP0COM | DISP1COM)
 ;----------------------------------------
 ; Led Timer Definitions
 ;========================================
-	.if (LED_TIMERA == 0)							;Lets define the keyboard timer registers
+	.if (LED_TIMERA == 0)							;Lets define the led timer registers
 LEDTCTL:				.equ	TA0CTL
 LEDTCCTL0:				.equ	TA0CCTL0
 LEDTCCTL1:				.equ	TA0CCTL1

@@ -67,7 +67,7 @@
 ; INPUT         : None
 ; OUTPUT        : None
 ; REGS USED     : R4
-; REGS AFFECTED : None
+; REGS AFFECTED : R4
 ; STACK USAGE   : None
 ; VARS USED     : None
 ; OTHER FUNCS   : None
@@ -177,6 +177,7 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#LedsPInit					;Initialize the ports used by the leds
 			CALL	#InitSys					;Initialize clock, RAM and variables, eint
 
+			CALL	#LedsEnable					;Start led scanning
 			CALL	#LedsTest					;Lets test the leds
 
 ReSleep:	BIS		#LPM1,SR					;Sleep...

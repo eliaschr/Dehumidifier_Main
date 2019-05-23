@@ -1,0 +1,117 @@
+;*********************************************************************************************
+;* Buzzer Library                                                                            *
+;*-------------------------------------------------------------------------------------------*
+;* BuzzAutoDefs.h43                                                                          *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
+;* Example of automatic definitions is the computation of interrupt vectors according to     *
+;* the timer module used for the buzzer timing.                                              *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Buzzer Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if ($isdefed("__BUZZER_LIB_AUTO_DEFS__") == 0)
+	.if ($isdefed("__BUZZER_LIB_H43__") == 0)
+		.emsg "Buzzer.h43 must have been included in the file before BuzzAutoDefs.h43"
+	.endif
+
+__BUZZER_LIB_AUTO_DEFS__:.equ	1				;Need to define this in order to avoid
+												; double inclusions
+
+;----------------------------------------
+; Buzzer Timer Definitions
+;========================================
+	.if (BUZZER_TIMERA == 0)						;Lets define the Buzzer timer registers
+BUZZTCTL:				.equ	TA0CTL
+BUZZTCCTL0:				.equ	TA0CCTL0
+BUZZTCCTL1:				.equ	TA0CCTL1
+BUZZTCCTL2:				.equ	TA0CCTL2
+BUZZTR:					.equ	TA0R
+BUZZTCCR0:				.equ	TA0CCR0
+BUZZTCCR1:				.equ	TA0CCR1
+BUZZTCCR2:				.equ	TA0CCR2
+BUZZTEX0:				.equ	TA0EX0
+BUZZTIV:				.equ	TA0IV
+BUZZTVECTOR0:			.equ	TIMER0_A0_VECTOR
+BUZZTVECTOR1:			.equ	TIMER0_A1_VECTOR
+	.elseif (BUZZER_TIMERA == 1)
+BUZZTCTL:				.equ	TA1CTL
+BUZZTCCTL0:				.equ	TA1CCTL0
+BUZZTCCTL1:				.equ	TA1CCTL1
+BUZZTCCTL2:				.equ	TA1CCTL2
+BUZZTR:					.equ	TA1R
+BUZZTCCR0:				.equ	TA1CCR0
+BUZZTCCR1:				.equ	TA1CCR1
+BUZZTCCR2:				.equ	TA1CCR2
+BUZZTEX0:				.equ	TA1EX0
+BUZZTIV:				.equ	TA1IV
+BUZZTVECTOR0:			.equ	TIMER1_A0_VECTOR
+BUZZTVECTOR1:			.equ	TIMER1_A1_VECTOR
+	.elseif (BUZZER_TIMERA == 2)
+BUZZTCTL:				.equ	TA2CTL
+BUZZTCCTL0:				.equ	TA2CCTL0
+BUZZTCCTL1:				.equ	TA2CCTL1
+;BUZZTCCTL2:			.equ	TA2CCTL2			;Timer A2 does not have CC2
+BUZZTR:					.equ	TA2R
+BUZZTCCR0:				.equ	TA2CCR0
+BUZZTCCR1:				.equ	TA2CCR1
+;BUZZTCCR2:				.equ	TA2CCR2				;Timer A2 does not have CC2
+BUZZTEX0:				.equ	TA2EX0
+BUZZTIV:				.equ	TA2IV
+BUZZTVECTOR0:			.equ	TIMER2_A0_VECTOR
+BUZZTVECTOR1:			.equ	TIMER2_A1_VECTOR
+	.elseif (BUZZER_TIMERA == 3)
+BUZZTCTL:				.equ	TA3CTL
+BUZZTCCTL0:				.equ	TA3CCTL0
+BUZZTCCTL1:				.equ	TA3CCTL1
+;BUZZTCCTL2:			.equ	TA3CCTL2			;Timer A3 does not have CC2
+BUZZTR:					.equ	TA3R
+BUZZTCCR0:				.equ	TA3CCR0
+BUZZTCCR1:				.equ	TA3CCR1
+;BUZZTCCR2:				.equ	TA3CCR2				;Timer A3 does not have CC2
+BUZZTEX0:				.equ	TA3EX0
+BUZZTIV:				.equ	TA3IV
+BUZZTVECTOR0:			.equ	TIMER3_A0_VECTOR
+BUZZTVECTOR1:			.equ	TIMER3_A1_VECTOR
+	.elseif (BUZZER_TIMERA == 4)
+BUZZTCTL:				.equ	TA4CTL
+BUZZTCCTL0:				.equ	TA4CCTL0
+BUZZTCCTL1:				.equ	TA4CCTL1
+BUZZTCCTL2:				.equ	TA4CCTL2
+BUZZTR:					.equ	TA4R
+BUZZTCCR0:				.equ	TA4CCR0
+BUZZTCCR1:				.equ	TA4CCR1
+BUZZTCCR2:				.equ	TA4CCR2
+BUZZTEX0:				.equ	TA4EX0
+BUZZTIV:				.equ	TA4IV
+BUZZTVECTOR0:			.equ	TIMER4_A0_VECTOR
+BUZZTVECTOR1:			.equ	TIMER4_A1_VECTOR
+	.else
+		.emsg "BUZZER_TIMERA definition in Buzzer.h43 file has to be between 0 and 4"
+	.endif											;BUZZER_TIMERA
+
+	.endif											;__BUZZER_LIB_AUTO_DEFS__

@@ -179,7 +179,7 @@ LedsPInit:
 ; INPUT         : None
 ; OUTPUT        : None
 ; REGS USED     : R4
-; REGS AFFECTED : None
+; REGS AFFECTED : R4
 ; STACK USAGE   : None
 ; VARS USED     : LedBuffer, LEDANION, LEDC_DOUT, LEDCOM, LEDCYCLE, LEDNS_DOUT, LEDNS_MASK,
 ;                 LEDNSANION, LEDNSTANK, LEDP_DOUT, LedPointer, LEDTANK, LEDTCCR0, LEDTCCTL0,
@@ -338,9 +338,9 @@ Disp0BlinkOn:
 ;----------------------------------------
 ; Disp0BlinkOff
 ; Stops Display 0 blinking
-; INPUT         : R4 contains the led blink mask to be used
+; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : R4
+; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
 ; VARS USED     : DISP0OFFS, LedBlinkMask
@@ -410,7 +410,7 @@ Disp0SetDigit:
 ; VARS USED     : DISP1OFFS, LedBuffer, LedDigits
 ; OTHER FUNCS   : None
 Disp1SetDigit:
-			MOV.B	LedDigits(R4),&(LedBuffer +DISP0OFFS);Get the digit value and store it at
+			MOV.B	LedDigits(R4),&(LedBuffer +DISP1OFFS);Get the digit value and store it at
 												; Disp1 data buffer
 			RET
 
@@ -441,7 +441,7 @@ Disp0SetLeds:
 ; VARS USED     : DISP1OFFS, LedBuffer
 ; OTHER FUNCS   : None
 Disp1SetLeds:
-			MOV.B	R4,&(LedBuffer +DISP0OFFS)	;Set the Display 1 led mask
+			MOV.B	R4,&(LedBuffer +DISP1OFFS)	;Set the Display 1 led mask
 			RET
 
 
@@ -453,8 +453,8 @@ Disp1SetLeds:
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : LEDCYCLE, LEDTCCR1, LEDTCCTL1, LedTestBlnk, LedTestCntr, LedTestGrp,
-;                 LedTestPtr
+; VARS USED     : LedBuffer, LEDCYCLE, LEDTCCR1, LEDTCCTL1, LedTestArr, LedTestBlnk,
+;                 LedTestCntr, LedTestGrp, LedTestPtr
 ; OTHER FUNCS   : None
 LedsTest:
 			MOV		#00000h,&LedTestCntr		;Reset the counter of itterations
@@ -483,7 +483,7 @@ LedsTest:
 ; STACK USAGE   : 6 = 3x Push
 ; VARS USED     : LEDANION, LedBlinkMask,  LedBlnkCnt, LEDBLNKITVL, LEDBLNKON, LedBuffer,
 ;                 LEDBUFSIZE, LEDC_DOUT, LEDC_MASK, LedGrpArr, LEDNS_DOUT, LEDNS_MASK,
-;                 LEDNSANION, LEDNSTANK, LEDOFFS, LEDP_DOUT, LedPointer
+;                 LEDNSANION, LEDNSTANK, LEDOFFS, LEDP_DOUT, LedPointer, LEDTANK
 ; OTHER FUNCS   : None
 LedScan:
 			BIC.B	#LEDC_MASK,&LEDC_DOUT		;Disable all led groups
@@ -535,10 +535,11 @@ LSISR_SkipCnt:
 ; Interrupt Service Routine for Led testing, triggered by CCR1 of the Led Timer
 ; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : None
+; REGS USED     : R4, R5, R15
 ; REGS AFFECTED : None
-; STACK USAGE   : None
-; VARS USED     : 
+; STACK USAGE   : 8 = 3x Push + 1x Call
+; VARS USED     : BLINKTEST, LEDGROUPS, LedTestArr, LedTestBlnk, LEDTESTBLT, LedTestCntr,
+;                 LedTestEnd, LedTestFunc, LedTestPtr, LEDTESTTIME
 ; OTHER FUNCS   : None
 LedTester:
 			INC		&LedTestCntr				;Increment the number of itterations

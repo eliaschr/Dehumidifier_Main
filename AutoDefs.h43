@@ -460,5 +460,112 @@ LEDNS_Vector:			.equ	PORT8_VECTOR
 		.emsg "Board_NoScanLedPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_NoScanLedPort
 
+;----------------------------------------
+; Buzzer Definitions
+;========================================
+;The Buzzer is a very simple peripheral. Just trigger it for a short time and you have a beep.
+; Here we create its port definitions. Not all registers are used in the program but they are
+; defined here for completeness.
+
+	.if (Board_BuzzerPort == 1)
+BUZZP_DIN:				.equ	P1IN				;Data input register
+BUZZP_DOUT:				.equ	P1OUT				;Data output register for triggering Buzz
+BUZZP_DIR:				.equ	P1DIR				;Direction selection register
+BUZZP_REN:				.equ	P1REN				;Resistor setup register
+BUZZP_SEL0:				.equ	P1SEL0				;Special function selection registers
+BUZZP_SEL1:				.equ	P1SEL1
+BUZZP_INTE:				.equ	P1IE				;Interrupt enable register
+BUZZP_INTES:			.equ	P1IES				;Interrupt edge selector register
+BUZZP_INTF:				.equ	P1IFG				;Interrupt flags register
+BUZZP_INTV:				.equ	P1IV				;Interrupt vector register
+BUZZP_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+	.elseif (Board_BuzzerPort == 2)
+BUZZP_DIN:				.equ	P2IN
+BUZZP_DOUT:				.equ	P2OUT
+BUZZP_DIR:				.equ	P2DIR
+BUZZP_REN:				.equ	P2REN
+BUZZP_SEL0:				.equ	P2SEL0
+BUZZP_SEL1:				.equ	P2SEL1
+BUZZP_INTE:				.equ	P2IE
+BUZZP_INTES:			.equ	P2IES
+BUZZP_INTF:				.equ	P2IFG
+BUZZP_INTV:				.equ	P2IV
+BUZZP_Vector:			.equ	PORT2_VECTOR
+	.elseif (Board_BuzzerPort == 3)
+BUZZP_DIN:				.equ	P3IN
+BUZZP_DOUT:				.equ	P3OUT
+BUZZP_DIR:				.equ	P3DIR
+BUZZP_REN:				.equ	P3REN
+BUZZP_SEL0:				.equ	P3SEL0
+BUZZP_SEL1:				.equ	P3SEL1
+BUZZP_INTE:				.equ	P3IE
+BUZZP_INTES:			.equ	P3IES
+BUZZP_INTF:				.equ	P3IFG
+BUZZP_INTV:				.equ	P3IV
+BUZZP_Vector:			.equ	PORT3_VECTOR
+	.elseif (Board_BuzzerPort == 4)
+BUZZP_DIN:				.equ	P4IN
+BUZZP_DOUT:				.equ	P4OUT
+BUZZP_DIR:				.equ	P4DIR
+BUZZP_REN:				.equ	P4REN
+BUZZP_SEL0:				.equ	P4SEL0
+BUZZP_SEL1:				.equ	P4SEL1
+BUZZP_INTE:				.equ	P4IE
+BUZZP_INTES:			.equ	P4IES
+BUZZP_INTF:				.equ	P4IFG
+BUZZP_INTV:				.equ	P4IV
+BUZZP_Vector:			.equ	PORT4_VECTOR
+	.elseif (Board_BuzzerPort == 5)
+BUZZP_DIN:				.equ	P5IN
+BUZZP_DOUT:				.equ	P5OUT
+BUZZP_DIR:				.equ	P5DIR
+BUZZP_REN:				.equ	P5REN
+BUZZP_SEL0:				.equ	P5SEL0
+BUZZP_SEL1:				.equ	P5SEL1
+BUZZP_INTE:				.equ	P5IE
+BUZZP_INTES:			.equ	P5IES
+BUZZP_INTF:				.equ	P5IFG
+BUZZP_INTV:				.equ	P5IV
+BUZZP_Vector:			.equ	PORT5_VECTOR
+	.elseif (Board_BuzzerPort == 6)
+BUZZP_DIN:				.equ	P6IN
+BUZZP_DOUT:				.equ	P6OUT
+BUZZP_DIR:				.equ	P6DIR
+BUZZP_REN:				.equ	P6REN
+BUZZP_SEL0:				.equ	P6SEL0
+BUZZP_SEL1:				.equ	P6SEL1
+BUZZP_INTE:				.equ	P6IE
+BUZZP_INTES:			.equ	P6IES
+BUZZP_INTF:				.equ	P6IFG
+BUZZP_INTV:				.equ	P6IV
+BUZZP_Vector:			.equ	PORT6_VECTOR
+	.elseif (Board_BuzzerPort == 7)
+BUZZP_DIN:				.equ	P7IN
+BUZZP_DOUT:				.equ	P7OUT
+BUZZP_DIR:				.equ	P7DIR
+BUZZP_REN:				.equ	P7REN
+BUZZP_SEL0:				.equ	P7SEL0
+BUZZP_SEL1:				.equ	P7SEL1
+BUZZP_INTE:				.equ	P7IE
+BUZZP_INTES:			.equ	P7IES
+BUZZP_INTF:				.equ	P7IFG
+BUZZP_INTV:				.equ	P7IV
+BUZZP_Vector:			.equ	PORT7_VECTOR
+	.elseif (Board_BuzzerPort == 8)
+BUZZP_DIN:				.equ	P8IN
+BUZZP_DOUT:				.equ	P8OUT
+BUZZP_DIR:				.equ	P8DIR
+BUZZP_REN:				.equ	P8REN
+BUZZP_SEL0:				.equ	P8SEL0
+BUZZP_SEL1:				.equ	P8SEL1
+BUZZP_INTE:				.equ	P8IE
+BUZZP_INTES:			.equ	P8IES
+BUZZP_INTF:				.equ	P8IFG
+BUZZP_INTV:				.equ	P8IV
+BUZZP_Vector:			.equ	PORT8_VECTOR
+	.else
+		.emsg "Board_BuzzerPort definition in Board.h43 file has to be between 1 and 8"
+	.endif											;Board_BuzzerPort
+
 
 	.endif											;__BOARD_AUTO_DEFS__

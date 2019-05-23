@@ -70,7 +70,7 @@ Board_LedNS1:			.equ	BIT1				;Abstruct no scanning led 1
 
 Board_LedCom:			.equ	BIT1				;Common Cathode of Leds
 Board_DispCom0:			.equ	BIT2				;Common Cathode of 7-segment Display 0
-Board_DispCom1:			.equ	BIT35				;Common Cathode of 7-segment Display 1
+Board_DispCom1:			.equ	BIT3				;Common Cathode of 7-segment Display 1
 
 Board_LedPower:			.equ	Board_Led5			;Power On led
 Board_LedPump:			.equ	Board_Led3			;Compresson On led
@@ -91,6 +91,13 @@ Board_DispE:			.equ	Board_Led6			;Display Segment e
 Board_DispF:			.equ	Board_Led2			;Display Segment f
 Board_DispG:			.equ	Board_Led3			;Display Segment g
 Board_DispDp:			.equ	Board_Led5			;Display Segment point
+
+
+;----------------------------------------
+; Buzzer Definitions
+;========================================
+Board_BuzzerPort:		.equ	5					;Port the Buzzer is connected to
+Board_BuzzerPin:		.equ	BIT3				;Port pin used to drive the buzzer
 
 
 						.include "AutoDefs.h43"

@@ -1,0 +1,61 @@
+;*********************************************************************************************
+;* Buzzer Library                                                                            *
+;*-------------------------------------------------------------------------------------------*
+;* Buzzer.h43                                                                                *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* In this file all the necessary definitions for the buzzer handling library are  set and   *
+;* the functions that need to be available to the rest of the program are made global.       *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Buzzer Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library (Set by the developper):                                       *
+;* ----------------------------------------------------                                      *
+;*                                                                                           *
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Global functions of the Library:                                                          *
+;* ---------------------------------                                                         *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if  ($isdefed("__BUZZER_LIB_H43__") == 0)
+
+__BUZZER_LIB_H43__:	.equ	1					;Must define this in order to avoid double
+												; inclusions
+;----------------------------------------
+; Global Definitions
+;========================================
+BUZZER_TIMERA:			.equ	3				;Timer to be used for Buzzer timing
+
+BUZZPIN:				.equ	Board_BuzzerPin	;Pin to be used for the buzzer
+
+
+;----------------------------------------
+; Global Functions
+;========================================
+						.global	BuzzPInit		;Initialize port pins used for the Buzzer
+
+
+	.endif										;__BUZZER_LIB_H43__
