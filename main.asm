@@ -141,16 +141,16 @@ DCODelay:	DEC		R4						;2 CyclesWait some cycles...
 			MOV		#SELA__LFXTCLK | SELS__DCOCLK | SELM__DCOCLK,&CSCTL2
 											;AClk = LFXT, SMClk = DCO and MClk = DCO
 			BIC		#LFXTOFF,&CSCTL4		;Enable LFXT
-			MOV		#00000h,&CSCTL0			;Lock the CS registers again
 
 			;Lets see when the LFXT will be stable, to use it
-			BIC		#LFXTOFFG,&CSCTL5		;Clear the Fault Flag of the LFXT
-ReTestOsc:	BIC		#OFIFG,&SFRIFG1			;Clear the Oscillator Fault flag
+ReTestOsc:	BIC		#LFXTOFFG,&CSCTL5		;Clear the Fault Flag of the LFXT
+			BIC		#OFIFG,&SFRIFG1			;Clear the Oscillator Fault flag
 			MOV		#0FFh,R4				;Small delay factor
 OscDelay:	DEC		R4						;Wait some cycles...
 			JNZ		OscDelay
 			BIT.B	#OFIFG,&SFRIFG1			;Check if there is any problem in the oscillation
 			JNZ		ReTestOsc				;Repeat testing until there is no fault
+			MOV.B	#000h,&CSCTL0_H			;Lock the CS registers again
 
 			;LFXT runs OK. Time to clear the RAM area (except stack)
 			MOV		#01C00h,R4				;R4 points to the beginning of RAM area
@@ -180,9 +180,11 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#LedsEnable					;Start led scanning
 			CALL	#LedsTest					;Lets test the leds
 
-ReSleep:	BIS		#LPM1,SR					;Sleep...
+			NOP
+ReSleep:	BIS		#CPUOFF | GIE,SR			;Sleep...
 			NOP
 			JMP		ReSleep						;Nowhere to go...
+			NOP
 
 
 ;-------------------------------------------

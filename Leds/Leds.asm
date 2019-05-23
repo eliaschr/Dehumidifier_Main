@@ -604,7 +604,9 @@ LTISR_End:	BIC		#CCIE|CCIFG,&LEDTCCTL1		;Stop producing interrupts
 ; Interrupt Vectors
 ;========================================
 			.sect	LEDTVECTOR0				;Led Timer Interrupt Vector to scan the led groups
+;			.sect	TIMER3_A0_VECTOR
 			.short	LedScan
 
 			.sect	LEDTVECTOR1				;Led testing interrupt vector
+;			.sect	TIMER3_A1_VECTOR
 			.short	LedTester
