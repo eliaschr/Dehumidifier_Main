@@ -40,101 +40,101 @@ __BOARD_AUTO_DEFS__:	.equ	1					;Need to define this in order to avoid
 ; Keyboard Definitions
 ;========================================
 	.if (Board_KeyPort == 1)						;Lets define the keyboard registers needed
-KBD_DIN:				.equ	P1IN				;Data input register from keyboard
-KBD_DOUT:				.equ	P1OUT				;Data output register for keyboard
-KBD_DIR:				.equ	P1DIR				;Direction selection register for key pins
-KBD_REN:				.equ	P1REN				;Resistor setup register for key pins
-KBD_SEL0:				.equ	P1SEL0				;Special function selection registers
-KBD_SEL1:				.equ	P1SEL1
-KBD_INTE:				.equ	P1IE				;Interrupt enable register for keypresses
-KBD_INTES:				.equ	P1IES				;Interrupt edge selector register 
-KBD_INTF:				.equ	P1IFG				;Interrupt flags reflecting the keypresses
-KBD_INTV:				.equ	P1IV				;Interrupt vector register
-KBD_Vector:				.equ	PORT1_VECTOR		;Interrupt Vector Segment
+KBD_DIN:		.equ	P1IN						;Data input register from keyboard
+KBD_DOUT:		.equ	P1OUT						;Data output register for keyboard
+KBD_DIR:		.equ	P1DIR						;Direction selection register for key pins
+KBD_REN:		.equ	P1REN						;Resistor setup register for key pins
+KBD_SEL0:		.equ	P1SEL0						;Special function selection registers
+KBD_SEL1:		.equ	P1SEL1
+KBD_INTE:		.equ	P1IE						;Interrupt enable register for keypresses
+KBD_INTES:		.equ	P1IES						;Interrupt edge selector register 
+KBD_INTF:		.equ	P1IFG						;Interrupt flags reflecting the keypresses
+KBD_INTV:		.equ	P1IV						;Interrupt vector register
+				.define "PORT1_VECTOR", KBD_Vector	;Interrupt Vector Segment
 	.elseif (Board_KeyPort == 2)
-KBD_DIN:				.equ	P2IN
-KBD_DOUT:				.equ	P2OUT
-KBD_DIR:				.equ	P2DIR
-KBD_REN:				.equ	P2REN
-KBD_SEL0:				.equ	P2SEL0
-KBD_SEL1:				.equ	P2SEL1
-KBD_INTE:				.equ	P2IE
-KBD_INTES:				.equ	P2IES
-KBD_INTF:				.equ	P2IFG
-KBD_INTV:				.equ	P2IV
-KBD_Vector:				.equ	PORT2_VECTOR
+KBD_DIN:		.equ	P2IN
+KBD_DOUT:		.equ	P2OUT
+KBD_DIR:		.equ	P2DIR
+KBD_REN:		.equ	P2REN
+KBD_SEL0:		.equ	P2SEL0
+KBD_SEL1:		.equ	P2SEL1
+KBD_INTE:		.equ	P2IE
+KBD_INTES:		.equ	P2IES
+KBD_INTF:		.equ	P2IFG
+KBD_INTV:		.equ	P2IV
+				.define "PORT2_VECTOR", KBD_Vector
 	.elseif (Board_KeyPort == 3)
-KBD_DIN:				.equ	P3IN
-KBD_DOUT:				.equ	P3OUT
-KBD_DIR:				.equ	P3DIR
-KBD_REN:				.equ	P3REN
-KBD_SEL0:				.equ	P3SEL0
-KBD_SEL1:				.equ	P3SEL1
-KBD_INTE:				.equ	P3IE
-KBD_INTES:				.equ	P3IES
-KBD_INTF:				.equ	P3IFG
-KBD_INTV:				.equ	P3IV
-KBD_Vector:				.equ	PORT3_VECTOR
+KBD_DIN:		.equ	P3IN
+KBD_DOUT:		.equ	P3OUT
+KBD_DIR:		.equ	P3DIR
+KBD_REN:		.equ	P3REN
+KBD_SEL0:		.equ	P3SEL0
+KBD_SEL1:		.equ	P3SEL1
+KBD_INTE:		.equ	P3IE
+KBD_INTES:		.equ	P3IES
+KBD_INTF:		.equ	P3IFG
+KBD_INTV:		.equ	P3IV
+				.define "PORT3_VECTOR", KBD_Vector
 	.elseif (Board_KeyPort == 4)
-KBD_DIN:				.equ	P4IN
-KBD_DOUT:				.equ	P4OUT
-KBD_DIR:				.equ	P4DIR
-KBD_REN:				.equ	P4REN
-KBD_SEL0:				.equ	P4SEL0
-KBD_SEL1:				.equ	P4SEL1
-KBD_INTE:				.equ	P4IE
-KBD_INTES:				.equ	P4IES
-KBD_INTF:				.equ	P4IFG
-KBD_INTV:				.equ	P4IV
-KBD_Vector:				.equ	PORT4_VECTOR
+KBD_DIN:		.equ	P4IN
+KBD_DOUT:		.equ	P4OUT
+KBD_DIR:		.equ	P4DIR
+KBD_REN:		.equ	P4REN
+KBD_SEL0:		.equ	P4SEL0
+KBD_SEL1:		.equ	P4SEL1
+KBD_INTE:		.equ	P4IE
+KBD_INTES:		.equ	P4IES
+KBD_INTF:		.equ	P4IFG
+KBD_INTV:		.equ	P4IV
+				.define "PORT4_VECTOR", KBD_Vector
 	.elseif (Board_KeyPort == 5)
-KBD_DIN:				.equ	P5IN
-KBD_DOUT:				.equ	P5OUT
-KBD_DIR:				.equ	P5DIR
-KBD_REN:				.equ	P5REN
-KBD_SEL0:				.equ	P5SEL0
-KBD_SEL1:				.equ	P5SEL1
-KBD_INTE:				.equ	P5IE
-KBD_INTES:				.equ	P5IES
-KBD_INTF:				.equ	P5IFG
-KBD_INTV:				.equ	P5IV
-KBD_Vector:				.equ	PORT5_VECTOR
+KBD_DIN:		.equ	P5IN
+KBD_DOUT:		.equ	P5OUT
+KBD_DIR:		.equ	P5DIR
+KBD_REN:		.equ	P5REN
+KBD_SEL0:		.equ	P5SEL0
+KBD_SEL1:		.equ	P5SEL1
+KBD_INTE:		.equ	P5IE
+KBD_INTES:		.equ	P5IES
+KBD_INTF:		.equ	P5IFG
+KBD_INTV:		.equ	P5IV
+				.define "PORT5_VECTOR", KBD_Vector
 	.elseif (Board_KeyPort == 6)
-KBD_DIN:				.equ	P6IN
-KBD_DOUT:				.equ	P6OUT
-KBD_DIR:				.equ	P6DIR
-KBD_REN:				.equ	P6REN
-KBD_SEL0:				.equ	P6SEL0
-KBD_SEL1:				.equ	P6SEL1
-KBD_INTE:				.equ	P6IE
-KBD_INTES:				.equ	P6IES
-KBD_INTF:				.equ	P6IFG
-KBD_INTV:				.equ	P6IV
-KBD_Vector:				.equ	PORT6_VECTOR
+KBD_DIN:		.equ	P6IN
+KBD_DOUT:		.equ	P6OUT
+KBD_DIR:		.equ	P6DIR
+KBD_REN:		.equ	P6REN
+KBD_SEL0:		.equ	P6SEL0
+KBD_SEL1:		.equ	P6SEL1
+KBD_INTE:		.equ	P6IE
+KBD_INTES:		.equ	P6IES
+KBD_INTF:		.equ	P6IFG
+KBD_INTV:		.equ	P6IV
+				.define "PORT6_VECTOR", KBD_Vector
 	.elseif (Board_KeyPort == 7)
-KBD_DIN:				.equ	P7IN
-KBD_DOUT:				.equ	P7OUT
-KBD_DIR:				.equ	P7DIR
-KBD_REN:				.equ	P7REN
-KBD_SEL0:				.equ	P7SEL0
-KBD_SEL1:				.equ	P7SEL1
-KBD_INTE:				.equ	P7IE
-KBD_INTES:				.equ	P7IES
-KBD_INTF:				.equ	P7IFG
-KBD_INTV:				.equ	P7IV
-KBD_Vector:				.equ	PORT7_VECTOR
+KBD_DIN:		.equ	P7IN
+KBD_DOUT:		.equ	P7OUT
+KBD_DIR:		.equ	P7DIR
+KBD_REN:		.equ	P7REN
+KBD_SEL0:		.equ	P7SEL0
+KBD_SEL1:		.equ	P7SEL1
+KBD_INTE:		.equ	P7IE
+KBD_INTES:		.equ	P7IES
+KBD_INTF:		.equ	P7IFG
+KBD_INTV:		.equ	P7IV
+				.define "PORT7_VECTOR", KBD_Vector
 	.elseif (Board_KeyPort == 8)
-KBD_DIN:				.equ	P8IN
-KBD_DOUT:				.equ	P8OUT
-KBD_DIR:				.equ	P8DIR
-KBD_REN:				.equ	P8REN
-KBD_SEL0:				.equ	P8SEL0
-KBD_SEL1:				.equ	P8SEL1
-KBD_INTE:				.equ	P8IE
-KBD_INTES:				.equ	P8IES
-KBD_INTF:				.equ	P8IFG
-KBD_INTV:				.equ	P8IV
-KBD_Vector:				.equ	PORT8_VECTOR
+KBD_DIN:		.equ	P8IN
+KBD_DOUT:		.equ	P8OUT
+KBD_DIR:		.equ	P8DIR
+KBD_REN:		.equ	P8REN
+KBD_SEL0:		.equ	P8SEL0
+KBD_SEL1:		.equ	P8SEL1
+KBD_INTE:		.equ	P8IE
+KBD_INTES:		.equ	P8IES
+KBD_INTF:		.equ	P8IFG
+KBD_INTV:		.equ	P8IV
+				.define "PORT8_VECTOR", KBD_Vector
 	.else
 		.emsg "Board_KeyPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_KeyPort
@@ -155,101 +155,101 @@ KBD_Vector:				.equ	PORT8_VECTOR
 ;First lets define the registers of the "Data" port (selects which led to light up in a group)
 ; Not all of the registers are used, but they are set here for completeness
 	.if (Board_LedPort == 1)
-LEDP_DIN:				.equ	P1IN				;Data input register from leds
-LEDP_DOUT:				.equ	P1OUT				;Data output register for leds
-LEDP_DIR:				.equ	P1DIR				;Direction selection register for led pins
-LEDP_REN:				.equ	P1REN				;Resistor setup register for led pins
-LEDP_SEL0:				.equ	P1SEL0				;Special function selection registers
-LEDP_SEL1:				.equ	P1SEL1
-LEDP_INTE:				.equ	P1IE				;Interrupt enable register for leds
-LEDP_INTES:				.equ	P1IES				;Interrupt edge selector register
-LEDP_INTF:				.equ	P1IFG				;Interrupt flags register
-LEDP_INTV:				.equ	P1IV				;Interrupt vector register
-LEDP_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+LEDP_DIN:		.equ	P1IN						;Data input register from leds
+LEDP_DOUT:		.equ	P1OUT						;Data output register for leds
+LEDP_DIR:		.equ	P1DIR						;Direction selection register for led pins
+LEDP_REN:		.equ	P1REN						;Resistor setup register for led pins
+LEDP_SEL0:		.equ	P1SEL0						;Special function selection registers
+LEDP_SEL1:		.equ	P1SEL1
+LEDP_INTE:		.equ	P1IE						;Interrupt enable register for leds
+LEDP_INTES:		.equ	P1IES						;Interrupt edge selector register
+LEDP_INTF:		.equ	P1IFG						;Interrupt flags register
+LEDP_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", LEDP_Vector	;Interrupt Vector Memory Segment
 	.elseif (Board_LedPort == 2)
-LEDP_DIN:				.equ	P2IN
-LEDP_DOUT:				.equ	P2OUT
-LEDP_DIR:				.equ	P2DIR
-LEDP_REN:				.equ	P2REN
-LEDP_SEL0:				.equ	P2SEL0
-LEDP_SEL1:				.equ	P2SEL1
-LEDP_INTE:				.equ	P2IE
-LEDP_INTES:				.equ	P2IES
-LEDP_INTF:				.equ	P2IFG
-LEDP_INTV:				.equ	P2IV
-LEDP_Vector:			.equ	PORT2_VECTOR
+LEDP_DIN:		.equ	P2IN
+LEDP_DOUT:		.equ	P2OUT
+LEDP_DIR:		.equ	P2DIR
+LEDP_REN:		.equ	P2REN
+LEDP_SEL0:		.equ	P2SEL0
+LEDP_SEL1:		.equ	P2SEL1
+LEDP_INTE:		.equ	P2IE
+LEDP_INTES:		.equ	P2IES
+LEDP_INTF:		.equ	P2IFG
+LEDP_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", LEDP_Vector	
 	.elseif (Board_LedPort == 3)
-LEDP_DIN:				.equ	P3IN
-LEDP_DOUT:				.equ	P3OUT
-LEDP_DIR:				.equ	P3DIR
-LEDP_REN:				.equ	P3REN
-LEDP_SEL0:				.equ	P3SEL0
-LEDP_SEL1:				.equ	P3SEL1
-LEDP_INTE:				.equ	P3IE
-LEDP_INTES:				.equ	P3IES
-LEDP_INTF:				.equ	P3IFG
-LEDP_INTV:				.equ	P3IV
-LEDP_Vector:			.equ	PORT3_VECTOR
+LEDP_DIN:		.equ	P3IN
+LEDP_DOUT:		.equ	P3OUT
+LEDP_DIR:		.equ	P3DIR
+LEDP_REN:		.equ	P3REN
+LEDP_SEL0:		.equ	P3SEL0
+LEDP_SEL1:		.equ	P3SEL1
+LEDP_INTE:		.equ	P3IE
+LEDP_INTES:		.equ	P3IES
+LEDP_INTF:		.equ	P3IFG
+LEDP_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", LEDP_Vector	
 	.elseif (Board_LedPort == 4)
-LEDP_DIN:				.equ	P4IN
-LEDP_DOUT:				.equ	P4OUT
-LEDP_DIR:				.equ	P4DIR
-LEDP_REN:				.equ	P4REN
-LEDP_SEL0:				.equ	P4SEL0
-LEDP_SEL1:				.equ	P4SEL1
-LEDP_INTE:				.equ	P4IE
-LEDP_INTES:				.equ	P4IES
-LEDP_INTF:				.equ	P4IFG
-LEDP_INTV:				.equ	P4IV
-LEDP_Vector:			.equ	PORT4_VECTOR
+LEDP_DIN:		.equ	P4IN
+LEDP_DOUT:		.equ	P4OUT
+LEDP_DIR:		.equ	P4DIR
+LEDP_REN:		.equ	P4REN
+LEDP_SEL0:		.equ	P4SEL0
+LEDP_SEL1:		.equ	P4SEL1
+LEDP_INTE:		.equ	P4IE
+LEDP_INTES:		.equ	P4IES
+LEDP_INTF:		.equ	P4IFG
+LEDP_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", LEDP_Vector	
 	.elseif (Board_LedPort == 5)
-LEDP_DIN:				.equ	P5IN
-LEDP_DOUT:				.equ	P5OUT
-LEDP_DIR:				.equ	P5DIR
-LEDP_REN:				.equ	P5REN
-LEDP_SEL0:				.equ	P5SEL0
-LEDP_SEL1:				.equ	P5SEL1
-LEDP_INTE:				.equ	P5IE
-LEDP_INTES:				.equ	P5IES
-LEDP_INTF:				.equ	P5IFG
-LEDP_INTV:				.equ	P5IV
-LEDP_Vector:			.equ	PORT5_VECTOR
+LEDP_DIN:		.equ	P5IN
+LEDP_DOUT:		.equ	P5OUT
+LEDP_DIR:		.equ	P5DIR
+LEDP_REN:		.equ	P5REN
+LEDP_SEL0:		.equ	P5SEL0
+LEDP_SEL1:		.equ	P5SEL1
+LEDP_INTE:		.equ	P5IE
+LEDP_INTES:		.equ	P5IES
+LEDP_INTF:		.equ	P5IFG
+LEDP_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", LEDP_Vector	
 	.elseif (Board_LedPort == 6)
-LEDP_DIN:				.equ	P6IN
-LEDP_DOUT:				.equ	P6OUT
-LEDP_DIR:				.equ	P6DIR
-LEDP_REN:				.equ	P6REN
-LEDP_SEL0:				.equ	P6SEL0
-LEDP_SEL1:				.equ	P6SEL1
-LEDP_INTE:				.equ	P6IE
-LEDP_INTES:				.equ	P6IES
-LEDP_INTF:				.equ	P6IFG
-LEDP_INTV:				.equ	P6IV
-LEDP_Vector:			.equ	PORT6_VECTOR
+LEDP_DIN:		.equ	P6IN
+LEDP_DOUT:		.equ	P6OUT
+LEDP_DIR:		.equ	P6DIR
+LEDP_REN:		.equ	P6REN
+LEDP_SEL0:		.equ	P6SEL0
+LEDP_SEL1:		.equ	P6SEL1
+LEDP_INTE:		.equ	P6IE
+LEDP_INTES:		.equ	P6IES
+LEDP_INTF:		.equ	P6IFG
+LEDP_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", LEDP_Vector	
 	.elseif (Board_LedPort == 7)
-LEDP_DIN:				.equ	P7IN
-LEDP_DOUT:				.equ	P7OUT
-LEDP_DIR:				.equ	P7DIR
-LEDP_REN:				.equ	P7REN
-LEDP_SEL0:				.equ	P7SEL0
-LEDP_SEL1:				.equ	P7SEL1
-LEDP_INTE:				.equ	P7IE
-LEDP_INTES:				.equ	P7IES
-LEDP_INTF:				.equ	P7IFG
-LEDP_INTV:				.equ	P7IV
-LEDP_Vector:			.equ	PORT7_VECTOR
+LEDP_DIN:		.equ	P7IN
+LEDP_DOUT:		.equ	P7OUT
+LEDP_DIR:		.equ	P7DIR
+LEDP_REN:		.equ	P7REN
+LEDP_SEL0:		.equ	P7SEL0
+LEDP_SEL1:		.equ	P7SEL1
+LEDP_INTE:		.equ	P7IE
+LEDP_INTES:		.equ	P7IES
+LEDP_INTF:		.equ	P7IFG
+LEDP_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", LEDP_Vector	
 	.elseif (Board_LedPort == 8)
-LEDP_DIN:				.equ	P8IN
-LEDP_DOUT:				.equ	P8OUT
-LEDP_DIR:				.equ	P8DIR
-LEDP_REN:				.equ	P8REN
-LEDP_SEL0:				.equ	P8SEL0
-LEDP_SEL1:				.equ	P8SEL1
-LEDP_INTE:				.equ	P8IE
-LEDP_INTES:				.equ	P8IES
-LEDP_INTF:				.equ	P8IFG
-LEDP_INTV:				.equ	P8IV
-LEDP_Vector:			.equ	PORT8_VECTOR
+LEDP_DIN:		.equ	P8IN
+LEDP_DOUT:		.equ	P8OUT
+LEDP_DIR:		.equ	P8DIR
+LEDP_REN:		.equ	P8REN
+LEDP_SEL0:		.equ	P8SEL0
+LEDP_SEL1:		.equ	P8SEL1
+LEDP_INTE:		.equ	P8IE
+LEDP_INTES:		.equ	P8IES
+LEDP_INTF:		.equ	P8IFG
+LEDP_INTV:		.equ	P8IV
+				.define	"PORT8_VECTOR", LEDP_Vector	
 	.else
 		.emsg "Board_LedPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_LedPort
@@ -257,101 +257,101 @@ LEDP_Vector:			.equ	PORT8_VECTOR
 ;Now lets define the registers of the "Group Selector" port.
 ; Not all of the registers are used, but they are set here for completeness
 	.if (Board_ComCtlPort == 1)
-LEDC_DIN:				.equ	P1IN				;Data input register of led groups
-LEDC_DOUT:				.equ	P1OUT				;Data output register for led groups
-LEDC_DIR:				.equ	P1DIR				;Direction selection register for groups
-LEDC_REN:				.equ	P1REN				;Resistor setup register for group pins
-LEDC_SEL0:				.equ	P1SEL0				;Special function selection registers
-LEDC_SEL1:				.equ	P1SEL1
-LEDC_INTE:				.equ	P1IE				;Interrupt enable register for led groups
-LEDC_INTES:				.equ	P1IES				;Interrupt edge selector register
-LEDC_INTF:				.equ	P1IFG				;Interrupt flags register
-LEDC_INTV:				.equ	P1IV				;Interrupt vector register
-LEDC_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+LEDC_DIN:		.equ	P1IN						;Data input register of led groups
+LEDC_DOUT:		.equ	P1OUT						;Data output register for led groups
+LEDC_DIR:		.equ	P1DIR						;Direction selection register for groups
+LEDC_REN:		.equ	P1REN						;Resistor setup register for group pins
+LEDC_SEL0:		.equ	P1SEL0						;Special function selection registers
+LEDC_SEL1:		.equ	P1SEL1
+LEDC_INTE:		.equ	P1IE						;Interrupt enable register for led groups
+LEDC_INTES:		.equ	P1IES						;Interrupt edge selector register
+LEDC_INTF:		.equ	P1IFG						;Interrupt flags register
+LEDC_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", LEDC_Vector	;Interrupt Vector Memory Segment
 	.elseif (Board_ComCtlPort == 2)
-LEDC_DIN:				.equ	P2IN
-LEDC_DOUT:				.equ	P2OUT
-LEDC_DIR:				.equ	P2DIR
-LEDC_REN:				.equ	P2REN
-LEDC_SEL0:				.equ	P2SEL0
-LEDC_SEL1:				.equ	P2SEL1
-LEDC_INTE:				.equ	P2IE
-LEDC_INTES:				.equ	P2IES
-LEDC_INTF:				.equ	P2IFG
-LEDC_INTV:				.equ	P2IV
-LEDC_Vector:			.equ	PORT2_VECTOR
+LEDC_DIN:		.equ	P2IN
+LEDC_DOUT:		.equ	P2OUT
+LEDC_DIR:		.equ	P2DIR
+LEDC_REN:		.equ	P2REN
+LEDC_SEL0:		.equ	P2SEL0
+LEDC_SEL1:		.equ	P2SEL1
+LEDC_INTE:		.equ	P2IE
+LEDC_INTES:		.equ	P2IES
+LEDC_INTF:		.equ	P2IFG
+LEDC_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", LEDC_Vector
 	.elseif (Board_ComCtlPort == 3)
-LEDC_DIN:				.equ	P3IN
-LEDC_DOUT:				.equ	P3OUT
-LEDC_DIR:				.equ	P3DIR
-LEDC_REN:				.equ	P3REN
-LEDC_SEL0:				.equ	P3SEL0
-LEDC_SEL1:				.equ	P3SEL1
-LEDC_INTE:				.equ	P3IE
-LEDC_INTES:				.equ	P3IES
-LEDC_INTF:				.equ	P3IFG
-LEDC_INTV:				.equ	P3IV
-LEDC_Vector:			.equ	PORT3_VECTOR
+LEDC_DIN:		.equ	P3IN
+LEDC_DOUT:		.equ	P3OUT
+LEDC_DIR:		.equ	P3DIR
+LEDC_REN:		.equ	P3REN
+LEDC_SEL0:		.equ	P3SEL0
+LEDC_SEL1:		.equ	P3SEL1
+LEDC_INTE:		.equ	P3IE
+LEDC_INTES:		.equ	P3IES
+LEDC_INTF:		.equ	P3IFG
+LEDC_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", LEDC_Vector
 	.elseif (Board_ComCtlPort == 4)
-LEDC_DIN:				.equ	P4IN
-LEDC_DOUT:				.equ	P4OUT
-LEDC_DIR:				.equ	P4DIR
-LEDC_REN:				.equ	P4REN
-LEDC_SEL0:				.equ	P4SEL0
-LEDC_SEL1:				.equ	P4SEL1
-LEDC_INTE:				.equ	P4IE
-LEDC_INTES:				.equ	P4IES
-LEDC_INTF:				.equ	P4IFG
-LEDC_INTV:				.equ	P4IV
-LEDC_Vector:			.equ	PORT4_VECTOR
+LEDC_DIN:		.equ	P4IN
+LEDC_DOUT:		.equ	P4OUT
+LEDC_DIR:		.equ	P4DIR
+LEDC_REN:		.equ	P4REN
+LEDC_SEL0:		.equ	P4SEL0
+LEDC_SEL1:		.equ	P4SEL1
+LEDC_INTE:		.equ	P4IE
+LEDC_INTES:		.equ	P4IES
+LEDC_INTF:		.equ	P4IFG
+LEDC_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", LEDC_Vector
 	.elseif (Board_ComCtlPort == 5)
-LEDC_DIN:				.equ	P5IN
-LEDC_DOUT:				.equ	P5OUT
-LEDC_DIR:				.equ	P5DIR
-LEDC_REN:				.equ	P5REN
-LEDC_SEL0:				.equ	P5SEL0
-LEDC_SEL1:				.equ	P5SEL1
-LEDC_INTE:				.equ	P5IE
-LEDC_INTES:				.equ	P5IES
-LEDC_INTF:				.equ	P5IFG
-LEDC_INTV:				.equ	P5IV
-LEDC_Vector:			.equ	PORT5_VECTOR
+LEDC_DIN:		.equ	P5IN
+LEDC_DOUT:		.equ	P5OUT
+LEDC_DIR:		.equ	P5DIR
+LEDC_REN:		.equ	P5REN
+LEDC_SEL0:		.equ	P5SEL0
+LEDC_SEL1:		.equ	P5SEL1
+LEDC_INTE:		.equ	P5IE
+LEDC_INTES:		.equ	P5IES
+LEDC_INTF:		.equ	P5IFG
+LEDC_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", LEDC_Vector
 	.elseif (Board_ComCtlPort == 6)
-LEDC_DIN:				.equ	P6IN
-LEDC_DOUT:				.equ	P6OUT
-LEDC_DIR:				.equ	P6DIR
-LEDC_REN:				.equ	P6REN
-LEDC_SEL0:				.equ	P6SEL0
-LEDC_SEL1:				.equ	P6SEL1
-LEDC_INTE:				.equ	P6IE
-LEDC_INTES:				.equ	P6IES
-LEDC_INTF:				.equ	P6IFG
-LEDC_INTV:				.equ	P6IV
-LEDC_Vector:			.equ	PORT6_VECTOR
+LEDC_DIN:		.equ	P6IN
+LEDC_DOUT:		.equ	P6OUT
+LEDC_DIR:		.equ	P6DIR
+LEDC_REN:		.equ	P6REN
+LEDC_SEL0:		.equ	P6SEL0
+LEDC_SEL1:		.equ	P6SEL1
+LEDC_INTE:		.equ	P6IE
+LEDC_INTES:		.equ	P6IES
+LEDC_INTF:		.equ	P6IFG
+LEDC_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", LEDC_Vector
 	.elseif (Board_ComCtlPort == 7)
-LEDC_DIN:				.equ	P7IN
-LEDC_DOUT:				.equ	P7OUT
-LEDC_DIR:				.equ	P7DIR
-LEDC_REN:				.equ	P7REN
-LEDC_SEL0:				.equ	P7SEL0
-LEDC_SEL1:				.equ	P7SEL1
-LEDC_INTE:				.equ	P7IE
-LEDC_INTES:				.equ	P7IES
-LEDC_INTF:				.equ	P7IFG
-LEDC_INTV:				.equ	P7IV
-LEDC_Vector:			.equ	PORT7_VECTOR
+LEDC_DIN:		.equ	P7IN
+LEDC_DOUT:		.equ	P7OUT
+LEDC_DIR:		.equ	P7DIR
+LEDC_REN:		.equ	P7REN
+LEDC_SEL0:		.equ	P7SEL0
+LEDC_SEL1:		.equ	P7SEL1
+LEDC_INTE:		.equ	P7IE
+LEDC_INTES:		.equ	P7IES
+LEDC_INTF:		.equ	P7IFG
+LEDC_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", LEDC_Vector
 	.elseif (Board_ComCtlPort == 8)
-LEDC_DIN:				.equ	P8IN
-LEDC_DOUT:				.equ	P8OUT
-LEDC_DIR:				.equ	P8DIR
-LEDC_REN:				.equ	P8REN
-LEDC_SEL0:				.equ	P8SEL0
-LEDC_SEL1:				.equ	P8SEL1
-LEDC_INTE:				.equ	P8IE
-LEDC_INTES:				.equ	P8IES
-LEDC_INTF:				.equ	P8IFG
-LEDC_INTV:				.equ	P8IV
-LEDC_Vector:			.equ	PORT8_VECTOR
+LEDC_DIN:		.equ	P8IN
+LEDC_DOUT:		.equ	P8OUT
+LEDC_DIR:		.equ	P8DIR
+LEDC_REN:		.equ	P8REN
+LEDC_SEL0:		.equ	P8SEL0
+LEDC_SEL1:		.equ	P8SEL1
+LEDC_INTE:		.equ	P8IE
+LEDC_INTES:		.equ	P8IES
+LEDC_INTF:		.equ	P8IFG
+LEDC_INTV:		.equ	P8IV
+				.define	"PORT8_VECTOR", LEDC_Vector
 	.else
 		.emsg "Board_ComCtlPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_ComCtlPort
@@ -360,102 +360,102 @@ LEDC_Vector:			.equ	PORT8_VECTOR
 ;Now lets define the registers for the "No Scanning" leds.
 ; Not all of the registers are used, but they are set here for completeness
 	.if (Board_NoScanLedPort == 1)
-LEDNS_DIN:				.equ	P1IN				;Data input register of No-Scan leds
-LEDNS_DOUT:				.equ	P1OUT				;Data output register for
-LEDNS_DIR:				.equ	P1DIR				;Direction selection register for No-Scan
+LEDNS_DIN:		.equ	P1IN						;Data input register of No-Scan leds
+LEDNS_DOUT:		.equ	P1OUT						;Data output register for
+LEDNS_DIR:		.equ	P1DIR						;Direction selection register for No-Scan
 													; leds
-LEDNS_REN:				.equ	P1REN				;Resistor setup register for No-Scan leds
-LEDNS_SEL0:				.equ	P1SEL0				;Special function selection registers
-LEDNS_SEL1:				.equ	P1SEL1
-LEDNS_INTE:				.equ	P1IE				;Interrupt enable register for led groups
-LEDNS_INTES:			.equ	P1IES				;Interrupt edge selector register
-LEDNS_INTF:				.equ	P1IFG				;Interrupt flags register
-LEDNS_INTV:				.equ	P1IV				;Interrupt vector register
-LEDNS_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+LEDNS_REN:		.equ	P1REN						;Resistor setup register for No-Scan leds
+LEDNS_SEL0:		.equ	P1SEL0						;Special function selection registers
+LEDNS_SEL1:		.equ	P1SEL1
+LEDNS_INTE:		.equ	P1IE						;Interrupt enable register for led groups
+LEDNS_INTES:	.equ	P1IES						;Interrupt edge selector register
+LEDNS_INTF:		.equ	P1IFG						;Interrupt flags register
+LEDNS_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", LEDNS_Vector;Interrupt Vector Memory Segment
 	.elseif (Board_NoScanLedPort == 2)
-LEDNS_DIN:				.equ	P2IN
-LEDNS_DOUT:				.equ	P2OUT
-LEDNS_DIR:				.equ	P2DIR
-LEDNS_REN:				.equ	P2REN
-LEDNS_SEL0:				.equ	P2SEL0
-LEDNS_SEL1:				.equ	P2SEL1
-LEDNS_INTE:				.equ	P2IE
-LEDNS_INTES:			.equ	P2IES
-LEDNS_INTF:				.equ	P2IFG
-LEDNS_INTV:				.equ	P2IV
-LEDNS_Vector:			.equ	PORT2_VECTOR
+LEDNS_DIN:		.equ	P2IN
+LEDNS_DOUT:		.equ	P2OUT
+LEDNS_DIR:		.equ	P2DIR
+LEDNS_REN:		.equ	P2REN
+LEDNS_SEL0:		.equ	P2SEL0
+LEDNS_SEL1:		.equ	P2SEL1
+LEDNS_INTE:		.equ	P2IE
+LEDNS_INTES:	.equ	P2IES
+LEDNS_INTF:		.equ	P2IFG
+LEDNS_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", LEDNS_Vector
 	.elseif (Board_NoScanLedPort == 3)
-LEDNS_DIN:				.equ	P3IN
-LEDNS_DOUT:				.equ	P3OUT
-LEDNS_DIR:				.equ	P3DIR
-LEDNS_REN:				.equ	P3REN
-LEDNS_SEL0:				.equ	P3SEL0
-LEDNS_SEL1:				.equ	P3SEL1
-LEDNS_INTE:				.equ	P3IE
-LEDNS_INTES:			.equ	P3IES
-LEDNS_INTF:				.equ	P3IFG
-LEDNS_INTV:				.equ	P3IV
-LEDNS_Vector:			.equ	PORT3_VECTOR
+LEDNS_DIN:		.equ	P3IN
+LEDNS_DOUT:		.equ	P3OUT
+LEDNS_DIR:		.equ	P3DIR
+LEDNS_REN:		.equ	P3REN
+LEDNS_SEL0:		.equ	P3SEL0
+LEDNS_SEL1:		.equ	P3SEL1
+LEDNS_INTE:		.equ	P3IE
+LEDNS_INTES:	.equ	P3IES
+LEDNS_INTF:		.equ	P3IFG
+LEDNS_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", LEDNS_Vector
 	.elseif (Board_NoScanLedPort == 4)
-LEDNS_DIN:				.equ	P4IN
-LEDNS_DOUT:				.equ	P4OUT
-LEDNS_DIR:				.equ	P4DIR
-LEDNS_REN:				.equ	P4REN
-LEDNS_SEL0:				.equ	P4SEL0
-LEDNS_SEL1:				.equ	P4SEL1
-LEDNS_INTE:				.equ	P4IE
-LEDNS_INTES:			.equ	P4IES
-LEDNS_INTF:				.equ	P4IFG
-LEDNS_INTV:				.equ	P4IV
-LEDNS_Vector:			.equ	PORT4_VECTOR
+LEDNS_DIN:		.equ	P4IN
+LEDNS_DOUT:		.equ	P4OUT
+LEDNS_DIR:		.equ	P4DIR
+LEDNS_REN:		.equ	P4REN
+LEDNS_SEL0:		.equ	P4SEL0
+LEDNS_SEL1:		.equ	P4SEL1
+LEDNS_INTE:		.equ	P4IE
+LEDNS_INTES:	.equ	P4IES
+LEDNS_INTF:		.equ	P4IFG
+LEDNS_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", LEDNS_Vector
 	.elseif (Board_NoScanLedPort == 5)
-LEDNS_DIN:				.equ	P5IN
-LEDNS_DOUT:				.equ	P5OUT
-LEDNS_DIR:				.equ	P5DIR
-LEDNS_REN:				.equ	P5REN
-LEDNS_SEL0:				.equ	P5SEL0
-LEDNS_SEL1:				.equ	P5SEL1
-LEDNS_INTE:				.equ	P5IE
-LEDNS_INTES:			.equ	P5IES
-LEDNS_INTF:				.equ	P5IFG
-LEDNS_INTV:				.equ	P5IV
-LEDNS_Vector:			.equ	PORT5_VECTOR
+LEDNS_DIN:		.equ	P5IN
+LEDNS_DOUT:		.equ	P5OUT
+LEDNS_DIR:		.equ	P5DIR
+LEDNS_REN:		.equ	P5REN
+LEDNS_SEL0:		.equ	P5SEL0
+LEDNS_SEL1:		.equ	P5SEL1
+LEDNS_INTE:		.equ	P5IE
+LEDNS_INTES:	.equ	P5IES
+LEDNS_INTF:		.equ	P5IFG
+LEDNS_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", LEDNS_Vector
 	.elseif (Board_NoScanLedPort == 6)
-LEDNS_DIN:				.equ	P6IN
-LEDNS_DOUT:				.equ	P6OUT
-LEDNS_DIR:				.equ	P6DIR
-LEDNS_REN:				.equ	P6REN
-LEDNS_SEL0:				.equ	P6SEL0
-LEDNS_SEL1:				.equ	P6SEL1
-LEDNS_INTE:				.equ	P6IE
-LEDNS_INTES:			.equ	P6IES
-LEDNS_INTF:				.equ	P6IFG
-LEDNS_INTV:				.equ	P6IV
-LEDNS_Vector:			.equ	PORT6_VECTOR
+LEDNS_DIN:		.equ	P6IN
+LEDNS_DOUT:		.equ	P6OUT
+LEDNS_DIR:		.equ	P6DIR
+LEDNS_REN:		.equ	P6REN
+LEDNS_SEL0:		.equ	P6SEL0
+LEDNS_SEL1:		.equ	P6SEL1
+LEDNS_INTE:		.equ	P6IE
+LEDNS_INTES:	.equ	P6IES
+LEDNS_INTF:		.equ	P6IFG
+LEDNS_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", LEDNS_Vector
 	.elseif (Board_NoScanLedPort == 7)
-LEDNS_DIN:				.equ	P7IN
-LEDNS_DOUT:				.equ	P7OUT
-LEDNS_DIR:				.equ	P7DIR
-LEDNS_REN:				.equ	P7REN
-LEDNS_SEL0:				.equ	P7SEL0
-LEDNS_SEL1:				.equ	P7SEL1
-LEDNS_INTE:				.equ	P7IE
-LEDNS_INTES:			.equ	P7IES
-LEDNS_INTF:				.equ	P7IFG
-LEDNS_INTV:				.equ	P7IV
-LEDNS_Vector:			.equ	PORT7_VECTOR
+LEDNS_DIN:		.equ	P7IN
+LEDNS_DOUT:		.equ	P7OUT
+LEDNS_DIR:		.equ	P7DIR
+LEDNS_REN:		.equ	P7REN
+LEDNS_SEL0:		.equ	P7SEL0
+LEDNS_SEL1:		.equ	P7SEL1
+LEDNS_INTE:		.equ	P7IE
+LEDNS_INTES:	.equ	P7IES
+LEDNS_INTF:		.equ	P7IFG
+LEDNS_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", LEDNS_Vector
 	.elseif (Board_NoScanLedPort == 8)
-LEDNS_DIN:				.equ	P8IN
-LEDNS_DOUT:				.equ	P8OUT
-LEDNS_DIR:				.equ	P8DIR
-LEDNS_REN:				.equ	P8REN
-LEDNS_SEL0:				.equ	P8SEL0
-LEDNS_SEL1:				.equ	P8SEL1
-LEDNS_INTE:				.equ	P8IE
-LEDNS_INTES:			.equ	P8IES
-LEDNS_INTF:				.equ	P8IFG
-LEDNS_INTV:				.equ	P8IV
-LEDNS_Vector:			.equ	PORT8_VECTOR
+LEDNS_DIN:		.equ	P8IN
+LEDNS_DOUT:		.equ	P8OUT
+LEDNS_DIR:		.equ	P8DIR
+LEDNS_REN:		.equ	P8REN
+LEDNS_SEL0:		.equ	P8SEL0
+LEDNS_SEL1:		.equ	P8SEL1
+LEDNS_INTE:		.equ	P8IE
+LEDNS_INTES:	.equ	P8IES
+LEDNS_INTF:		.equ	P8IFG
+LEDNS_INTV:		.equ	P8IV
+				.define	"PORT8_VECTOR", LEDNS_Vector
 	.else
 		.emsg "Board_NoScanLedPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_NoScanLedPort
@@ -468,101 +468,101 @@ LEDNS_Vector:			.equ	PORT8_VECTOR
 ; defined here for completeness.
 
 	.if (Board_BuzzerPort == 1)
-BUZZP_DIN:				.equ	P1IN				;Data input register
-BUZZP_DOUT:				.equ	P1OUT				;Data output register for triggering Buzz
-BUZZP_DIR:				.equ	P1DIR				;Direction selection register
-BUZZP_REN:				.equ	P1REN				;Resistor setup register
-BUZZP_SEL0:				.equ	P1SEL0				;Special function selection registers
-BUZZP_SEL1:				.equ	P1SEL1
-BUZZP_INTE:				.equ	P1IE				;Interrupt enable register
-BUZZP_INTES:			.equ	P1IES				;Interrupt edge selector register
-BUZZP_INTF:				.equ	P1IFG				;Interrupt flags register
-BUZZP_INTV:				.equ	P1IV				;Interrupt vector register
-BUZZP_Vector:			.equ	PORT1_VECTOR		;Interrupt Vector Memory Segment
+BUZZP_DIN:		.equ	P1IN						;Data input register
+BUZZP_DOUT:		.equ	P1OUT						;Data output register for triggering Buzz
+BUZZP_DIR:		.equ	P1DIR						;Direction selection register
+BUZZP_REN:		.equ	P1REN						;Resistor setup register
+BUZZP_SEL0:		.equ	P1SEL0						;Special function selection registers
+BUZZP_SEL1:		.equ	P1SEL1
+BUZZP_INTE:		.equ	P1IE						;Interrupt enable register
+BUZZP_INTES:	.equ	P1IES						;Interrupt edge selector register
+BUZZP_INTF:		.equ	P1IFG						;Interrupt flags register
+BUZZP_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", BUZZP_Vector;Interrupt Vector Memory Segment
 	.elseif (Board_BuzzerPort == 2)
-BUZZP_DIN:				.equ	P2IN
-BUZZP_DOUT:				.equ	P2OUT
-BUZZP_DIR:				.equ	P2DIR
-BUZZP_REN:				.equ	P2REN
-BUZZP_SEL0:				.equ	P2SEL0
-BUZZP_SEL1:				.equ	P2SEL1
-BUZZP_INTE:				.equ	P2IE
-BUZZP_INTES:			.equ	P2IES
-BUZZP_INTF:				.equ	P2IFG
-BUZZP_INTV:				.equ	P2IV
-BUZZP_Vector:			.equ	PORT2_VECTOR
+BUZZP_DIN:		.equ	P2IN
+BUZZP_DOUT:		.equ	P2OUT
+BUZZP_DIR:		.equ	P2DIR
+BUZZP_REN:		.equ	P2REN
+BUZZP_SEL0:		.equ	P2SEL0
+BUZZP_SEL1:		.equ	P2SEL1
+BUZZP_INTE:		.equ	P2IE
+BUZZP_INTES:	.equ	P2IES
+BUZZP_INTF:		.equ	P2IFG
+BUZZP_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", BUZZP_Vector
 	.elseif (Board_BuzzerPort == 3)
-BUZZP_DIN:				.equ	P3IN
-BUZZP_DOUT:				.equ	P3OUT
-BUZZP_DIR:				.equ	P3DIR
-BUZZP_REN:				.equ	P3REN
-BUZZP_SEL0:				.equ	P3SEL0
-BUZZP_SEL1:				.equ	P3SEL1
-BUZZP_INTE:				.equ	P3IE
-BUZZP_INTES:			.equ	P3IES
-BUZZP_INTF:				.equ	P3IFG
-BUZZP_INTV:				.equ	P3IV
-BUZZP_Vector:			.equ	PORT3_VECTOR
+BUZZP_DIN:		.equ	P3IN
+BUZZP_DOUT:		.equ	P3OUT
+BUZZP_DIR:		.equ	P3DIR
+BUZZP_REN:		.equ	P3REN
+BUZZP_SEL0:		.equ	P3SEL0
+BUZZP_SEL1:		.equ	P3SEL1
+BUZZP_INTE:		.equ	P3IE
+BUZZP_INTES:	.equ	P3IES
+BUZZP_INTF:		.equ	P3IFG
+BUZZP_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", BUZZP_Vector
 	.elseif (Board_BuzzerPort == 4)
-BUZZP_DIN:				.equ	P4IN
-BUZZP_DOUT:				.equ	P4OUT
-BUZZP_DIR:				.equ	P4DIR
-BUZZP_REN:				.equ	P4REN
-BUZZP_SEL0:				.equ	P4SEL0
-BUZZP_SEL1:				.equ	P4SEL1
-BUZZP_INTE:				.equ	P4IE
-BUZZP_INTES:			.equ	P4IES
-BUZZP_INTF:				.equ	P4IFG
-BUZZP_INTV:				.equ	P4IV
-BUZZP_Vector:			.equ	PORT4_VECTOR
+BUZZP_DIN:		.equ	P4IN
+BUZZP_DOUT:		.equ	P4OUT
+BUZZP_DIR:		.equ	P4DIR
+BUZZP_REN:		.equ	P4REN
+BUZZP_SEL0:		.equ	P4SEL0
+BUZZP_SEL1:		.equ	P4SEL1
+BUZZP_INTE:		.equ	P4IE
+BUZZP_INTES:	.equ	P4IES
+BUZZP_INTF:		.equ	P4IFG
+BUZZP_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", BUZZP_Vector
 	.elseif (Board_BuzzerPort == 5)
-BUZZP_DIN:				.equ	P5IN
-BUZZP_DOUT:				.equ	P5OUT
-BUZZP_DIR:				.equ	P5DIR
-BUZZP_REN:				.equ	P5REN
-BUZZP_SEL0:				.equ	P5SEL0
-BUZZP_SEL1:				.equ	P5SEL1
-BUZZP_INTE:				.equ	P5IE
-BUZZP_INTES:			.equ	P5IES
-BUZZP_INTF:				.equ	P5IFG
-BUZZP_INTV:				.equ	P5IV
-BUZZP_Vector:			.equ	PORT5_VECTOR
+BUZZP_DIN:		.equ	P5IN
+BUZZP_DOUT:		.equ	P5OUT
+BUZZP_DIR:		.equ	P5DIR
+BUZZP_REN:		.equ	P5REN
+BUZZP_SEL0:		.equ	P5SEL0
+BUZZP_SEL1:		.equ	P5SEL1
+BUZZP_INTE:		.equ	P5IE
+BUZZP_INTES:	.equ	P5IES
+BUZZP_INTF:		.equ	P5IFG
+BUZZP_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", BUZZP_Vector
 	.elseif (Board_BuzzerPort == 6)
-BUZZP_DIN:				.equ	P6IN
-BUZZP_DOUT:				.equ	P6OUT
-BUZZP_DIR:				.equ	P6DIR
-BUZZP_REN:				.equ	P6REN
-BUZZP_SEL0:				.equ	P6SEL0
-BUZZP_SEL1:				.equ	P6SEL1
-BUZZP_INTE:				.equ	P6IE
-BUZZP_INTES:			.equ	P6IES
-BUZZP_INTF:				.equ	P6IFG
-BUZZP_INTV:				.equ	P6IV
-BUZZP_Vector:			.equ	PORT6_VECTOR
+BUZZP_DIN:		.equ	P6IN
+BUZZP_DOUT:		.equ	P6OUT
+BUZZP_DIR:		.equ	P6DIR
+BUZZP_REN:		.equ	P6REN
+BUZZP_SEL0:		.equ	P6SEL0
+BUZZP_SEL1:		.equ	P6SEL1
+BUZZP_INTE:		.equ	P6IE
+BUZZP_INTES:	.equ	P6IES
+BUZZP_INTF:		.equ	P6IFG
+BUZZP_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", BUZZP_Vector
 	.elseif (Board_BuzzerPort == 7)
-BUZZP_DIN:				.equ	P7IN
-BUZZP_DOUT:				.equ	P7OUT
-BUZZP_DIR:				.equ	P7DIR
-BUZZP_REN:				.equ	P7REN
-BUZZP_SEL0:				.equ	P7SEL0
-BUZZP_SEL1:				.equ	P7SEL1
-BUZZP_INTE:				.equ	P7IE
-BUZZP_INTES:			.equ	P7IES
-BUZZP_INTF:				.equ	P7IFG
-BUZZP_INTV:				.equ	P7IV
-BUZZP_Vector:			.equ	PORT7_VECTOR
+BUZZP_DIN:		.equ	P7IN
+BUZZP_DOUT:		.equ	P7OUT
+BUZZP_DIR:		.equ	P7DIR
+BUZZP_REN:		.equ	P7REN
+BUZZP_SEL0:		.equ	P7SEL0
+BUZZP_SEL1:		.equ	P7SEL1
+BUZZP_INTE:		.equ	P7IE
+BUZZP_INTES:	.equ	P7IES
+BUZZP_INTF:		.equ	P7IFG
+BUZZP_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", BUZZP_Vector
 	.elseif (Board_BuzzerPort == 8)
-BUZZP_DIN:				.equ	P8IN
-BUZZP_DOUT:				.equ	P8OUT
-BUZZP_DIR:				.equ	P8DIR
-BUZZP_REN:				.equ	P8REN
-BUZZP_SEL0:				.equ	P8SEL0
-BUZZP_SEL1:				.equ	P8SEL1
-BUZZP_INTE:				.equ	P8IE
-BUZZP_INTES:			.equ	P8IES
-BUZZP_INTF:				.equ	P8IFG
-BUZZP_INTV:				.equ	P8IV
-BUZZP_Vector:			.equ	PORT8_VECTOR
+BUZZP_DIN:		.equ	P8IN
+BUZZP_DOUT:		.equ	P8OUT
+BUZZP_DIR:		.equ	P8DIR
+BUZZP_REN:		.equ	P8REN
+BUZZP_SEL0:		.equ	P8SEL0
+BUZZP_SEL1:		.equ	P8SEL1
+BUZZP_INTE:		.equ	P8IE
+BUZZP_INTES:	.equ	P8IES
+BUZZP_INTF:		.equ	P8IFG
+BUZZP_INTV:		.equ	P8IV
+				.define	"PORT8_VECTOR", BUZZP_Vector
 	.else
 		.emsg "Board_BuzzerPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_BuzzerPort
