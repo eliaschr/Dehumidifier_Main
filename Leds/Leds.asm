@@ -86,13 +86,14 @@ LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
 			.bss	LedBuffer, LEDBUFSIZE	;Buffer that holds the led status of all groups
 			.bss	LedBlinkMask, LEDBUFSIZE;Mask of the leds to be blinking for each group
 
-			.global	LedPointer
-			.global	LedBlnkCnt
-			.global	LedTestCntr
-			.global	LedTestPtr
-			.global	LedTestBlnk
-			.global	LedBuffer
-			.global	LedBlinkMask
+;For debugging pursposes the variables should be global in order to be observable by CCS
+;			.global	LedPointer
+;			.global	LedBlnkCnt
+;			.global	LedTestCntr
+;			.global	LedTestPtr
+;			.global	LedTestBlnk
+;			.global	LedBuffer
+;			.global	LedBlinkMask
 
 
 ;----------------------------------------
@@ -290,7 +291,22 @@ LedsVal:
 			MOV.B	R4,&(LedBuffer + LEDOFFS)	;Set the leds status according to input param.
 			RET
 			
-			
+
+;----------------------------------------
+; LedsToggle
+; Toggles the leds that are specified at the input parameter
+; INPUT         : R4 contains the leds to be toggled
+; OUTPUT        : None
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : LedBuffer, LEDOFFS
+; OTHER FUNCS   : None
+LedsToggle:
+			XOR.B	R4,&(LedBuffer + LEDOFFS)	;Set the leds status according to input param.
+			RET
+
+
 ;----------------------------------------
 ; LedsBlinkAdd
 ; Starts blinking the leds defined at the input parameter
@@ -302,7 +318,7 @@ LedsVal:
 ; VARS USED     : LedBlinkMask, LEDOFFS
 ; OTHER FUNCS   : None
 LedsBlinkAdd:
-			BIS.B	R4,&(LedBlinkMask +LEDOFFS)	;Set the blinking mask
+			XOR.B	R4,&(LedBlinkMask +LEDOFFS)	;Toggle the leds in buffer
 			RET
 
 

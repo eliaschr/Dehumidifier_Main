@@ -88,6 +88,7 @@ LEDNSANION:				.equ	Board_LedNSAnion;Anionizer On led - Non scanning led
 						.global	LedsOn			;Lights up Leds
 						.global	LedsOff			;Lights off Leds
 						.global	LedsVal			;Set the Leds status
+						.global	LedsToggle		;Toggles some leds
 						.global	LedsBlinkAdd	;Adds some leds in the blinking mask
 						.global	LedsBlinkOff	;Removes some leds from the blinking mask
 						.global	LedsBlinkSet	;Sets the mask of the leds to be blinking

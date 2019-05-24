@@ -173,16 +173,70 @@ StartMe:
 StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 
 			CALL	#InitAllPorts				;Initialise all the port pins to a default
-			CALL	#KBDPInit					;Initialize the ports used by the keyboard
+			CALL	#KeyboardInit				;Initialize the keyboard subsystem
 			CALL	#LedsPInit					;Initialize the ports used by the leds
 			CALL	#InitSys					;Initialize clock, RAM and variables, eint
 
+			MOV		#KEYPOWER,R4
+			CALL	#KBDEINTKEYS				;Enable the keyboard Power key
 			CALL	#LedsEnable					;Start led scanning
-			CALL	#LedsTest					;Lets test the leds
+;			CALL	#LedsTest					;Lets test the leds
 
 			NOP
-ReSleep:	BIS		#CPUOFF | GIE,SR			;Sleep...
+ReSleep:	BIS		#LPM4 | GIE,SR				;Sleep...
 			NOP
+
+			;Lets prepare the keyboard loop
+MainLoop:	CALL	#KBDReadKey					;Is there a key to use?
+			JC		ReSleep						;No => Nothing to do
+
+			CMP.B	#KEYPOWER,R4				;Is it a normal press of the Power key?
+			JEQ		MainPwr						;Yes => Execute the key
+			CMP.B	#KEY_LPFLAG|KEYPOWER,R4		;Is it a long press of the Power key?
+			JEQ		MainLPower
+			CMP.B	#KEYHUMID,R4				;Is it a normal press of the Purifying key?
+			JEQ		MainHumid
+			CMP.B	#KEYTIMER,R4				;Is it a normal press of the Timer key?
+			JEQ		MainTimer
+			CMP.B	#KEYSPEED,R4				;Is it a normal press of the Speed key?
+			JEQ		MainSpeed
+			CMP.B	#KEYANION,R4				;Is it a normal press of the Anion key?
+			JEQ		MainAnion
+			CMP.B	#KEYSPEED|KEYANION,R4		;Is it a multipress of Anion|Speed?
+			JEQ		MainMulti
+			;Not supported keypress value!!!
+MainError:	MOV		#LEDTANK,R4					;Lets toggle the tank led
+			CALL	#LedsToggle
+			JMP		MainLoop
+
+MainLPower:	CALL	#LedsTest					;Lets test the leds
+			CALL	#KBDEINT					;Now enable all keys
+			JMP		MainLoop
+
+MainPwr:	MOV		#LEDPOWER,R4				;Lets toggle the power led
+			CALL	#LedsToggle
+			JMP		MainLoop
+
+MainHumid:	MOV		#LEDHUMID,R4				;Lets toggle the purifying led
+			CALL	#LedsToggle
+			JMP		MainLoop
+
+MainTimer:	MOV		#LEDTIMER,R4				;Lets toggle the timer led
+			CALL	#LedsToggle
+			JMP		MainLoop
+
+MainSpeed:	MOV		#LEDLOW,R4					;Lets toggle the low speed led
+			CALL	#LedsToggle
+			JMP		MainLoop
+
+MainAnion:	MOV		#LEDANION,R4				;Lets toggle the anion led
+			CALL	#LedsToggle
+			JMP		MainLoop
+
+MainMulti:	MOV		#LEDHIGH,R4					;Lets toggle the high led
+			CALL	#LedsToggle
+			JMP		MainLoop
+
 			JMP		ReSleep						;Nowhere to go...
 			NOP
 

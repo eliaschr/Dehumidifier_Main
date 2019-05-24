@@ -123,8 +123,13 @@ KBD_LPCOUNT:.equ	3						;Number of times the CCR0 will be triggered to
 			.bss	LastDelay, 2			;Last time interval used for key acceptance
 			.bss	LPCounter, 2			;The Long Press conter of seconds
 
-			.global KeyBuffer				;Only for testing purposes. CCS needs to have it
-											; global in order to watch it in memory pane
+;For  testing pursposes variables should be global in order to be observable by CCS
+			.global KeyBuffer
+			.global	KBStPoint
+			.global	KBuffLen
+			.global	LastKey
+			.global	LastDelay
+			.global	LPCounter
 
 
 ;----------------------------------------
@@ -151,6 +156,8 @@ KBD_LPCOUNT:.equ	3						;Number of times the CCR0 will be triggered to
 KBDPInit:	BIC.B	#KBD_KMASK,&KBD_SEL0	;Keyboard input pins are used as simple I/O pins
 			BIC.B	#KBD_KMASK,&KBD_SEL1
 			BIC.B	#KBD_KMASK,&KBD_DIR		;Keyboard pins function as inputs
+			BIS.B	#KBD_KMASK,&KBD_REN		;Internal resistors are enabled
+			BIS.B	#KBD_KMASK,&KBD_DOUT	;All resistors are pull-ups
 			BIC.B	#KBD_KMASK,&KBD_INTE	;Disable interrupts from this port pin
 			BIS.B	#KBD_KMASK,&KBD_INTES	;Interrupt is fired by a High-To-Low transition
 			;An example of a power key that provides the power through it, it usualy uses
@@ -218,8 +225,8 @@ KBDEINT:	BIS.B	#KBD_KMASK,&KBD_INTES	;Interrupt is fired by a High-To-Low transi
 ; Enables the keyboard interrupt.
 ; INPUT         : R4 contains the mask of the keys to be enabled
 ; OUTPUT        : None
-; REGS USED     : None
-; REGS AFFECTED : None
+; REGS USED     : R4
+; REGS AFFECTED : R4
 ; STACK USAGE   : None
 ; VARS USED     : KBD_INTE, KBD_INTES, KBD_INTF, KBD_KMASK
 ; OTHER FUNCS   : None
@@ -290,8 +297,13 @@ KBDKeyPress:
 			AND.B	&KBD_INTE,R4			;Filter only the enabled ones
 			BIT.B	#KBD_KMASK,R4			;Does this interrupt come from keyboard?
 			JZ		NoKeyPress				;No => Ignore this interrupt, Exit
-			MOV.B	&KBD_DIN,R4				;Get the current status of the keys
-			AND.B	#KBD_KMASK,R4			;Filter only the bits of the keys
+			MOV.B	&KBD_DIN,R4				;Get the current keypress
+			AND.B	#KBD_KMASK,R4			;Keep only the keys
+			BIS.B	&KBD_INTE,R4			;Assume enabled keys depressed
+			CMP.B	#KBD_KMASK,R4			;Is there any disabled key pressed?
+			JNZ		NoKeyPress				;No => then assume no keypress
+			MOV.B	&KBD_DIN,R4				;Get the current keypress
+			AND.B	#KBD_KMASK,R4			;Keep only the keys
 			BIC.B	#KBD_KMASK,&KBD_INTES	;Set temporarilly all keyboard interrupts to be
 											; triggered from a Low -> High transition (Break)
 			BIS.B	R4,&KBD_INTES			;Depressed keys' interrupts are triggered by a
@@ -330,13 +342,15 @@ KBRNotFnd:	XOR		R4,R4					;No key found or more than one keys are pressed,
 											; so clear R4
 
 			;A total key break means that the timer should be stopped
-KBDBreakK:	POP		R4
+KBDBreakK:
 NKPStop:	BIC 	#MC1,&KBDTCTL			;Stop TimerA running
 			BIC		#CCIE+CCIFG,&KBDTCCTL1	;Stop the interrupts from debouncing CCR
 			BIC		#CCIE+CCIFG,&KBDTCCTL0	;Stop the interrupts from Long Press CCR
 			MOV		#00000h,&KBDTR			;Clear TimerA counter register
 			MOV		#00000h,&LastKey		;Clear last key pressed
 NKPNoStop:	BIC.B	#KBD_KMASK,&KBD_INTF	;Reset any pending keyboard interrupts
+			MOV		&KBD_INTV,R4			;Dummy fetch of IV register to clear it
+			POP		R4
 			RETI							;And return to interrupted process
 
 KBRFoundR5:
@@ -359,6 +373,7 @@ KBRFound:	;R4 Contains the accepted keypress code or Zero if there are more than
 			BIS		#MC1,&KBDTCTL			;Start timer in continuous counting mode
 KBDSameKey:
 NoKeyPress:
+			MOV		&KBD_INTV,R4			;Dummy fetch of IV register to clear it
 			POP		R4						;Restore registers
 
 			RETI							;Exit interrupt
@@ -444,7 +459,9 @@ KBTNoStore:
 			BIT.B	#KEY_LPFLAG,&LastKey	;Did we perform long press already?
 			JNZ		KBTRetrigger			;Yes => Perform a normal retrigger
 			;Setup CCR0 to perform Long press evaluation
-			MOV		#00000h,&LPCounter		;Clear the long press coutner.
+			MOV		#KBD_LPCOUNT-1,&LPCounter;Set the long press coutner.
+											;-1 because the first itteration is already
+											; scheduled
 			MOV		#KBD_1sFACT,R4
 			MOV		R4,&LastDelay			;Set the last delay factor used
 			ADD		#KBDTR,R4				;Add now
