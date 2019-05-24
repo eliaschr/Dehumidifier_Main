@@ -55,8 +55,8 @@
 
 LEDBUFSIZE:	.equ	3						;Number of Led groups the system handles
 LEDFreq:	.equ	60						;The scanning frequency of the led groups in Hz
-LEDBLNKON:	.equ	30						;The number of scan counts a blinking led stays on
-LEDBLNKITVL:.equ	60						;The number of scan counts a blinking led repeats
+LEDBLNKON:	.equ	90						;The number of scan counts a blinking led stays on
+LEDBLNKITVL:.equ	180						;The number of scan counts a blinking led repeats
 											; blinking (Interval)
 LEDTESTTIME:.equ	20						;Number of scan itterations a led will be lit
 											; during test
@@ -85,6 +85,14 @@ LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
 			.bss	LedTestBlnk, 2			;Blinking flags
 			.bss	LedBuffer, LEDBUFSIZE	;Buffer that holds the led status of all groups
 			.bss	LedBlinkMask, LEDBUFSIZE;Mask of the leds to be blinking for each group
+
+			.global	LedPointer
+			.global	LedBlnkCnt
+			.global	LedTestCntr
+			.global	LedTestPtr
+			.global	LedTestBlnk
+			.global	LedBuffer
+			.global	LedBlinkMask
 
 
 ;----------------------------------------
@@ -120,11 +128,19 @@ LedTestArr:	;Test leds, one by one and then all together
 			;Test display 0 leds one by one and then all
 			.word	DISP0GRP|DISP_A, DISP0GRP|DISP_B, DISP0GRP|DISP_C, DISP0GRP|DISP_D
 			.word	DISP0GRP|DISP_E, DISP0GRP|DISP_F, DISP0GRP|DISP_G, DISP0GRP|DISP_DP
+			.word	DISP0GRP|0FFh			;Display 0 On
 			.word	DISP0GRP				;Display 0 off
 			;Test display 1 leds one by one and then all
 			.word	DISP1GRP|DISP_A, DISP1GRP|DISP_B, DISP1GRP|DISP_C, DISP1GRP|DISP_D
 			.word	DISP1GRP|DISP_E, DISP1GRP|DISP_F, DISP1GRP|DISP_G, DISP1GRP|DISP_DP
+			.word	DISP1GRP|0FFh			;Display 1 On
 			.word	DISP1GRP				;Display 1 off
+			.word	BLINKTEST|LEDGRP|LEDHUMID|LEDPOWER|LEDTANK|LEDTIMER|LEDLOW|LEDHIGH|LEDANION
+			.word	LEDGRP
+			.word	BLINKTEST|DISP0GRP|0FFh
+			.word	DISP0GRP
+			.word	BLINKTEST|DISP1GRP|0FFh
+			.word	DISP1GRP
 LedTestEnd:	.word	000h					;Marks the end of the testing array
 LedTestFunc:.word	LedsVal, Disp0SetLeds, Disp1SetLeds
 			.word	LedsBlinkSet, Disp0BlinkOn, Disp1BlinkOn
@@ -137,6 +153,7 @@ LedTestFunc:.word	LedsVal, Disp0SetLeds, Disp1SetLeds
 			.text
 ;Interrupt Service Routines must be global
 			.global	LedScan
+			.global	LEDTesterISR
 
 
 ;----------------------------------------
@@ -474,6 +491,26 @@ LedsTest:
 ;========================================
 
 ;----------------------------------------
+; LEDTimerISR
+; Dispatces the Led Interrupt according to the vector that triggered it
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : LedTester, LEDTIV
+LEDTimerISR:
+			ADD		&LEDTIV,PC				;Jump to the correct element of the ISR table
+			RETI							;Vector 0: No Interrupt
+			JMP		LedTester				;Vector 2: Timer CCR1 CCIFG
+			RETI							;Vector 4: Timer CCR2 CCIFG
+			RETI							;Vector 6: Reserved
+			RETI							;Vector 8: Reserved
+			RETI							;Vector A: TAIFG
+
+
+;----------------------------------------
 ; LedScan
 ; Interrupt Service Routine for Led Scanning, triggered by CCR0 of the Led Timer
 ; INPUT         : None
@@ -486,7 +523,7 @@ LedsTest:
 ;                 LEDNSANION, LEDNSTANK, LEDOFFS, LEDP_DOUT, LedPointer, LEDTANK
 ; OTHER FUNCS   : None
 LedScan:
-			BIC.B	#LEDC_MASK,&LEDC_DOUT		;Disable all led groups
+			BIS.B	#LEDC_MASK,&LEDC_DOUT		;Disable all led groups
 			PUSH	R4							;Need to keep registers unaffected (ISR)
 			PUSH	R5
 			PUSH	R6
@@ -604,9 +641,7 @@ LTISR_End:	BIC		#CCIE|CCIFG,&LEDTCCTL1		;Stop producing interrupts
 ; Interrupt Vectors
 ;========================================
 			.sect	LEDTVECTOR0				;Led Timer Interrupt Vector to scan the led groups
-;			.sect	TIMER3_A0_VECTOR
 			.short	LedScan
 
 			.sect	LEDTVECTOR1				;Led testing interrupt vector
-;			.sect	TIMER3_A1_VECTOR
-			.short	LedTester
+			.short	LEDTimerISR

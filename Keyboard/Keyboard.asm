@@ -373,7 +373,7 @@ NoKeyPress:
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
 ; VARS USED     : None
-; OTHER FUNCS   : KBRepInt
+; OTHER FUNCS   : KBDTIV, KBRepInt
 KBDTimerISR:
 			ADD		&KBDTIV,PC				;Jump to the correct element of the ISR table
 			RETI							;Vector 0: No Interrupt
