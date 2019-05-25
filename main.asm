@@ -34,6 +34,7 @@
 			.include "Definitions.h43"			;General definitions of the project
 			.include "Keyboard/Keyboard.h43"	;Keyboard library
 			.include "Leds/Leds.h43"			;Leds handling library
+			.include "Buzzer/Buzzer.h43"		;Buzzer handling library
 
 
 ;*********************************************************************************************
@@ -175,6 +176,7 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#InitAllPorts				;Initialise all the port pins to a default
 			CALL	#KeyboardInit				;Initialize the keyboard subsystem
 			CALL	#LedsPInit					;Initialize the ports used by the leds
+			CALL	#BuzzPInit					;Initialize the Buzzer subsystem
 			CALL	#InitSys					;Initialize clock, RAM and variables, eint
 
 			MOV		#KEYPOWER,R4
@@ -209,31 +211,39 @@ MainError:	MOV		#LEDTANK,R4					;Lets toggle the tank led
 			CALL	#LedsToggle
 			JMP		MainLoop
 
-MainLPower:	CALL	#LedsTest					;Lets test the leds
+MainLPower:	MOV		#004h,R4					;Start Beeping 4 times
+			CALL	#BeepMany
+			CALL	#LedsTest					;Lets test the leds
 			CALL	#KBDEINT					;Now enable all keys
 			JMP		MainLoop
 
 MainPwr:	MOV		#LEDPOWER,R4				;Lets toggle the power led
+			CALL	#BeepOnce					;Beep
 			CALL	#LedsToggle
 			JMP		MainLoop
 
 MainHumid:	MOV		#LEDHUMID,R4				;Lets toggle the purifying led
+			CALL	#BeepOnce					;Beep
 			CALL	#LedsToggle
 			JMP		MainLoop
 
 MainTimer:	MOV		#LEDTIMER,R4				;Lets toggle the timer led
+			CALL	#BeepOnce					;Beep
 			CALL	#LedsToggle
 			JMP		MainLoop
 
 MainSpeed:	MOV		#LEDLOW,R4					;Lets toggle the low speed led
+			CALL	#BeepOnce					;Beep
 			CALL	#LedsToggle
 			JMP		MainLoop
 
 MainAnion:	MOV		#LEDANION,R4				;Lets toggle the anion led
+			CALL	#BeepOnce					;Beep
 			CALL	#LedsToggle
 			JMP		MainLoop
 
 MainMulti:	MOV		#LEDHIGH,R4					;Lets toggle the high led
+			CALL	#BeepOnce					;Beep
 			CALL	#LedsToggle
 			JMP		MainLoop
 

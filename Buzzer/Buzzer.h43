@@ -47,7 +47,7 @@ __BUZZER_LIB_H43__:	.equ	1					;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-BUZZER_TIMERA:			.equ	3				;Timer to be used for Buzzer timing
+BUZZER_TIMERA:			.equ	1				;Timer to be used for Buzzer timing
 
 BUZZPIN:				.equ	Board_BuzzerPin	;Pin to be used for the buzzer
 
@@ -56,6 +56,8 @@ BUZZPIN:				.equ	Board_BuzzerPin	;Pin to be used for the buzzer
 ; Global Functions
 ;========================================
 						.global	BuzzPInit		;Initialize port pins used for the Buzzer
+						.global	BeepOnce		;Beeps once
+						.global	BeepMany		;Beeps many times
 
 
 	.endif										;__BUZZER_LIB_H43__

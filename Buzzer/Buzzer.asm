@@ -98,19 +98,20 @@ BuzzPInit:
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : BeepCnt, BeepRptT, BUZZCCR1, BUZZERITVL, BUZZERONT, BUZZP_DOUT, BUZZPIN,
-;                 BUZZTCCR1, BUZZTCCTL1, BUZZTCTL, BUZZTR
+; VARS USED     : BeepCnt, BeepRptT, BUZZERITVL, BUZZERONT, BUZZP_DOUT, BUZZPIN, BUZZTCCR1,
+;                 BUZZTCCTL1, BUZZTCTL, BUZZTR
 ; OTHER FUNCS   : None
 BeepOnce:
 			MOV		#BUZZERITVL - BUZZERONT,&BeepRptT;Set the repetition interval
 			MOV		#00001h,&BeepCnt		;Beep only once
 			MOV		#BUZZERONT,&BUZZTCCR1	;Set the On time
-			ADD		&BUZZTR,&BUZZCCR1		;The "On Time" counts from now
+			ADD		&BUZZTR,&BUZZTCCR1		;The "On Time" counts from now
 			BIS.B	#BUZZPIN,&BUZZP_DOUT	;Beep!
 			BIC		#CCIFG,&BUZZTCCTL1		;Clear spurious interrupts
 			BIS		#CCIE,&BUZZTCCTL1		;Enable interrupts from this timer CCR1
-			BIS		#MC1,&BUZZTCTL			;Start timer running in continuous mode
-			RETI
+			BIS		#TASSEL_1|MC1,&BUZZTCTL	;Start timer running in continuous mode. The
+											; timer is sourced by AClk (32768 Hz)
+			RET
 
 
 ;----------------------------------------
@@ -121,19 +122,20 @@ BeepOnce:
 ; REGS USED     : R4
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : BeepCnt, BeepRptT, BUZZCCR1, BUZZERITVL, BUZZERONT, BUZZP_DOUT, BUZZPIN,
-;                 BUZZTCCR1, BUZZTCCTL1, BUZZTCTL, BUZZTR
+; VARS USED     : BeepCnt, BeepRptT, BUZZERITVL, BUZZERONT, BUZZP_DOUT, BUZZPIN, BUZZTCCR1
+;                 BUZZTCCTL1, BUZZTCTL, BUZZTR
 ; OTHER FUNCS   : None
 BeepMany:
 			MOV		#BUZZERITVL - BUZZERONT,&BeepRptT;Set the repetition interval
-			MOV		#R4,&BuzzCnt			;Beep only once
+			MOV		R4,&BeepCnt			;Beep only once
 			MOV		#BUZZERONT,&BUZZTCCR1	;Set the On time
-			ADD		&BUZZTR,&BUZZCCR1		;The "On Time" counts from now
+			ADD		&BUZZTR,&BUZZTCCR1		;The "On Time" counts from now
 			BIS.B	#BUZZPIN,&BUZZP_DOUT	;Beep!
 			BIC		#CCIFG,&BUZZTCCTL1		;Clear spurious interrupts
 			BIS		#CCIE,&BUZZTCCTL1		;Enable interrupts from this timer CCR1
-			BIS		#MC1,&BUZZTCTL			;Start timer running in continuous mode
-			RETI
+			BIS		#TASSEL_1|MC1,&BUZZTCTL	;Start timer running in continuous mode. The
+											; timer is sourced by AClk (32768 Hz)
+			RET
 
 
 ;----------------------------------------
@@ -170,10 +172,10 @@ BuzzBeepISR:
 ; VARS USED     : 
 ; OTHER FUNCS   : BuzzOnInt
 BuzzOnInt:
-			BIT.B	#BUZZPIN,&BUZZ_DIN		;Do we sound?
+			BIT.B	#BUZZPIN,&BUZZP_DIN		;Do we sound?
 			JZ		BOI_Repeat				;No => Try to repeat beep
 			;Going to stop the buzzer beep
-			BIC.B	#BUZZPIN,&BUZZ_DOUT		;Stop beeping
+			BIC.B	#BUZZPIN,&BUZZP_DOUT	;Stop beeping
 			DEC		&BeepCnt				;One beep leSS
 			JNZ		BOI_NoStop				;Not finished => Do not stop the timer
 			;Finished -> Stop
@@ -186,8 +188,8 @@ BOI_NoStop:	ADD		&BeepRptT,&BUZZTCCR1	;Prepare for next interrupt
 			BIC		#CCIFG,&BUZZTCTL		;Clear the interrupt flag
 			RETI
 			
-BOI_Repeat:	BIS.B	#BUZZPIN,&BUZZ_DOUT		;Start beeping
-			ADD		#BEEPONT,&BUZZTCCR1		;Set the interval of sounding for On Time
+BOI_Repeat:	BIS.B	#BUZZPIN,&BUZZP_DOUT	;Start beeping
+			ADD		#BUZZERONT,&BUZZTCCR1	;Set the interval of sounding for On Time
 			BIC		#CCIFG,&BUZZTCTL		;Clear the interrupt flag
 			RETI
 

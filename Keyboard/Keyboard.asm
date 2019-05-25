@@ -124,12 +124,12 @@ KBD_LPCOUNT:.equ	3						;Number of times the CCR0 will be triggered to
 			.bss	LPCounter, 2			;The Long Press conter of seconds
 
 ;For  testing pursposes variables should be global in order to be observable by CCS
-			.global KeyBuffer
-			.global	KBStPoint
-			.global	KBuffLen
-			.global	LastKey
-			.global	LastDelay
-			.global	LPCounter
+;			.global KeyBuffer
+;			.global	KBStPoint
+;			.global	KBuffLen
+;			.global	LastKey
+;			.global	LastDelay
+;			.global	LPCounter
 
 
 ;----------------------------------------

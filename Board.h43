@@ -96,8 +96,8 @@ Board_DispDp:			.equ	Board_Led5			;Display Segment point
 ;----------------------------------------
 ; Buzzer Definitions
 ;========================================
-Board_BuzzerPort:		.equ	5					;Port the Buzzer is connected to
-Board_BuzzerPin:		.equ	BIT3				;Port pin used to drive the buzzer
+Board_BuzzerPort:		.equ	1					;Port the Buzzer is connected to
+Board_BuzzerPin:		.equ	BIT0				;Port pin used to drive the buzzer
 
 
 						.include "AutoDefs.h43"
