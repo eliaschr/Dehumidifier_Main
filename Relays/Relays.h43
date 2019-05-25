@@ -1,7 +1,7 @@
 ;*********************************************************************************************
-;* Buzzer Library                                                                            *
+;* Relays Library                                                                            *
 ;*-------------------------------------------------------------------------------------------*
-;* Buzzer.h43                                                                                *
+;* Relays.h43                                                                                *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -18,19 +18,22 @@
 ;* You should have received a copy of the GNU General Public License                         *
 ;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
 ;*-------------------------------------------------------------------------------------------*
-;* In this file all the necessary definitions for the buzzer handling library are  set and   *
-;* the functions that need to be available to the rest of the program are made global.       *
+;* In this file all the necessary definitions for the relays/actuators handling library are  *
+;* set and the functions that need to be available to the rest of the program are made       *
+;* global.                                                                                   *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
-			.title	"Buzzer Library"
+			.title	"Relays Library"
 			.width	94
 			.tab	4
 
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developper):                                       *
 ;* ----------------------------------------------------                                      *
-;* BUZZER_TIMERA : The number of the timer module to be used for buzzer functionality        *
-;* BUZZPIN       : The pin that the buzzer is connected                                      *
+;* RELPUMP  : The pin that drives the relay that sets the compressor on/off                  *                                                                                *
+;* RELFANLO : The pin that drives the relay that sets the fan speed to low                   *
+;* RELFANHI : The pin that drives the relay that sets the fan speed to high                  *
+;* RELANION : The pin that drives the relay that sets the anionizer on/off                   *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
@@ -39,35 +42,51 @@
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
-;* BuzzPInit : Initialize port pins used for the Buzzer                                      *
-;* BeepOnce  : Beeps once                                                                    *
-;* BeepMany  : Beeps many times                                                              *
+;* RelaysPInit : Initializes the port pins for the relays as outputs                         *
+;* RelPumpOn   : Powers on the compressor                                                    *
+;* RelPumpOff  : Powers off the compressor                                                   *
+;* RelFanOff   : Powers off the fan                                                          *
+;* RelFanLow   : Sets the fan at low speed                                                   *
+;* RelFanHigh  : Sets the fan at high speed                                                  *
+;* RelAnionOn  : Powers on the anionizer                                                     *
+;* RelAnionOff : Powers off the anionizer                                                    *
+;* RelGetState : Gets the state of the relays                                                *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
 ;* ------------------------------------------------                                          *
-;* Board_BuzzerPin : The pin number in a port that the buzzer is connected to.               *
+;* Board_RelayPump    : The pin that drives the relay that sets the compressor on/off        *
+;* Board_RelayFanLow  : The pin that drives the relay that sets the fan speed to low         *
+;* Board_RelayFanHigh : The pin that drives the relay that sets the fan speed to high        *
+;* Board_RelayAnion   : The pin that drives the relay that sets the anionizer on/off         *
 ;*                                                                                           *
 ;*********************************************************************************************
 
-	.if  ($isdefed("__BUZZER_LIB_H43__") == 0)
+	.if  ($isdefed("__RELAYS_LIB_H43__") == 0)
 
-__BUZZER_LIB_H43__:	.equ	1					;Must define this in order to avoid double
+__RELAYS_LIB_H43__:	.equ	1					;Must define this in order to avoid double
 												; inclusions
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-BUZZER_TIMERA:			.equ	1				;Timer to be used for Buzzer timing
-
-BUZZPIN:				.equ	Board_BuzzerPin	;Pin to be used for the buzzer
+RELPUMP:			.equ	Board_RelayPump		;Shortcut to compressor relay
+RELFANLO:			.equ	Board_RelayFanLow	;Shortcut to Fan-Low speed relay
+RELFANHI:			.equ	Board_RelayFanHigh	;Shortcut to Fan-High speed relay
+RELANION:			.equ	Board_RelayAnion	;Shortcut to Anionizer relay
 
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
-						.global	BuzzPInit		;Initialize port pins used for the Buzzer
-						.global	BeepOnce		;Beeps once
-						.global	BeepMany		;Beeps many times
+						.global	RelaysPInit		;Initialize port pins used for the Relays
+						.global	RelPumpOn		;Enables the Compressor
+						.global	RelPumpOff		;Disables the Compressor
+						.global	RelFanOff		;Stops the Fan
+						.global	RelFanLow		;Fan to Low Speed
+						.global	RelFanHigh		;Fan to High Speed
+						.global	RelAnionOn		;Enables the Anionizer
+						.global	RelAnionOff		;Disables the Anionizer
+						.global	RelGetState		;Gets the current state of all relays
 
 
-	.endif										;__BUZZER_LIB_H43__
+	.endif										;__RELAYS_LIB_H43__

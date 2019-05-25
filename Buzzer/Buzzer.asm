@@ -28,13 +28,24 @@
 ;*===========================================================================================*
 ;* Names And Values:                                                                         *
 ;* ------------------                                                                        *
+;* BUZZERONT  : Time the buzzer sounds when beeping in measures of Timer Tick (32768 hZ)     *
+;* BUZZERITVL : The interval from one beep to another whe the system needs repetitive beeps. *
+;*              The time is set as the number of timer ticks (32768 Hz)                      *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
 ;* -----------                                                                               *
+;* BeepCnt  : The number of times the buzzer will sound                                      *
+;* BeepRptT : The repetition interval to be used                                             *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
+;* --------------------------                                                                *
+;* BuzzPInit   : Initializes the port pin that triggers the Buzzer.                          *
+;* BeepOnce    : Starts the buzzer to beep once.                                             *
+;* BeepMany    : Makes the buzzer sound as many times as R4 specifies.                       *
+;* BuzzBeepISR : Dispatcher for the interrupts triggered by the Buzzer TimerA                *
+;* BuzzOnInt   : Interrupt to produce timings for the buzzer to produce one or many beeps    *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
@@ -58,7 +69,7 @@ BUZZERITVL:	.equ	08000h					;Time interval for repetitive beeps in number of
 ; Variables Definitions
 ;-------------------------------------------
 			.bss	BeepCnt, 2				;The number of times the buzzer will sound
-			.bss	BeepRptT, 2				;The repetiotion interval to be used
+			.bss	BeepRptT, 2				;The repetition interval to be used
 
 
 ;----------------------------------------
@@ -116,8 +127,8 @@ BeepOnce:
 
 ;----------------------------------------
 ; BeepMany
-; Initializes the port pin that triggers the Buzzer.
-; INPUT         : R4 conains the number of beeps
+; Makes the buzzer sound as many times as R4 specifies.
+; INPUT         : R4 contains the number of beeps
 ; OUTPUT        : None
 ; REGS USED     : R4
 ; REGS AFFECTED : None

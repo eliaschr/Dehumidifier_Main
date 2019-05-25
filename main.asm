@@ -35,6 +35,7 @@
 			.include "Keyboard/Keyboard.h43"	;Keyboard library
 			.include "Leds/Leds.h43"			;Leds handling library
 			.include "Buzzer/Buzzer.h43"		;Buzzer handling library
+			.include "Relays/Relays.h43"		;Relays handling library
 
 
 ;*********************************************************************************************
@@ -177,12 +178,12 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#KeyboardInit				;Initialize the keyboard subsystem
 			CALL	#LedsPInit					;Initialize the ports used by the leds
 			CALL	#BuzzPInit					;Initialize the Buzzer subsystem
+			CALL	#RelaysPInit				;Initialize the Relays subsystem
 			CALL	#InitSys					;Initialize clock, RAM and variables, eint
 
 			MOV		#KEYPOWER,R4
-			CALL	#KBDEINTKEYS				;Enable the keyboard Power key
+			CALL	#KBDEINTKEYS				;Enable only the keyboard Power key
 			CALL	#LedsEnable					;Start led scanning
-;			CALL	#LedsTest					;Lets test the leds
 
 			NOP
 ReSleep:	BIS		#LPM4 | GIE,SR				;Sleep...

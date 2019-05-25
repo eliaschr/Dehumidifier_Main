@@ -568,4 +568,113 @@ BUZZP_INTV:		.equ	P8IV
 	.endif											;Board_BuzzerPort
 
 
+;----------------------------------------
+; Relays Definitions
+;========================================
+;In the system there are four relays that power up the high current loads. Here are the
+; definitions that define the port registers according to the selected by the Board.h43
+; definitions.
+; Not all of the registers are used, but they are set here for completeness
+
+	.if (Board_RelPort == 1)
+RELP_DIN:		.equ	P1IN						;Data input register
+RELP_DOUT:		.equ	P1OUT						;Data output register for enabling relays
+RELP_DIR:		.equ	P1DIR						;Direction selection register
+RELP_REN:		.equ	P1REN						;Resistor setup register
+RELP_SEL0:		.equ	P1SEL0						;Special function selection registers
+RELP_SEL1:		.equ	P1SEL1
+RELP_INTE:		.equ	P1IE						;Interrupt enable register
+RELP_INTES:		.equ	P1IES						;Interrupt edge selector register
+RELP_INTF:		.equ	P1IFG						;Interrupt flags register
+RELP_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", RELP_Vector;Interrupt Vector Memory Segment
+	.elseif (Board_RelPort == 2)
+RELP_DIN:		.equ	P2IN
+RELP_DOUT:		.equ	P2OUT
+RELP_DIR:		.equ	P2DIR
+RELP_REN:		.equ	P2REN
+RELP_SEL0:		.equ	P2SEL0
+RELP_SEL1:		.equ	P2SEL1
+RELP_INTE:		.equ	P2IE
+RELP_INTES:		.equ	P2IES
+RELP_INTF:		.equ	P2IFG
+RELP_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", RELP_Vector
+	.elseif (Board_RelPort == 3)
+RELP_DIN:		.equ	P3IN
+RELP_DOUT:		.equ	P3OUT
+RELP_DIR:		.equ	P3DIR
+RELP_REN:		.equ	P3REN
+RELP_SEL0:		.equ	P3SEL0
+RELP_SEL1:		.equ	P3SEL1
+RELP_INTE:		.equ	P3IE
+RELP_INTES:		.equ	P3IES
+RELP_INTF:		.equ	P3IFG
+RELP_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", RELP_Vector
+	.elseif (Board_RelPort == 4)
+RELP_DIN:		.equ	P4IN
+RELP_DOUT:		.equ	P4OUT
+RELP_DIR:		.equ	P4DIR
+RELP_REN:		.equ	P4REN
+RELP_SEL0:		.equ	P4SEL0
+RELP_SEL1:		.equ	P4SEL1
+RELP_INTE:		.equ	P4IE
+RELP_INTES:		.equ	P4IES
+RELP_INTF:		.equ	P4IFG
+RELP_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", RELP_Vector
+	.elseif (Board_RelPort == 5)
+RELP_DIN:		.equ	P5IN
+RELP_DOUT:		.equ	P5OUT
+RELP_DIR:		.equ	P5DIR
+RELP_REN:		.equ	P5REN
+RELP_SEL0:		.equ	P5SEL0
+RELP_SEL1:		.equ	P5SEL1
+RELP_INTE:		.equ	P5IE
+RELP_INTES:		.equ	P5IES
+RELP_INTF:		.equ	P5IFG
+RELP_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", RELP_Vector
+	.elseif (Board_RelPort == 6)
+RELP_DIN:		.equ	P6IN
+RELP_DOUT:		.equ	P6OUT
+RELP_DIR:		.equ	P6DIR
+RELP_REN:		.equ	P6REN
+RELP_SEL0:		.equ	P6SEL0
+RELP_SEL1:		.equ	P6SEL1
+RELP_INTE:		.equ	P6IE
+RELP_INTES:		.equ	P6IES
+RELP_INTF:		.equ	P6IFG
+RELP_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", RELP_Vector
+	.elseif (Board_RelPort == 7)
+RELP_DIN:		.equ	P7IN
+RELP_DOUT:		.equ	P7OUT
+RELP_DIR:		.equ	P7DIR
+RELP_REN:		.equ	P7REN
+RELP_SEL0:		.equ	P7SEL0
+RELP_SEL1:		.equ	P7SEL1
+RELP_INTE:		.equ	P7IE
+RELP_INTES:		.equ	P7IES
+RELP_INTF:		.equ	P7IFG
+RELP_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", RELP_Vector
+	.elseif (Board_RelPort == 8)
+RELP_DIN:		.equ	P8IN
+RELP_DOUT:		.equ	P8OUT
+RELP_DIR:		.equ	P8DIR
+RELP_REN:		.equ	P8REN
+RELP_SEL0:		.equ	P8SEL0
+RELP_SEL1:		.equ	P8SEL1
+RELP_INTE:		.equ	P8IE
+RELP_INTES:		.equ	P8IES
+RELP_INTF:		.equ	P8IFG
+RELP_INTV:		.equ	P8IV
+				.define	"PORT8_VECTOR", BUZZP_Vector
+	.else
+		.emsg "Board_RelPort definition in Board.h43 file has to be between 1 and 8"
+	.endif											;Board_RelPort
+
+
 	.endif											;__BOARD_AUTO_DEFS__

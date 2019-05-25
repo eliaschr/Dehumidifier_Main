@@ -1,7 +1,7 @@
 ;*********************************************************************************************
-;* Global Definitions                                                                        *
+;* Relays Library                                                                            *
 ;*-------------------------------------------------------------------------------------------*
-;* Definitions.h43                                                                           *
+;* RelaysAutoDefs.h43                                                                        *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -18,22 +18,34 @@
 ;* You should have received a copy of the GNU General Public License                         *
 ;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
 ;*-------------------------------------------------------------------------------------------*
-;* Global definitions the rest of the files should be aware of.                              *
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
 ;*********************************************************************************************
-;* Note: Correct format of the file is presented when tab space is defined as 4
-			.title	"Global Definitions"
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Relays Library"
 			.width	94
 			.tab	4
 
-	.if  ($isdefed("__MAIN_DEFINITIONS__") == 0)
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;*                                                                                           *
+;*********************************************************************************************
 
-__MAIN_DEFINITIONS__:		.equ	1				;Need to define this in order to avoid
-													; double inclusions
+	.if ($isdefed("__RELAYS_LIB_AUTO_DEFS__") == 0)
+	.if ($isdefed("__RELAYS_LIB_H43__") == 0)
+		.emsg "Relays.h43 must have been included in the file before RelaysAutoDefs.h43"
+	.endif
+
+__RELAYS_LIB_AUTO_DEFS__:.equ	1				;Need to define this in order to avoid
+												; double inclusions
+
 ;----------------------------------------
-; Definitions
+; Relays Definitions
 ;========================================
-ACLKFreq:	.equ	32768							;AClk Clock Frequency in Hz
-MAINFreq:	.equ	8000000							;MClk Clock Frequency in Hz
 
-
-	.endif											;__MAIN_DEFINITIONS__
+	.endif											;__RELAYS_LIB_AUTO_DEFS__

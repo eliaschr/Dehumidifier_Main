@@ -28,15 +28,72 @@
 			.tab	4
 
 ;*===========================================================================================*
+;* Names And Values: (Defined by the Developer)                                              *
+;* ---------------------------------------------                                             *
+;* LEDBUFSIZE  : Number of Led groups the system handles                                     *
+;* LEDFreq     : The scanning frequency of the led groups in Hz                              *
+;* LEDBLNKON   : The number of scan counts a blinking led stays on                           *
+;* LEDBLNKITVL : The number of scan counts a blinking led repeats blinking (Interval)        *
+;* LEDTESTTIME : Number of scan itterations a led will be lit during test                    *
+;* LEDTESTBLT  : Number of scan itterations when blinking is tested                          *
+;*                                                                                           *
+;*===========================================================================================*
 ;* Names And Values:                                                                         *
 ;* ------------------                                                                        *
+;* LEDCYCLE    : The CCR0 setting to achieve the scanning timing                             *
+;* LEDOFFS     : Offset in buffer that contains the Led group data                           *
+;* DISP0OFFS   : Offset in buffer that contains the first display's led pattern              *
+;* DISP1OFFS   : Offset in buffer that contains the second display's led pattern             *
+;* LEDGROUPS   : Number of led groups to be scanned                                          *
+;* LEDNS_MASK  : The mask of the leds used at no scanning port                               *
+;* LEDGRP      : Value to be OR'd at the testing data to define the Leds group               *
+;* DISP0GRP    : Value to be OR'd at the testing data to define the 1st display's group      *
+;* DISP1GRP    : Value to be OR'd at the testing data to define the 2nd display's group      *
+;* BLINKTEST   : Mask bit to be OR'd at the testing data to define blinking test             *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
 ;* -----------                                                                               *
+;* LedPointer   : Pointer to the current group byte in buffer                                *
+;* LedBlnkCnt   : Led blinker counter                                                        *
+;* LedTestCntr  : Led Test Scanning Counter                                                  *
+;* LedTestPtr   : Pointer to data during led test                                            *
+;* LedTestBlnk  : Blinking flags                                                             *
+;* LedBuffer    : Buffer that holds the led status of all groups                             *
+;* LedBlinkMask : Mask of the leds to be blinking for each group                             *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
+;* --------------------------                                                                *
+;* LedsPInit     : Initializes the port pins the Leds and Displays are connected to.         *
+;* LedsEnable    : Initializes the associated timer module and starts it counting            *
+;* LedsDisable   : Initializes the associated timer module and starts it counting            *
+;* LedsOn        : Lights up the selected leds                                               *
+;* LedsOff       : Lights off the selected leds                                              *
+;* LedsVal       : Sets the leds status as described at the input parameter                  *
+;* LedsToggle    : Toggles the leds that are specified at the input parameter                *
+;* LedsBlinkAdd  : Starts blinking the leds defined at the input parameter                   *
+;* LedsBlinkOff  : Stops led blinking of the defined leds                                    *
+;* LedsBlinkSet  : Sets the leds blink status as described at the input parameter            *
+;* Disp0BlinkOn  : Starts blinking of Display 0                                              *
+;* Disp0BlinkOff : Stops Display 0 blinking                                                  *
+;* Disp1BlinkOn  : Starts blinking Display 1                                                 *
+;* Disp1BlinkOff : Stops Display 1 blinking                                                  *
+;* Disp0SetDigit : Sets the digit to be displayed by Display 0                               *
+;* Disp1SetDigit : Sets the digit to be displayed by Display 1                               *
+;* Disp0SetLeds  : Sets the leds of Display 0 according to the input parameter               *
+;* Disp1SetLeds  : Sets the leds of Display 0 according to the input parameter               *
+;* LedsTest      : Starts a led test                                                         *
+;* LEDTimerISR   : Dispatces the Led Interrupt according to the vector that triggered it     *
+;* LedScan       : Interrupt Service Routine for Led Scanning, triggered by CCR0 of the Led  *
+;*                  Timer                                                                    *
+;* LedTester     : Interrupt Service Routine for Led testing, triggered by CCR1 of the Led   *
+;*                  Timer                                                                    *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;* ACLKFreq : The frequency of the timer                                                     *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
@@ -72,7 +129,7 @@ DISP1OFFS:	.equ	(DISP0OFFS +1)
 LEDGROUPS:	.equ	(DISP1OFFS +1)			;Number of groups supported
 
 ;Following is the mask of the leds used at no scanning port
-LEDNS_MASK:	.equ	(Board_LedNSTank | Board_LedNSAnion)
+LEDNS_MASK:	.equ	(LEDNSTANK | LEDNSANION)
 
 
 ;*********************************************************************************************
@@ -434,7 +491,7 @@ Disp0SetDigit:
 
 ;----------------------------------------
 ; Disp1SetLeds
-; Sets the digit to be displayed by Display  1
+; Sets the digit to be displayed by Display 1
 ; INPUT         : R4 contains the digit to be desplayed on display 1
 ; OUTPUT        : None
 ; REGS USED     : R4

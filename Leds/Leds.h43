@@ -30,14 +30,77 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developper):                                       *
 ;* ----------------------------------------------------                                      *
+;* LED_TIMERA  : Timer to be used for LED scanning                                           *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* LEDCOM      : The common pin of the Leds group                                            *
+;* DISP0COM    : The common pin of the first 7-Segment Display                               *
+;* DISP1COM    : The common pin of the second 7-Segment                                      *
+;* DISP_A      : Segment A of a display                                                      *
+;* DISP_B      : Segment B of a display                                                      *
+;* DISP_C      : Segment C of a display                                                      *
+;* DISP_D      : Segment D of a display                                                      *
+;* DISP_E      : Segment E of a display                                                      *
+;* DISP_F      : Segment F of a display                                                      *
+;* DISP_G      : Segment G of a display                                                      *
+;* DISP_DP     : Display point of a display                                                  *
+;* DIGIT_EMPTY : The digit to send to displays in order to clear them                        *
+;* LEDHUMID    : Purifying led                                                               *
+;* LEDPOWER    : Power On led                                                                *
+;* LEDTANK     : Tank Full led                                                               *
+;* LEDNSTANK   : Tank Full led - Non scanning led                                            *
+;* LEDTIMER    : Timer On led                                                                *
+;* LEDLOW      : Low Fan Speed led                                                           *
+;* LEDHIGH     : High Fan Speed led                                                          *
+;* LEDANION    : Anionizer On led                                                            *
+;* LEDNSANION  : Anionizer On led - Non scanning led                                         *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
+;* LedsPInit     : Initialize port pins used by Leds/Displays                                *
+;* LedsEnable    : Starts the scanning of the leds                                           *
+;* LedsDisable   : Stops the scanning of the leds and lights off                             *
+;* LedsOn        : Lights up Leds                                                            *
+;* LedsOff       : Lights off Leds                                                           *
+;* LedsVal       : Set the Leds status                                                       *
+;* LedsToggle    : Toggles some leds                                                         *
+;* LedsBlinkAdd  : Adds some leds in the blinking mask                                       *
+;* LedsBlinkOff  : Removes some leds from the blinking mask                                  *
+;* LedsBlinkSet  : Sets the mask of the leds to be blinking                                  *
+;* Disp0BlinkOn  : Starts the blinking of display 1                                          *
+;* Disp0BlinkOff : Stops display 1 blinking                                                  *
+;* Disp1BlinkOn  : Starts the blinking of display 2                                          *
+;* Disp1BlinkOff : Stops display 2 blinking                                                  *
+;* Disp0SetDigit : Sets the display 0 digit                                                  *
+;* Disp1SetDigit : Sets the display 1 digit                                                  *
+;* LedsTest      : Tests the led subsystem                                                   *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;* Board_LedCom     : The common pin of the Leds group                                       *
+;* Board_DispCom0   : The common pin of the first 7-Segment Display                          *
+;* Board_DispCom1   : The common pin of the second 7-Segment Display                         *
+;* Board_DispA      : Segment A of a display                                                 *
+;* Board_DispB      : Segment B of a display                                                 *
+;* Board_DispC      : Segment C of a display                                                 *
+;* Board_DispD      : Segment D of a display                                                 *
+;* Board_DispE      : Segment E of a display                                                 *
+;* Board_DispF      : Segment F of a display                                                 *
+;* Board_DispG      : Segment G of a display                                                 *
+;* Board_DispDp     : Display point of a display                                             *
+;* Board_LedPump    : Purifying led                                                          *
+;* Board_LedPower   : Power On led                                                           *
+;* Board_LedTank    : Tank Full led                                                          *
+;* Board_LedNSTank  : Tank Full led - Non scanning led                                       *
+;* Board_LedTimer   : Timer On led                                                           *
+;* Board_LedLow     : Low Fan Speed led                                                      *
+;* Board_LedHigh    : High Fan Speed led                                                     *
+;* Board_LedAnion   : Anionizer On led                                                       *
+;* Board_LedNSAnion : Anionizer On led - Non scanning led                                    *
 ;*                                                                                           *
 ;*********************************************************************************************
 
@@ -53,8 +116,8 @@ LED_TIMERA:				.equ	3				;Timer to be used for LED scanning
 LEDCOM:					.equ	Board_LedCom	;The common pin of the Leds group
 DISP0COM:				.equ	Board_DispCom0	;The common pin of the first 7-Segment Display
 DISP1COM:				.equ	Board_DispCom1	;The common pin of the second 7-Segment
-
 												; Display
+
 DISP_A:					.equ	Board_DispA		;Segment A of a display
 DISP_B:					.equ	Board_DispB		;Segment B of a display
 DISP_C:					.equ	Board_DispC		;Segment C of a display

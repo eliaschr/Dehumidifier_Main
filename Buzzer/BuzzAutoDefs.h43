@@ -31,6 +31,24 @@
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* BUZZTCTL     : The associated Timer Control register                                      *
+;* BUZZTCCTL0   : The associated Timer CCR0 Control register                                 *
+;* BUZZTCCTL1   : The associated Timer CCR1 Control register                                 *
+;* BUZZTCCTL2   : The associated Timer CCR2 Control register (Set only if applicable)        *
+;* BUZZTR       : The associated Timer Counter register                                      *
+;* BUZZTCCR0    : The associated Timer CCR0 Counter register                                 *
+;* BUZZTCCR1    : The associated Timer CCR1 Counter register                                 *
+;* BUZZTCCR2    : The associated Timer CCR2 Counter register (Set only if applicable)        *
+;* BUZZTEX0     : The associated Timer Extension register                                    *
+;* BUZZTIV      : The associated Interrupt Vector number that triggered an interrupt         *
+;* BUZZTVECTOR0 : The vector section of the CCR0 interrupt service routine pointer           *
+;* BUZZTVECTOR1 : The vector section of the interrupt service routine pointer of the rest of *
+;*                 available interrupt triggers                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;* BUZZER_TIMERA : The timer to be associated with the buzzer library.                       *
 ;*                                                                                           *
 ;*********************************************************************************************
 

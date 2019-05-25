@@ -31,6 +31,26 @@
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* LEDP_MASK   : All pins of the port are used for the leds                                  *
+;* LEDC_MASK   : The mask of all pins used for the group selection                           *
+;* LEDTCTL     : The associated Timer Control register                                       *
+;* LEDTCCTL0   : The associated Timer CCR0 Control register                                  *
+;* LEDTCCTL1   : The associated Timer CCR1 Control register                                  *
+;* LEDTCCTL2   : The associated Timer CCR2 Control register (Set only if applicable)         *
+;* LEDTR       : The associated Timer Counter register                                       *
+;* LEDTCCR0    : The associated Timer CCR0 Counter register                                  *
+;* LEDTCCR1    : The associated Timer CCR1 Counter register                                  *
+;* LEDTCCR2    : The associated Timer CCR2 Counter register (Set only if applicable)         *
+;* LEDTEX0     : The associated Timer Extension register                                     *
+;* LEDTIV      : The associated Interrupt Vector number that triggered an interrupt          *
+;* LEDTVECTOR0 : The vector section of the CCR0 interrupt service routine pointer            *
+;* LEDTVECTOR1 : The vector section of the interrupt service routine pointer of the rest of  *
+;*                available interrupt triggers                                               *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;* LED_TIMERA : The number of the associated TimerA module                                   *
 ;*                                                                                           *
 ;*********************************************************************************************
 

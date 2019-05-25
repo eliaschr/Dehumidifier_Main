@@ -100,5 +100,16 @@ Board_BuzzerPort:		.equ	1					;Port the Buzzer is connected to
 Board_BuzzerPin:		.equ	BIT0				;Port pin used to drive the buzzer
 
 
+;----------------------------------------
+; Relays Definitions
+;========================================
+Board_RelPort:			.equ	2					;The port the relays are connected
+
+Board_RelayPump:		.equ	BIT0				;Relay that sets the compressor on
+Board_RelayFanLow:		.equ	BIT1				;Relay that enables the fan at low speed
+Board_RelayFanHigh:		.equ	BIT2				;Relay that enables the fan at high speed
+Board_RelayAnion:		.equ	BIT3				;Relay that enables the Anionizer
+
+
 						.include "AutoDefs.h43"
 	.endif											;__BOARD_DEFS__
