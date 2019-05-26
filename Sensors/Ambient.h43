@@ -1,0 +1,71 @@
+;*********************************************************************************************
+;* Ambient Temperature and Humidity Library                                                  *
+;*-------------------------------------------------------------------------------------------*
+;* Ambient.h43                                                                               *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* In this file all the necessary definitions for the measurements of the ambient humidity   *
+;* and temperature.                                                                          *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Ambient Temperature and Humidity Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library (Set by the developper):                                       *
+;* ----------------------------------------------------                                      *
+;* I2CPORT : The eUSCI_B module to be used as I2C port that communicates with the sensor     *
+;*                                                                                           *
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Global functions of the Library:                                                          *
+;* ---------------------------------                                                         *
+;* AmbPInit   : Initialize the port pins used as I2C                                         *
+;* AmbI2CInit : Initializes the eUSCI as I2C                                                 *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if  ($isdefed("__AMBIENT_H43__") == 0)
+
+__AMBIENT_H43__:		.equ	1				;Must define this in order to avoid double
+												; inclusions
+;----------------------------------------
+; Global Definitions
+;========================================
+I2CPORT:				.equ	0				;Number of eUSCI_B serial module to use for
+												; the sensor
+I2COWNADDR:				.equ	076h			;The address of MSP if it was a slave (7 bits)
+AMB_BPS:				.equ	400000			;Bps of the I2C bus
+
+
+;----------------------------------------
+; Global Functions
+;========================================
+						.global	AmbPInit		;Initialize the port pins used as I2C
+						.global	AmbI2CInit		;Initializes the eUSCI as I2C
+
+
+
+	.endif										;__AMBIENT_H43__

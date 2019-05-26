@@ -1,0 +1,231 @@
+;*********************************************************************************************
+;* Ambient Temperature and Humidity Library                                                  *
+;*-------------------------------------------------------------------------------------------*
+;* AmbientAutoDefs.h43                                                                       *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
+;* Example of automatic definitions is the computation of interrupt vectors according to     *
+;* the I2C module used.                                                                      *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Ambient Temperature and Humidity Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;* AMB_SCL      : I2C Clock pin in port                                                      *
+;* AMB_SDA      : I2C Data pin in port                                                       *
+;* AMB_SEL0VAL  : SEL0 value to enable I2C                                                   *
+;* AMB_SEL1VAL  : SEL1 value to enable I2C                                                   *
+;* AMBP_DIN     : Data input register                                                        *
+;* AMBP_DOUT    : Data output register                                                       *
+;* AMBP_DIR     : Direction selection register                                               *
+;* AMBP_REN     : Resistor setup register                                                    *
+;* AMBP_SEL0    : Special function selection register 0                                      *
+;* AMBP_SEL1    : Special function selection register 1                                      *
+;* AMBP_INTE    : Interrupt enable register                                                  *
+;* AMBP_INTES   : Interrupt edge selector register                                           *
+;* AMBP_INTF    : Interrupt flags register                                                   *
+;* AMBP_INTV    : Interrupt vector register                                                  *
+;* AMBP_Vector  : Interrupt Vector Memory Segment                                            *
+;* AMBU_CTLW0   : eUSCI Control Word 0                                                       *
+;* AMBU_CTLW1   : eUSCI Control Word 1                                                       *
+;* AMBU_BRW     : eUSCI Bit Rate register                                                    *
+;* AMBU_STATW   : eUSCI Status Word                                                          *
+;* AMBU_TBCNT   : eUSCI Byte Counter Threshold                                               *
+;* AMBU_RXBUF   : eUSCI Receive Buffer                                                       *
+;* AMBU_TXBUF   : eUSCI Transmit Buffer                                                      *
+;* AMBU_I2COA0  : eUSCI Own Address 0                                                        *
+;* AMBU_I2COA1  : eUSCI Own Address 1                                                        *
+;* AMBU_I2COA2  : eUSCI Own Address 2                                                        *
+;* AMBU_I2COA3  : eUSCI Own Address 3                                                        *
+;* AMBU_ADDRX   : eUSCI Received Address                                                     *
+;* AMBU_ADDMASK : eUSCI Address Mask Register                                                *
+;* AMBU_I2CSA   : eUSCI Slave Address                                                        *
+;* AMBU_IE      : eUSCI Interrupt Enable Register                                            *
+;* AMBU_IFG     : eUSCI Interrupt Flag Resgister                                             *
+;* AMBU_IV      : eUSCI Interrupt Vector Register                                            *
+;* AMBU_Vector  : eUSCI Interrupt Segment in Memory                                          *
+;* AMBP_MASK    : Mask bit of the pins used in the port as I2c                               *
+;* AMB_BPSDIV   : Bit Rate divider to achieve the needed Bps setting                         *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if ($isdefed("__AMBIENT_AUTO_DEFS__") == 0)
+	.if ($isdefed("__AMBIENT_H43__") == 0)
+		.emsg "Ambient.h43 must have been included in the file before AmbientAutoDefs.h43"
+	.endif
+
+__AMBIENT_AUTO_DEFS__:	.equ	1					;Need to define this in order to avoid
+													; double inclusions
+
+;----------------------------------------
+; Definitions
+;========================================
+	.if (I2CPORT == 0)
+AMB_SCL:		.equ	BIT7						;I2C Clock pin in port
+AMB_SDA:		.equ	BIT6						;I2C Data pin in port
+AMB_SEL0VAL:	.equ	0							;SEL0 value to enable I2C
+AMB_SEL1VAL:	.equ	(AMB_SCL|AMB_SDA)			;SEL1 value to enable I2C
+AMBP_DIN:		.equ	P1IN						;Data input register
+AMBP_DOUT:		.equ	P1OUT						;Data output register
+AMBP_DIR:		.equ	P1DIR						;Direction selection register
+AMBP_REN:		.equ	P1REN						;Resistor setup register
+AMBP_SEL0:		.equ	P1SEL0						;Special function selection registers
+AMBP_SEL1:		.equ	P1SEL1
+AMBP_INTE:		.equ	P1IE						;Interrupt enable register
+AMBP_INTES:		.equ	P1IES						;Interrupt edge selector register
+AMBP_INTF:		.equ	P1IFG						;Interrupt flags register
+AMBP_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", AMBP_Vector;Interrupt Vector Memory Segment
+AMBU_CTLW0:		.equ	UCB0CTLW0					;eUSCI Control Word 0
+AMBU_CTLW1:		.equ	UCB0CTLW1					;eUSCI Control Word 1
+AMBU_BRW:		.equ	UCB0BRW						;eUSCI Bit Rate register
+AMBU_STATW:		.equ	UCB0STATW					;eUSCI Status Word
+AMBU_TBCNT:		.equ	UCB0TBCNT					;eUSCI Byte Counter Threshold
+AMBU_RXBUF:		.equ	UCB0RXBUF					;eUSCI Receive Buffer
+AMBU_TXBUF:		.equ	UCB0TXBUF					;eUSCI Transmit Buffer
+AMBU_I2COA0:	.equ	UCB0I2COA0					;eUSCI Own Address 0
+AMBU_I2COA1:	.equ	UCB0I2COA1					;eUSCI Own Address 1
+AMBU_I2COA2:	.equ	UCB0I2COA2					;eUSCI Own Address 2
+AMBU_I2COA3:	.equ	UCB0I2COA3					;eUSCI Own Address 3
+AMBU_ADDRX:		.equ	UCB0ADDRX					;eUSCI Received Address
+AMBU_ADDMASK:	.equ	UCB0ADDMASK					;eUSCI Address Mask Register
+AMBU_I2CSA:		.equ	UCB0I2CSA					;eUSCI Slave Address
+AMBU_IE:		.equ	UCB0IE						;eUSCI Interrupt Enable Register
+AMBU_IFG:		.equ	UCB0IFG						;eUSCI Interrupt Flag Resgister
+AMBU_IV:		.equ	UCB0IV						;eUSCI Interrupt Vector Register
+				.define	"EUSCI_B0_VECTOR",AMBU_Vector;eUSCI Interrupt Segment in Memory
+	.elseif (I2CPORT == 1)
+AMB_SCL:		.equ	BIT1
+AMB_SDA:		.equ	BIT0
+AMB_SEL0VAL:	.equ	(AMB_SCL|AMB_SDA)
+AMB_SEL1VAL:	.equ	0
+AMBP_DIN:		.equ	P5IN
+AMBP_DOUT:		.equ	P5OUT
+AMBP_DIR:		.equ	P5DIR
+AMBP_REN:		.equ	P5REN
+AMBP_SEL0:		.equ	P5SEL0
+AMBP_SEL1:		.equ	P5SEL1
+AMBP_INTE:		.equ	P5IE
+AMBP_INTES:		.equ	P5IES
+AMBP_INTF:		.equ	P5IFG
+AMBP_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", RELP_Vector
+AMBU_CTLW0:		.equ	UCB1CTLW0
+AMBU_CTLW1:		.equ	UCB1CTLW1
+AMBU_BRW:		.equ	UCB1BRW
+AMBU_STATW:		.equ	UCB1STATW
+AMBU_TBCNT:		.equ	UCB1TBCNT
+AMBU_RXBUF:		.equ	UCB1RXBUF
+AMBU_TXBUF:		.equ	UCB1TXBUF
+AMBU_I2COA0:	.equ	UCB1I2COA0
+AMBU_I2COA1:	.equ	UCB1I2COA1
+AMBU_I2COA2:	.equ	UCB1I2COA2
+AMBU_I2COA3:	.equ	UCB1I2COA3
+AMBU_ADDRX:		.equ	UCB1ADDRX
+AMBU_ADDMASK:	.equ	UCB1ADDMASK
+AMBU_I2CSA:		.equ	UCB1I2CSA
+AMBU_IE:		.equ	UCB1IE
+AMBU_IFG:		.equ	UCB1IFG
+AMBU_IV:		.equ	UCB1IV
+				.define	"EUSCI_B1_VECTOR",AMBU_Vector
+	.elseif (I2CPORT == 2)
+AMB_SCL:		.equ	BIT1
+AMB_SDA:		.equ	BIT0
+AMB_SEL0VAL:	.equ	(AMB_SCL|AMB_SDA)
+AMB_SEL1VAL:	.equ	0
+AMBP_DIN:		.equ	P7IN
+AMBP_DOUT:		.equ	P7OUT
+AMBP_DIR:		.equ	P7DIR
+AMBP_REN:		.equ	P7REN
+AMBP_SEL0:		.equ	P7SEL0
+AMBP_SEL1:		.equ	P7SEL1
+AMBP_INTE:		.equ	P7IE
+AMBP_INTES:		.equ	P7IES
+AMBP_INTF:		.equ	P7IFG
+AMBP_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", RELP_Vector
+AMBU_CTLW0:		.equ	UCB2CTLW0
+AMBU_CTLW1:		.equ	UCB2CTLW1
+AMBU_BRW:		.equ	UCB2BRW
+AMBU_STATW:		.equ	UCB2STATW
+AMBU_TBCNT:		.equ	UCB2TBCNT
+AMBU_RXBUF:		.equ	UCB2RXBUF
+AMBU_TXBUF:		.equ	UCB2TXBUF
+AMBU_I2COA0:	.equ	UCB2I2COA0
+AMBU_I2COA1:	.equ	UCB2I2COA1
+AMBU_I2COA2:	.equ	UCB2I2COA2
+AMBU_I2COA3:	.equ	UCB2I2COA3
+AMBU_ADDRX:		.equ	UCB2ADDRX
+AMBU_ADDMASK:	.equ	UCB2ADDMASK
+AMBU_I2CSA:		.equ	UCB2I2CSA
+AMBU_IE:		.equ	UCB2IE
+AMBU_IFG:		.equ	UCB2IFG
+AMBU_IV:		.equ	UCB2IV
+				.define	"EUSCI_B2_VECTOR",AMBU_Vector
+	.elseif (I2CPORT == 3)
+AMB_SCL:		.equ	BIT5
+AMB_SDA:		.equ	BIT4
+AMB_SEL0VAL:	.equ	(AMB_SCL|AMB_SDA)
+AMB_SEL1VAL:	.equ	0
+AMBP_DIN:		.equ	P6IN
+AMBP_DOUT:		.equ	P6OUT
+AMBP_DIR:		.equ	P6DIR
+AMBP_REN:		.equ	P6REN
+AMBP_SEL0:		.equ	P6SEL0
+AMBP_SEL1:		.equ	P6SEL1
+AMBP_INTE:		.equ	P6IE
+AMBP_INTES:		.equ	P6IES
+AMBP_INTF:		.equ	P6IFG
+AMBP_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", RELP_Vector
+AMBU_CTLW0:		.equ	UCB3CTLW0
+AMBU_CTLW1:		.equ	UCB3CTLW1
+AMBU_BRW:		.equ	UCB3BRW
+AMBU_STATW:		.equ	UCB3STATW
+AMBU_TBCNT:		.equ	UCB3TBCNT
+AMBU_RXBUF:		.equ	UCB3RXBUF
+AMBU_TXBUF:		.equ	UCB3TXBUF
+AMBU_I2COA0:	.equ	UCB3I2COA0
+AMBU_I2COA1:	.equ	UCB3I2COA1
+AMBU_I2COA2:	.equ	UCB3I2COA2
+AMBU_I2COA3:	.equ	UCB3I2COA3
+AMBU_ADDRX:		.equ	UCB3ADDRX
+AMBU_ADDMASK:	.equ	UCB3ADDMASK
+AMBU_I2CSA:		.equ	UCB3I2CSA
+AMBU_IE:		.equ	UCB3IE
+AMBU_IFG:		.equ	UCB3IFG
+AMBU_IV:		.equ	UCB3IV
+				.define	"EUSCI_B3_VECTOR",AMBU_Vector
+	.else
+		.emsg "I2CPORT value should be from 0 to 3, set in Ambient.h43 file"
+	.endif											;I2CPORT
+
+AMB_BPSDIV:		.equ	(SMClkFreq/AMB_BPS)			;The Bit Rate divider to be used for the
+													; specified Bps
+
+
+	.endif											;__AMBIENT_AUTO_DEFS__
