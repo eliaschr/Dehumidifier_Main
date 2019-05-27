@@ -98,17 +98,30 @@ AmbPInit:	BIC.B	#AMBP_MASK,&AMBP_SEL0	;Clear the selection bits used byt this I2
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     :
+; VARS USED     : AMB_BPSDIV, AMBU_BRW, AMBU_CTLW0, AMBU_CTLW1, 
 ; OTHER FUNCS   : None
 AmbI2CInit: BIS		#UCSWRST,&AMBU_CTLW0	;Keep associated module in reset to configure it
 			BIS		#UCMODE_3 | UCMST | UCSYNC,&AMBU_CTLW0
 											;Set I2C master mode, in sync
-			BIC		#UCASTP_3,&AMBU_CTLW1	;Clear both bits of STOP generation mode
-			BIS		#UCASTP_2,&AMBU_CTLW1	;Automatically generate STOP condition when
-											; counter reaches its threshold
+			BIC		#UCASTP_3,&AMBU_CTLW1	;Clear both bits of STOP generation mode (No auto-
+											; matic STOP condition)
 			MOV		#AMB_BPSDIV,&AMBU_BRW	;Set divider for the correct bit rate
 			BIC		#UCSWRST,&AMBU_CTLW0	;Stop reset mode. I2C is ready to be used
 			RET
+			
+
+;----------------------------------------
+; AmbSensorInit
+; Initialize the Humidity and Temperature sensor
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     :
+; OTHER FUNCS   : None
+AmbSensorInit:
+			
 
 
 ;----------------------------------------
