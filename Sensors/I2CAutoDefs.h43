@@ -1,0 +1,231 @@
+;*********************************************************************************************
+;* I2C Bus Support Library                                                                   *
+;*-------------------------------------------------------------------------------------------*
+;* I2CAutoDefs.h43                                                                           *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
+;* Example of automatic definitions is the computation of interrupt vectors according to     *
+;* the I2C module used.                                                                      *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"I2C Bus Support Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;* I2C_SCL      : I2C Clock pin in port                                                      *
+;* I2C_SDA      : I2C Data pin in port                                                       *
+;* I2C_SEL0VAL  : SEL0 value to enable I2C                                                   *
+;* I2C_SEL1VAL  : SEL1 value to enable I2C                                                   *
+;* I2CP_DIN     : Data input register                                                        *
+;* I2CP_DOUT    : Data output register                                                       *
+;* I2CP_DIR     : Direction selection register                                               *
+;* I2CP_REN     : Resistor setup register                                                    *
+;* I2CP_SEL0    : Special function selection register 0                                      *
+;* I2CP_SEL1    : Special function selection register 1                                      *
+;* I2CP_INTE    : Interrupt enable register                                                  *
+;* I2CP_INTES   : Interrupt edge selector register                                           *
+;* I2CP_INTF    : Interrupt flags register                                                   *
+;* I2CP_INTV    : Interrupt vector register                                                  *
+;* I2CP_Vector  : Interrupt Vector Memory Segment                                            *
+;* I2CU_CTLW0   : eUSCI Control Word 0                                                       *
+;* I2CU_CTLW1   : eUSCI Control Word 1                                                       *
+;* I2CU_BRW     : eUSCI Bit Rate register                                                    *
+;* I2CU_STATW   : eUSCI Status Word                                                          *
+;* I2CU_TBCNT   : eUSCI Byte Counter Threshold                                               *
+;* I2CU_RXBUF   : eUSCI Receive Buffer                                                       *
+;* I2CU_TXBUF   : eUSCI Transmit Buffer                                                      *
+;* I2CU_I2COA0  : eUSCI Own Address 0                                                        *
+;* I2CU_I2COA1  : eUSCI Own Address 1                                                        *
+;* I2CU_I2COA2  : eUSCI Own Address 2                                                        *
+;* I2CU_I2COA3  : eUSCI Own Address 3                                                        *
+;* I2CU_ADDRX   : eUSCI Received Address                                                     *
+;* I2CU_ADDMASK : eUSCI Address Mask Register                                                *
+;* I2CU_I2CSA   : eUSCI Slave Address                                                        *
+;* I2CU_IE      : eUSCI Interrupt Enable Register                                            *
+;* I2CU_IFG     : eUSCI Interrupt Flag Resgister                                             *
+;* I2CU_IV      : eUSCI Interrupt Vector Register                                            *
+;* I2CU_Vector  : eUSCI Interrupt Segment in Memory                                          *
+;* I2CP_MASK    : Mask bit of the pins used in the port as I2c                               *
+;* I2C_BPSDIV   : Bit Rate divider to achieve the needed Bps setting                         *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if ($isdefed("__I2CBUSLIB_AUTO_DEFS__") == 0)
+	.if ($isdefed("__I2CBUSLIB_H43__") == 0)
+		.emsg "I2CBus.h43 must have been included in the file before I2CAutoDefs.h43"
+	.endif
+
+__I2CBUSLIB_AUTO_DEFS__:.equ	1					;Need to define this in order to avoid
+													; double inclusions
+
+;----------------------------------------
+; Definitions
+;========================================
+	.if (I2CPORT == 0)
+I2C_SCL:		.equ	BIT7						;I2C Clock pin in port
+I2C_SDA:		.equ	BIT6						;I2C Data pin in port
+I2C_SEL0VAL:	.equ	0							;SEL0 value to enable I2C
+I2C_SEL1VAL:	.equ	(I2C_SCL|I2C_SDA)			;SEL1 value to enable I2C
+I2CP_DIN:		.equ	P1IN						;Data input register
+I2CP_DOUT:		.equ	P1OUT						;Data output register
+I2CP_DIR:		.equ	P1DIR						;Direction selection register
+I2CP_REN:		.equ	P1REN						;Resistor setup register
+I2CP_SEL0:		.equ	P1SEL0						;Special function selection registers
+I2CP_SEL1:		.equ	P1SEL1
+I2CP_INTE:		.equ	P1IE						;Interrupt enable register
+I2CP_INTES:		.equ	P1IES						;Interrupt edge selector register
+I2CP_INTF:		.equ	P1IFG						;Interrupt flags register
+I2CP_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", I2CP_Vector;Interrupt Vector Memory Segment
+I2CU_CTLW0:		.equ	UCB0CTLW0					;eUSCI Control Word 0
+I2CU_CTLW1:		.equ	UCB0CTLW1					;eUSCI Control Word 1
+I2CU_BRW:		.equ	UCB0BRW						;eUSCI Bit Rate register
+I2CU_STATW:		.equ	UCB0STATW					;eUSCI Status Word
+I2CU_TBCNT:		.equ	UCB0TBCNT					;eUSCI Byte Counter Threshold
+I2CU_RXBUF:		.equ	UCB0RXBUF					;eUSCI Receive Buffer
+I2CU_TXBUF:		.equ	UCB0TXBUF					;eUSCI Transmit Buffer
+I2CU_I2COA0:	.equ	UCB0I2COA0					;eUSCI Own Address 0
+I2CU_I2COA1:	.equ	UCB0I2COA1					;eUSCI Own Address 1
+I2CU_I2COA2:	.equ	UCB0I2COA2					;eUSCI Own Address 2
+I2CU_I2COA3:	.equ	UCB0I2COA3					;eUSCI Own Address 3
+I2CU_ADDRX:		.equ	UCB0ADDRX					;eUSCI Received Address
+I2CU_ADDMASK:	.equ	UCB0ADDMASK					;eUSCI Address Mask Register
+I2CU_I2CSA:		.equ	UCB0I2CSA					;eUSCI Slave Address
+I2CU_IE:		.equ	UCB0IE						;eUSCI Interrupt Enable Register
+I2CU_IFG:		.equ	UCB0IFG						;eUSCI Interrupt Flag Resgister
+I2CU_IV:		.equ	UCB0IV						;eUSCI Interrupt Vector Register
+				.define	"EUSCI_B0_VECTOR",I2CU_Vector;eUSCI Interrupt Segment in Memory
+	.elseif (I2CPORT == 1)
+I2C_SCL:		.equ	BIT1
+I2C_SDA:		.equ	BIT0
+I2C_SEL0VAL:	.equ	(I2C_SCL|I2C_SDA)
+I2C_SEL1VAL:	.equ	0
+I2CP_DIN:		.equ	P5IN
+I2CP_DOUT:		.equ	P5OUT
+I2CP_DIR:		.equ	P5DIR
+I2CP_REN:		.equ	P5REN
+I2CP_SEL0:		.equ	P5SEL0
+I2CP_SEL1:		.equ	P5SEL1
+I2CP_INTE:		.equ	P5IE
+I2CP_INTES:		.equ	P5IES
+I2CP_INTF:		.equ	P5IFG
+I2CP_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", I2CP_Vector
+I2CU_CTLW0:		.equ	UCB1CTLW0
+I2CU_CTLW1:		.equ	UCB1CTLW1
+I2CU_BRW:		.equ	UCB1BRW
+I2CU_STATW:		.equ	UCB1STATW
+I2CU_TBCNT:		.equ	UCB1TBCNT
+I2CU_RXBUF:		.equ	UCB1RXBUF
+I2CU_TXBUF:		.equ	UCB1TXBUF
+I2CU_I2COA0:	.equ	UCB1I2COA0
+I2CU_I2COA1:	.equ	UCB1I2COA1
+I2CU_I2COA2:	.equ	UCB1I2COA2
+I2CU_I2COA3:	.equ	UCB1I2COA3
+I2CU_ADDRX:		.equ	UCB1ADDRX
+I2CU_ADDMASK:	.equ	UCB1ADDMASK
+I2CU_I2CSA:		.equ	UCB1I2CSA
+I2CU_IE:		.equ	UCB1IE
+I2CU_IFG:		.equ	UCB1IFG
+I2CU_IV:		.equ	UCB1IV
+				.define	"EUSCI_B1_VECTOR",I2CU_Vector
+	.elseif (I2CPORT == 2)
+I2C_SCL:		.equ	BIT1
+I2C_SDA:		.equ	BIT0
+I2C_SEL0VAL:	.equ	(I2C_SCL|I2C_SDA)
+I2C_SEL1VAL:	.equ	0
+I2CP_DIN:		.equ	P7IN
+I2CP_DOUT:		.equ	P7OUT
+I2CP_DIR:		.equ	P7DIR
+I2CP_REN:		.equ	P7REN
+I2CP_SEL0:		.equ	P7SEL0
+I2CP_SEL1:		.equ	P7SEL1
+I2CP_INTE:		.equ	P7IE
+I2CP_INTES:		.equ	P7IES
+I2CP_INTF:		.equ	P7IFG
+I2CP_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", I2CP_Vector
+I2CU_CTLW0:		.equ	UCB2CTLW0
+I2CU_CTLW1:		.equ	UCB2CTLW1
+I2CU_BRW:		.equ	UCB2BRW
+I2CU_STATW:		.equ	UCB2STATW
+I2CU_TBCNT:		.equ	UCB2TBCNT
+I2CU_RXBUF:		.equ	UCB2RXBUF
+I2CU_TXBUF:		.equ	UCB2TXBUF
+I2CU_I2COA0:	.equ	UCB2I2COA0
+I2CU_I2COA1:	.equ	UCB2I2COA1
+I2CU_I2COA2:	.equ	UCB2I2COA2
+I2CU_I2COA3:	.equ	UCB2I2COA3
+I2CU_ADDRX:		.equ	UCB2ADDRX
+I2CU_ADDMASK:	.equ	UCB2ADDMASK
+I2CU_I2CSA:		.equ	UCB2I2CSA
+I2CU_IE:		.equ	UCB2IE
+I2CU_IFG:		.equ	UCB2IFG
+I2CU_IV:		.equ	UCB2IV
+				.define	"EUSCI_B2_VECTOR",I2CU_Vector
+	.elseif (I2CPORT == 3)
+I2C_SCL:		.equ	BIT5
+I2C_SDA:		.equ	BIT4
+I2C_SEL0VAL:	.equ	(I2C_SCL|I2C_SDA)
+I2C_SEL1VAL:	.equ	0
+I2CP_DIN:		.equ	P6IN
+I2CP_DOUT:		.equ	P6OUT
+I2CP_DIR:		.equ	P6DIR
+I2CP_REN:		.equ	P6REN
+I2CP_SEL0:		.equ	P6SEL0
+I2CP_SEL1:		.equ	P6SEL1
+I2CP_INTE:		.equ	P6IE
+I2CP_INTES:		.equ	P6IES
+I2CP_INTF:		.equ	P6IFG
+I2CP_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", I2CP_Vector
+I2CU_CTLW0:		.equ	UCB3CTLW0
+I2CU_CTLW1:		.equ	UCB3CTLW1
+I2CU_BRW:		.equ	UCB3BRW
+I2CU_STATW:		.equ	UCB3STATW
+I2CU_TBCNT:		.equ	UCB3TBCNT
+I2CU_RXBUF:		.equ	UCB3RXBUF
+I2CU_TXBUF:		.equ	UCB3TXBUF
+I2CU_I2COA0:	.equ	UCB3I2COA0
+I2CU_I2COA1:	.equ	UCB3I2COA1
+I2CU_I2COA2:	.equ	UCB3I2COA2
+I2CU_I2COA3:	.equ	UCB3I2COA3
+I2CU_ADDRX:		.equ	UCB3ADDRX
+I2CU_ADDMASK:	.equ	UCB3ADDMASK
+I2CU_I2CSA:		.equ	UCB3I2CSA
+I2CU_IE:		.equ	UCB3IE
+I2CU_IFG:		.equ	UCB3IFG
+I2CU_IV:		.equ	UCB3IV
+				.define	"EUSCI_B3_VECTOR",I2CU_Vector
+	.else
+		.emsg "I2CPORT value should be from 0 to 3, set in I2Cient.h43 file"
+	.endif											;I2CPORT
+
+I2C_BPSDIV:		.equ	(SMClkFreq/I2C_BPS)			;The Bit Rate divider to be used for the
+													; specified Bps
+
+
+	.endif											;__I2CBUSLIB_AUTO_DEFS__

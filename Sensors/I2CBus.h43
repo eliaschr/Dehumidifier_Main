@@ -1,7 +1,7 @@
 ;*********************************************************************************************
-;* Ambient Temperature and Humidity Library                                                  *
+;* I2C Bus Support Library                                                                   *
 ;*-------------------------------------------------------------------------------------------*
-;* Ambient.h43                                                                               *
+;* I2CBus.h43                                                                                *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -18,11 +18,10 @@
 ;* You should have received a copy of the GNU General Public License                         *
 ;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
 ;*-------------------------------------------------------------------------------------------*
-;* In this file all the necessary definitions for the measurements of the ambient humidity   *
-;* and temperature.                                                                          *
+;* In this file all the necessary definitions for the use of an I2C bus are defined.         *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
-			.title	"Ambient Temperature and Humidity Library"
+			.title	"I2C Bus Supoort Library"
 			.width	94
 			.tab	4
 
@@ -38,8 +37,8 @@
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
-;* AmbPInit   : Initialize the port pins used as I2C                                         *
-;* AmbI2CInit : Initializes the eUSCI as I2C                                                 *
+;* I2CPInit : Initialize the port pins used as I2C                                           *
+;* I2CInit  : Initializes the eUSCI as I2C                                                   *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
@@ -47,25 +46,27 @@
 ;*                                                                                           *
 ;*********************************************************************************************
 
-	.if  ($isdefed("__AMBIENT_H43__") == 0)
+	.if  ($isdefed("__I2CBUSLIB_H43__") == 0)
 
-__AMBIENT_H43__:		.equ	1				;Must define this in order to avoid double
+__I2CBUSLIB_H43__:		.equ	1				;Must define this in order to avoid double
 												; inclusions
 ;----------------------------------------
 ; Global Definitions
 ;========================================
+TXBUFFLEN:				.equ	32				;Size of I2C transmission buffer
+RXBUFFLEN:				.equ	32				;Size of I2C reception buffer
 I2CPORT:				.equ	0				;Number of eUSCI_B serial module to use for
 												; the sensor
 I2COWNADDR:				.equ	076h			;The address of MSP if it was a slave (7 bits)
-AMB_BPS:				.equ	400000			;Bps of the I2C bus
+I2C_BPS:				.equ	400000			;Bps of the I2C bus
 
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
-						.global	AmbPInit		;Initialize the port pins used as I2C
-						.global	AmbI2CInit		;Initializes the eUSCI as I2C
+						.global	I2CPInit		;Initialize the port pins used as I2C
+						.global	I2CInit			;Initializes the eUSCI as I2C
 
 
 
-	.endif										;__AMBIENT_H43__
+	.endif										;__I2CBUSLIB_H43__
