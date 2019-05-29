@@ -54,17 +54,20 @@
 ;----------------------------------------
 ; Definitions
 ;========================================
+I2CBUZY:	.equ	BITF					;I2C Bus is buzy (Transaction in progress)
+I2CTRANSMIT:.equ	BITE					;I2C Subsystem sends data
 
 
 ;*********************************************************************************************
 ; Variables Definitions
 ;-------------------------------------------
-			.bss	I2CTxBuff, TXBUFFLEN	;I2C Transmission buffer
-			.bss	I2CRxBuff, RXBUFFLEN	;I2C Transmission buffer
+			.bss	I2CTxBuff, I2CTXBUFFLEN *2	;I2C Transmission buffer (contains words)
+			.bss	I2CRxBuff, I2CRXBUFFLEN	;I2C Transmission buffer
 			.bss	I2CTxStrt, 2			;Starting offset of transmission buffer
 			.bss	I2CTxLen, 2				;Length of data in transmission buffer
 			.bss	I2CRxStrt, 2			;Starting offset of reception buffer
 			.bss	I2CRxLen, 2				;Length of data written in reception buffer
+			.bss	I2CStatus, 2			;Some status flags
 
 
 ;----------------------------------------
@@ -103,9 +106,10 @@ I2CPInit:	BIC.B	#I2CP_MASK,&I2CP_SEL0	;Clear the selection bits used byt this I2
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : I2C_BPSDIV, I2CU_BRW, I2CU_CTLW0, I2CU_CTLW1, 
+; VARS USED     : I2C_BPSDIV, I2CBUZY, I2CStatus, I2CU_BRW, I2CU_CTLW0, I2CU_CTLW1
 ; OTHER FUNCS   : None
 I2CInit:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep associated module in reset to configure it
+			BIC		#I2CBUZY,&I2CStatus		;Bus is free
 			BIS		#UCMODE_3 | UCMST | UCSYNC,&I2CU_CTLW0
 											;Set I2C master mode, in sync
 			BIC		#UCASTP_3,&I2CU_CTLW1	;Clear both bits of STOP generation mode (No auto-
@@ -120,16 +124,130 @@ I2CInit:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep associated module in reset to configure
 ; Produces a Start condition on I2C bus and sends the Address byte. After that, it is ready to
 ; transmit more bytes
 ; INPUT         : R4 contains the Slave to be addressed
-; OUTPUT        : None
-; REGS USED     : None
-; REGS AFFECTED : None
-; STACK USAGE   : None
-; VARS USED     : I2CU_CTLW0, I2CU_I2CSA
+; OUTPUT        : If everything is fine, the carry flag is cleared. If the consition is not
+;                 sent or it is not scheduled
+; REGS USED     : R4, R15
+; REGS AFFECTED : R4, R15
+; STACK USAGE   : 2
+; VARS USED     : I2CBUZY, I2CTxBuff, I2CTxStrt, I2CStatus, I2CTxLen, I2CTXBUFLEN, I2CU_CTLW0,
+;                 I2CU_I2CSA, I2CU_IE, I2CU_IFG
 ; OTHER FUNCS   : None
-I2CStartTx:	MOV		R4,&I2CU_I2CSA			;Set the slave address to be transmitted
+I2CStartTx:	BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
+			JZ		I2CSTTTx				;No => Start the communication at once
+			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
+			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			JZ		I2CTxSchdSt				;Yes => then schedule the transmission
+			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
+			JNZ		I2CTxSchdSt				;Yes => Schedule this transmission
+			;At this point, either the bus is free, or it expects data to be transmitted (all
+			; the previous scheduled data were transmitted and wait for the next action).
+			; The bus must be used at once
+I2CSTTTx:	MOV		R4,&I2CU_I2CSA			;Set the slave address to be transmitted
 			BIS		#UCTR,&I2CU_CTLW0		;Going to transmit data to the slave
 			BIS		#UCTXSTT,&I2CU_CTLW0	;Generate the Start condition and send the address
+			BIS		#I2CBUZY | I2CTRANSMIT,&I2CStatus
+											;The bus now is buzy transmitting data
+			BIS		#UCTXIE0,&I2CU_IE		;Enable the transmission interrupt
+			CLRC							;Clear carry to signal success
 			RET
+			;The bus should schedule the byte, by adding it in the transmission buffer. This
+			; is a critical task, as a running interrupt could alter the results and create a
+			; lockup making the bus unusable. So, at this point the Tx interrupt must be
+			; disabled
+I2CTxSchSt:	BIS		#(UCTXSTT | UCTR) <<8,R4;Set that this is a starting condition of the
+											; Tx communication
+I2CTx_Schd:	PUSH	SR						;Store the general interrupts status
+			DINT							;Disable them. The following part is critical
+			CMP		#I2CTXBUFLEN,&I2CTxLen	;Is there any empty cell in buffer?
+			JHS		I2CTxStErr				;No => Flag the error and exit
+			MOV		&I2CTxStrt,R15			;Get the starting of the cyclic buffer
+			ADD		#I2CTxLen,R15			;Add the stored data in it to find the first empty
+											; cell
+			CMP		#I2CTXBUFLEN,R15		;Passed the end of the buffer?
+			JLO		I2CTxNoRvrt				;No => then do not revert to the beginning
+			SUB		#I2CTXBUFLEN,R15		;else, revert to the beginning
+I2CTxNoRvrt:
+			ADD		#I2CTxBuff,R15			;R15 points to the first empty cell to be used
+			MOV		R4,0(R15)				;Store the whole word of data + flags
+			INCD	&TXBufLen				;Increase the occupied length in buffer (Word)
+			POP		SR						;Restire interrupts status
+			CLRC							;Clear carry to flag success
+			BIS		#UCTXIE0,&I2CU_IE		;Enable transmission interrupt again
+			RET
+										
+			;Buffer is full. The starting slave address is not scheduled => Error
+I2CTxStErr:	POP		SR						;Restore general interrupt status
+			BIS		#UCTXIE0,&I2CU_IE		;Enable the transmission interrupt
+			SETC							;Set carry flag to express there was an error
+			RET
+			
+
+;----------------------------------------
+; I2CSend
+; Sends a byte when the I2C subsystem is configured as a transmitter
+; INPUT         : R4 contains the byte to be transmitted
+; OUTPUT        : If everything is fine, the carry flag is cleared. If the consition is not
+;                 sent or it is not scheduled
+; REGS USED     : R4, R15 (Through I2CTx_Schd)
+; REGS AFFECTED : R4, R15
+; STACK USAGE   : 2 (by I2CTx_Schd)
+; VARS USED     : I2CBUZY, I2CStatus, I2CTXBUF, I2CTxLen, I2CU_IE, I2CU_IFG
+; OTHER FUNCS   : I2CTx_Schd
+I2CSend:	BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
+			JZ		I2CTxNow				;No => Send the data at once
+			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
+			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			JZ		I2CTxSchdD				;Yes => then schedule the transmission
+			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
+			JNZ		I2CTxSchdD				;Yes => Schedule this transmission
+			;At this point, either the bus is free, or it expects data to be transmitted (all
+			; the previous scheduled data were transmitted and wait for the next action).
+			; The bus must be used at once
+I2CTxNow:	MOV.B	R4,&I2CTXBUF			;Send it at once
+			BIS		#UCTXIFG0,I2CU_IE		;Enable the transmission interrupt
+			CLRC							;Clear carry flag to signal the validity
+			RET
+			;The bus should schedule the byte, by adding it in the transmission buffer. This
+			; is a critical task, as a running interrupt could alter the results and create a
+			; lockup making the bus unusable. So, at this point the interrupts must be
+			; disabled
+I2CTxSchdD:	BIC		#0FF00h,R4				;Ensure higher byte of R4 is cleared as this is
+											; pure data
+			JMP		I2CTx_Schd				;Schedule the new data to be transmitted later
+
+
+;----------------------------------------
+; I2CStop
+; Sends a Stop condition through the I2C bus
+; INPUT         : None
+; OUTPUT        : If everything is fine, the carry flag is cleared. If the consition is not
+;                 sent or it is not scheduled
+; REGS USED     : R4, R15 (by I2CTx_Schd)
+; REGS AFFECTED : R4, R15 (by I2CTx_Schd)
+; STACK USAGE   : 2 (by I2CTx_Schd)
+; VARS USED     : I2CBUZY, I2CStatus, I2CTXBUF, I2CTxLen, I2CU_IE, I2CU_IFG
+; OTHER FUNCS   : I2CTx_Schd
+I2CStop:	BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
+			JZ		I2CStpTxNow				;No => Send the data at once
+			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
+			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			JZ		I2CSpSchdD				;Yes => then schedule the transmission
+			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
+			JNZ		I2CSpSchdD				;Yes => Schedule this transmission
+			;At this point, either the bus is free, or it expects data to be transmitted (all
+			; the previous scheduled data were transmitted and wait for the next action).
+			; The bus must be used at once
+I2CStpTxNow:
+			BIS		#UCTXSTP,&I2CU_CTLW0	;Generate the Stop Condition
+			BIS		#UCSTPIFG,&I2CU_IE		;Enable the Stop Condition Interrupt
+			CLRC							;Signal everything is OK
+			RET
+			;The bus should schedule the transaction, by adding it in the transmission buffer
+			; an empty byte with the stop condition flag set. This is a critical task, as a
+			; running interrupt could alter the results and create a lockup making the bus
+			; unusable. So, at this point the interrupts must be disabled
+I2CSpSchdD:	MOV		#UCTXSTP << 8,R4		;Set R4 with empty data and Stop Condition flag
+			JMP		I2CTx_Schd				;Schedule the new data to be transmitted later
 
 
 ;----------------------------------------
@@ -164,6 +282,7 @@ I2CReadBuf:	MOV.B	#000h,R4
 			CMP		#00000h,&I2CRxLen
 			JNE		I2CRxNo
 			PUSH	SR						;Store the state of the interrupts
+			DINT							;Disable them. The following is a critical section
 			MOV		&I2CRxStrt,R4			;Get the starting pointer
 			ADD		#I2CRxBuff,R4			;Add the starting offset of the buffer
 			MOV.B	@R4,R4					;Get the byte from the buffer
