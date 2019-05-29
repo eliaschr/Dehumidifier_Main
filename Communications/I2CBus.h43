@@ -68,6 +68,7 @@ I2C_BPS:				.equ	400000			;Bps of the I2C bus
 						.global	I2CInit			;Initializes the eUSCI as I2C
 						.global	I2CStartTx		;Starts a communication as a transmitter
 						.global	I2CSend			;Continues a transmission
+						.global	I2CStop			;Sends a Stop Condition
 
 
 	.endif										;__I2CBUSLIB_H43__

@@ -252,7 +252,7 @@ I2CSpSchdD:	MOV		#UCTXSTP << 8,R4		;Set R4 with empty data and Stop Condition fl
 
 ;----------------------------------------
 ; I2CStartRx
-; Produces a Start condition on I2C bus and sends the Address byte. The bus is configures in
+; Produces a Start condition on I2C bus and sends the Address byte. The bus is configured in
 ; Receiver mode, so it expects to receive data from the slave
 ; INPUT         : R4 contains the Slave to be addressed
 ; OUTPUT        : None
@@ -261,7 +261,19 @@ I2CSpSchdD:	MOV		#UCTXSTP << 8,R4		;Set R4 with empty data and Stop Condition fl
 ; STACK USAGE   : None
 ; VARS USED     : I2CU_CTLW0, I2CU_I2CSA
 ; OTHER FUNCS   : None
-I2CStartRx:	MOV		R4,&I2CU_I2CSA			;Set the slave address to be transmitted
+I2CStartRx:	BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
+			JZ		I2CSTTTx				;No => Start the communication at once
+			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
+			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			JZ		I2CTxSchdSt				;Yes => then schedule the transmission
+
+			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
+			JNZ		I2CTxSchdSt				;Yes => Schedule this transmission
+			;At this point, either the bus is free, or it expects data to be transmitted (all
+			; the previous scheduled data were transmitted and wait for the next action).
+			; The bus must be used at once
+
+			MOV		R4,&I2CU_I2CSA			;Set the slave address to be transmitted
 			BIC		#UCTR,&I2CU_CTLW0		;Going to receive data to the slave
 			BIS		#UCTXSTT,&I2CU_CTWL0	;Generate the Start condition and send the address
 			RET
