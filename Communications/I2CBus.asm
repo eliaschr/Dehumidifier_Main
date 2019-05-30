@@ -262,21 +262,30 @@ I2CSpSchdD:	MOV		#UCTXSTP << 8,R4		;Set R4 with empty data and Stop Condition fl
 ; VARS USED     : I2CU_CTLW0, I2CU_I2CSA
 ; OTHER FUNCS   : None
 I2CStartRx:	BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
-			JZ		I2CSTTTx				;No => Start the communication at once
+			JZ		I2CSTTRx				;No => Start the communication at once
 			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
 			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
-			JZ		I2CTxSchdSt				;Yes => then schedule the transmission
+			JZ		I2CRxSchdSt				;Yes => then schedule the transmission
 
 			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
-			JNZ		I2CTxSchdSt				;Yes => Schedule this transmission
+			JNZ		I2CRxSchdSt				;Yes => Schedule this transmission
 			;At this point, either the bus is free, or it expects data to be transmitted (all
 			; the previous scheduled data were transmitted and wait for the next action).
 			; The bus must be used at once
-
-			MOV		R4,&I2CU_I2CSA			;Set the slave address to be transmitted
+I2CSTTRx:	MOV		R4,&I2CU_I2CSA			;Set the slave address to be transmitted
 			BIC		#UCTR,&I2CU_CTLW0		;Going to receive data to the slave
 			BIS		#UCTXSTT,&I2CU_CTWL0	;Generate the Start condition and send the address
+			BIS		#I2CBUZY,&I2CStatus
+			BIC		#I2CTRANSMIT,&I2CStatus
+											;The bus now is buzy transmitting data
 			RET
+			;The bus should schedule the transaction, by adding it in the transmission buffer.
+			; Adding the slave address with the starting flag enabled is the indication of a
+			; scheduled receiver transaction. This is a critical task, as a running interrupt
+			; could alter the results and create a lockup making the bus unusable. So, at this
+			; point the interrupts must be disabled
+I2CSpSchdD:	MOV		#UCTXSTT << 8,R4		;Set R4 with empty data and Start Condition flag
+			JMP		I2CTx_Schd				;Schedule the new data to be transmitted later
 
 
 ;----------------------------------------

@@ -69,6 +69,8 @@ I2C_BPS:				.equ	400000			;Bps of the I2C bus
 						.global	I2CStartTx		;Starts a communication as a transmitter
 						.global	I2CSend			;Continues a transmission
 						.global	I2CStop			;Sends a Stop Condition
+						.global	I2CStartRx		;Starts a communication as a receiver
+						.global	I2CReadBuf		;Reads a byte received through I2C
 
 
 	.endif										;__I2CBUSLIB_H43__
