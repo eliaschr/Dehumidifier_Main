@@ -54,6 +54,7 @@
 ;----------------------------------------
 ; Definitions
 ;========================================
+;Flags that appear in I2CStatus variable to describe the status of I2C subsystem
 I2CBUZY:	.equ	BITF					;I2C Bus is buzy (Transaction in progress)
 I2CTRANSMIT:.equ	BITE					;I2C Subsystem sends data
 
@@ -69,6 +70,16 @@ I2CTRANSMIT:.equ	BITE					;I2C Subsystem sends data
 			.bss	I2CRxLen, 2				;Length of data written in reception buffer
 			.bss	I2CStatus, 2			;Some status flags
 
+;When debugging the subsystem, the variables should be global in order for CCS to address them
+; When debugging uncomment the following lines
+;			.global	I2CTxBuff
+;			.global	I2CRxBuff
+;			.global	I2CTxStrt
+;			.global	I2CTxLen
+;			.global	I2CRxStrt
+;			.global	I2CRxLen
+;			.global	I2CStatus
+
 
 ;----------------------------------------
 ; Constants
@@ -79,6 +90,7 @@ I2CTRANSMIT:.equ	BITE					;I2C Subsystem sends data
 ; Functions
 ;========================================
 			.text
+			.global	I2CDispatcher			;ISRs should be global
 
 
 ;----------------------------------------
@@ -319,9 +331,102 @@ I2CRxNo:	;SETC							;Came here from a CMP #O,... When 0, the carry
 ;----------------------------------------
 ; Interrupt Service Routines
 ;========================================
+;----------------------------------------
+; I2CTxISR
+; Interrupt Service Routine for I2C Transmission readiness. The interrupt is triggered by
+; UCTXIFG0 flag when its associated interrupt is enabled (UCTXIE0) and the system is ready to
+; accept a new data byte to be transmitted. If there is any byte in the buffer it should be
+; sent now.
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+I2CTxISR:	
+			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
+			JZ		ITxISRExit				;No => Then exit the interrupt
+			PUSH	R4						;Gonna need some registers
+			PUSH	R15
+			MOV		&I2CTxStrt,R15			;Get the starting offset of the buffer
+			MOV		I2CTxBuf(R15),R4		;Get the word scheduled
+			INCD	R15						;Point to the next element in buffer
+			CMP		#I2CTXBUFFLEN,R15		;Passed the border of the table?
+			JLO		ITxNoRvt				;No => do not revert to the beginning
+			MOV		#00000h,R15				;else, point to the beginning of the table
+ITxNoRvt:	MOV		R15,&I2CTxStrt			;Store the new pointer
+			DECD	&I2CTxLen				;One word less in the buffer
+			JNZ		ITxISRKeep				;Still data in buffer? => Keep this ISR enabled
+			BIC		#UCTXIE0,&I2CU_IE		;else, disable it
+			;Now R4 contains the data byte to be sent at its LSB and the control flags at its
+			; MSB. Need to see the flags to figure out if this is a data byte to be send or
+			; something else
+ITxISRKeep:	BIT		#(UCTXSTP << 8),R4		;Do we have to send a Stop Condition?
+			JNZ		ITxISRStp				;Yes => then do it
+			BIT		#(UCTXSTT << 8),R4		;Do we have to send a Start Condition?
+			JNZ		ITxISRStt				;Yes => Send a reStart Condition
+			;Just a clear byte to send
+			MOV.B	R4,&I2CU_TXBUF			;Go!...
+			POP		R15						;And exit, restoring the used registers
+			POP		R4
+			RETI
+			
+ITxISRStt:	;If a Start Condition is scheduled then R4 at its LSB contains the slave to be
+			; addressed and at its MSB there is the UCRX flag
+			MOV.B	R4,&I2CU_I2CSA			;Set the slave address
+			BIC		#UCRX,&I2CU_CTLW0		;Clear the Receiver Mode bit
+			AND		#(UCRX << 8),R4			;Keep only this bit in R4 MSB
+			SWPB							;Bring the control word at LSB
+			BIS		R4,&I2CU_CTLW0			;Set the Receiver Mode according to the setup
+			BIS		#UCTXSTT,&I2CU_CTLW0	;Send the Start Condition and the slave address
+			POP		R15						;And exit, restoring the used registers
+			POP		R4
+			RETI
 
+ITxISRStp:	;When a Stop Condition is scheduled, the lower byte of R4 is irrelevant
+			BIS		#UCTXSTP,&I2CU_CTLW0	;Send the Stop Condition (and wait for its
+											; interrupt
+			POP		R15						;Restore used registers
+			POP		R4
+
+ITxISRExit:	
+			RETI
+			
+
+;----------------------------------------
+; I2CDispatcher
+; Interrupt Service Routine for I2C eUSCI. It dispatches to the appropriate function according
+; to the Interrupt Vector that triggered the interrupt
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : I2CU_IV
+; OTHER FUNCS   : I2CNAckISR, I2CRxISR, I2CStpISR, I2CTxISR
+I2CDispatcher:
+			ADD		&I2CU_IV,PC				;Proceed to appropriate Jump
+			RETI							;Vector 0: No Interrupt
+			RETI							;Vector 2: Arbitration Lost (ALIFG)
+			JMP		I2CNAckISR				;Vector 4: Not Acknowledge received (NACKIFG)
+			RETI							;Vector 6: Start Condition met (Slave, STTIFG)
+			JMP		I2CStpISR				;Vector 8: Stop Condition met (STPIFG)
+			RETI							;Vector 10: RXIFG3
+			RETI							;Vector 12: TXIFG3
+			RETI							;Vector 14: RXIFG2
+			RETI							;Vector 16: TXIFG2
+			RETI							;Vector 18: RXIFG1
+			RETI							;Vector 20: TXIFG1
+			JMP		I2CRxISR				;Vector 22: Byte received (RXIFG0)
+			JMP		I2CTxISR				;Vector 24: Byte transmitted (TXIFG0)
+			RETI							;Vector 26: Byte Counter interrupt (BCNTIFG)
+			RETI							;Vector 28: Clock Low Timeout (CLTOIFG)
+			RETI							;Vector 30: 9th Bit Transferring (BIT9IFG)
+			
 
 ;----------------------------------------
 ; Interrupt Vectors
 ;========================================
-
+			.sect	I2CU_Vector
+			.short	I2CDispatcher
