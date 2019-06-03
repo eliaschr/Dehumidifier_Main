@@ -61,9 +61,16 @@ I2CPRESTOP:	.equ	BITD					;I2C Early Stop condition met => Scheduled bytes
 											; were skipped
 I2CNACKRECV:.equ	BITC					;I2C Received a NAck
 I2CCOUNTOK:	.equ	BITB					;Threashold counter reached
+I2CRXOVFL:	.equ	BITA					;Rx buffer overflow
+I2CRXFULL:	.equ	BIT9					;Rx Buffer is now full. No more bytes to store
+I2CRXLIMIT:	.equ	BIT8					;When the Rx buffer has reached a threshold, this
+											; flag is set to notify for Almost Full condition
 
 ;Flag in TxBuffer word that presents UCRX of the following Start Condition
 I2CB_UCTR:	.equ	BITF					;UCTR Flag for the following Start Condition
+
+;Mask of all bits used by I2C pins
+I2CP_MASK:	.equ	(I2C_SCL | I2C_SDA)
 
 
 ;*********************************************************************************************
@@ -133,7 +140,7 @@ I2CInit:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep associated module in reset to configure
 											;Set I2C master mode, in sync
 			BIC		#UCASTP_3,&I2CU_CTLW1	;Clear both bits of STOP generation mode (No auto-
 											; matic STOP condition)
-			BIS		#UCASTP_1.&I2CU_CTLW1	;Only trigger interrupt when threshold is reached
+			BIS		#UCASTP_1,&I2CU_CTLW1	;Only trigger interrupt when threshold is reached
 			MOV		#I2C_BPSDIV,&I2CU_BRW	;Set divider for the correct bit rate
 			BIC		#UCSWRST,&I2CU_CTLW0	;Stop reset mode. I2C is ready to be used
 			RET
@@ -152,7 +159,7 @@ I2CInit:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep associated module in reset to configure
 ; REGS USED     : R4, R5, R15
 ; REGS AFFECTED : R4, R15
 ; STACK USAGE   : 2
-; VARS USED     : I2CB_UCTX, I2CBUZY, I2CTxBuff, I2CTxStrt, I2CStatus, I2CTxLen, I2CTXBUFLEN,
+; VARS USED     : I2CB_UCTX, I2CBUZY, I2CTxBuff, I2CTxStrt, I2CStatus, I2CTxLen, I2CTXBUFFLEN,
 ;                 I2CU_CTLW0, I2CU_I2CSA, I2CU_IE, I2CU_IFG
 ; OTHER FUNCS   : None
 I2CStartTx:	CMP		#00080h,R4				;The slave address cannot be greater than 7 bits
@@ -181,7 +188,7 @@ I2CSTTTx:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep subsystem in reset mode to configure i
 			CLRC							;Clear carry to signal success
 			RET
 
-I2CTxSchSt:	;The bus should schedule the byte, by adding it in the transmission buffer. This
+I2CTxSchdSt:;The bus should schedule the byte, by adding it in the transmission buffer. This
 			; is a critical task, as a running interrupt could alter the results and create a
 			; lockup making the bus unusable. So, at this point the Tx interrupt must be
 			; disabled
@@ -195,18 +202,19 @@ I2CTxSchSt:	;The bus should schedule the byte, by adding it in the transmission 
 			ADD		R5,R4					;Add the number of bytes for the threshold
 I2CTx_Schd:	PUSH	SR						;Store the general interrupts status
 			DINT							;Disable them. The following part is critical
-			CMP		#I2CTXBUFLEN,&I2CTxLen	;Is there any empty cell in buffer?
+			NOP
+			CMP		#I2CTXBUFFLEN,&I2CTxLen	;Is there any empty cell in buffer?
 			JHS		I2CTxStErr				;No => Flag the error and exit
 			MOV		&I2CTxStrt,R15			;Get the starting of the cyclic buffer
 			ADD		&I2CTxLen,R15			;Add the stored data in it to find the first empty
 											; cell
-			CMP		#I2CTXBUFLEN,R15		;Passed the end of the buffer?
+			CMP		#I2CTXBUFFLEN,R15		;Passed the end of the buffer?
 			JLO		I2CTxNoRvrt				;No => then do not revert to the beginning
-			SUB		#I2CTXBUFLEN,R15		;else, revert to the beginning
+			SUB		#I2CTXBUFFLEN,R15		;else, revert to the beginning
 I2CTxNoRvrt:
 			ADD		#I2CTxBuff,R15			;R15 points to the first empty cell to be used
 			MOV		R4,0(R15)				;Store the whole word of data + flags
-			INCD	&I2CTXBufLen			;Increase the occupied length in buffer (Word)
+			INCD	&I2CTxLen				;Increase the occupied length in buffer (Word)
 			POP		SR						;Restore interrupts status
 			CLRC							;Clear carry to flag success
 			BIS		#UCTXIE0,&I2CU_IE		;Enable transmission interrupt again
@@ -271,7 +279,8 @@ I2CTxSchdD:	;The system should schedule the byte, by adding it in the transmissi
 ; REGS USED     : R4, R15 (by I2CTx_Schd)
 ; REGS AFFECTED : R4, R15 (by I2CTx_Schd)
 ; STACK USAGE   : 2 (by I2CTx_Schd)
-; VARS USED     : I2CBUZY, I2CStatus, I2CTXBUF, I2CTxLen, I2CU_IE, I2CU_IFG
+; VARS USED     : I2CB_UCTR, I2CU_CTLW0, I2CBUZY, I2CStatus, I2CTXBUF, I2CTxLen, I2CU_IE,
+;                 I2CU_IFG
 ; OTHER FUNCS   : I2CTx_Schd
 I2CStop:	BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
 			JZ		I2CTxError				;No => Illegal to send a Stop Condition
@@ -293,7 +302,7 @@ I2CSpSchdD:	;The bus should schedule the transaction, by adding it in the transm
 			; an empty byte with the stop condition flag set. This is a critical task, as a
 			; running interrupt could alter the results and create a lockup making the bus
 			; unusable. So, at this point the interrupts must be disabled
-			MOV		#I2CB_UCRX,R4			;Set R4 with empty data and Stop Condition flag
+			MOV		#I2CB_UCTR,R4			;Set R4 with empty data and Stop Condition flag
 			JMP		I2CTx_Schd				;Schedule the new data to be transmitted later
 
 
@@ -333,11 +342,11 @@ I2CSTTRx:	;At this point, either the bus is free, or it expects data to be trans
 			BIS		#I2CBUZY,&I2CStatus		;Flag that the bus is buzy
 			BIC		#I2CTRANSMIT,&I2CStatus	;In Receiver mode
 											;The bus now is buzy transmitting data
-			BIS		#UCTXSTT,&I2CU_CTWL0	;Generate the Start condition and send the address
+			BIS		#UCTXSTT,&I2CU_CTLW0	;Generate the Start condition and send the address
 			BIS		#UCTXIE0|UCRXIE0|UCNACKIE|UCBCNTIE|UCSTPIE,&I2CU_IE;Enable necessary ints.
 			RET
 
-I2CSpSchdD:	;The bus should schedule the transaction, by adding it in the transmission buffer.
+I2CRxSchdSt:;The bus should schedule the transaction, by adding it in the transmission buffer.
 			; The word that should be scheduled, contains the slave addres at its higher byte,
 			; together with the receive flag. In the lower byte of the scheduled word there is
 			; the threshold count of bytes to be received. No automatic Stop Condition is sent
@@ -366,6 +375,7 @@ I2CReadBuf:	MOV.B	#000h,R4
 			JNE		I2CRxNo
 			PUSH	SR						;Store the state of the interrupts
 			DINT							;Disable them. The following is a critical section
+			NOP
 			MOV		&I2CRxStrt,R4			;Get the starting pointer
 			ADD		#I2CRxBuff,R4			;Add the starting offset of the buffer
 			MOV.B	@R4,R4					;Get the byte from the buffer
@@ -376,6 +386,27 @@ I2CRxNo:	;SETC							;Came here from a CMP #O,... When 0, the carry
 											; flag is set, so no need to do it again here.
 											; Added only for clarity
 			RET
+
+
+;----------------------------------------
+; I2CGetStatus
+; Returns the status word. The input is a flag mask that makes these bits get cleared on exit
+; INPUT         : R4 contains the flag mask of the flags to be cleared
+; OUTPUT        : R4 contains the status word
+; REGS USED     : R4, R5
+; REGS AFFECTED : R4, R5
+; STACK USAGE   : 2 = 1x Push
+; VARS USED     : I2CStatus
+; OTHER FUNCS   : None
+I2CGetStatus:
+			PUSH	SR						;This is a critical section so we have to
+			DINT							;Disable interrupts. But first store their status
+			NOP
+			MOV		R4,R5					;Get the mask
+			MOV		&I2CStatus,R4			;Get the status word
+			BIC		R5,&I2CStatus			;Clear the bits defined by the mask
+			POP		SR						;Re-enable interrups only if they were enabled
+			RET								;Return to caller
 
 
 ;----------------------------------------
@@ -401,7 +432,7 @@ I2CTxISR:
 			PUSH	R4						;Gonna need some registers
 			PUSH	R15
 			MOV		&I2CTxStrt,R15			;Get the starting offset of the buffer
-			MOV		I2CTxBuf(R15),R4		;Get the word scheduled
+			MOV		I2CTxBuff(R15),R4		;Get the word scheduled
 			INCD	R15						;Point to the next element in buffer
 			CMP		#I2CTXBUFFLEN,R15		;Passed the border of the table?
 			JLO		ITxNoRvt				;No => do not revert to the beginning
@@ -520,7 +551,7 @@ IStpIEnd:	;Nothing to do at this point. The bus should become free
 ;----------------------------------------
 ; I2CNAckISR
 ; Interrupt Service Routine for I2C NAck. When a NAck is received the communication should be
-; stopped.
+; stopped. Also, the main thread should be notified, so the system wakes up
 ; INPUT         : None
 ; OUTPUT        : None
 ; REGS USED     : None
@@ -530,6 +561,7 @@ IStpIEnd:	;Nothing to do at this point. The bus should become free
 ; OTHER FUNCS   : I2CStpTxNow
 I2CNAckISR:	BIS		#I2CNACKRECV,&I2CStatus	;Flag there is a NAck received
 			CALL	#I2CStpTxNow			;Send a Stop condition
+			BIC		#LPM4,0(SP)				;Wake up the system on exit
 			RETI							;Return to interrupted process. The Stop interrupt
 											; will be triggered after the condition is sent
 
@@ -537,15 +569,67 @@ I2CNAckISR:	BIS		#I2CNACKRECV,&I2CStatus	;Flag there is a NAck received
 ;----------------------------------------
 ; I2CBcntISR
 ; Interrupt Service Routine for I2C Threshold counter. It is triggered whenever the threshold
-; counter is reached, meaning all the bytes expected were transmitted or received
+; counter is reached, meaning all the bytes expected were transmitted or received. The only
+; thing this interrupt does is to wake the system up. The main thread can then fetch the
+; received data, or act according to the status
 ; INPUT         : None
 ; OUTPUT        : None
 ; REGS USED     : None
 ; REGS AFFECTED : None
-; STACK USAGE   : 2 (By call)
-; VARS USED     : I2CNACKRECV, I2CStatus
-; OTHER FUNCS   : I2CStpTxNow
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
 I2CBcntISR:
+			BIC		#LPM4,0(SP)				;Wake up on exit
+			BIS		#I2CCOUNTOK,&I2CStatus	;Set the counter flag
+			RETI
+
+
+;----------------------------------------
+; I2CRxISR
+; Interrupt Service Routine for data reception. Whenever there is a new byte in the receiving
+; buffer of I2C hardware subsystem, this interrupt is triggered. The already came byte must be
+; copied to the receiving circular buffer. When the buffer reaches its threshold the system
+; wakes up to consume these data, and empty the buffer to be able to receive more.
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : R4, R15
+; REGS AFFECTED : None
+; STACK USAGE   : 4 = 2x Push
+; VARS USED     : I2CRxBuff, I2CRXBUFFLEN, I2CRXFULL, I2CRxLen, I2CRXLIMIT, I2CRXOVFL,
+;                 I2CRxStrt, I2CRXTHRESHOLD, I2CStatus, I2CU_RXBUF,
+; OTHER FUNCS   : None
+I2CRxISR:	PUSH	R4
+			MOV.B	&I2CU_RXBUF,R4			;Get the byte as soon as possible cause hardware
+											; is still active
+			PUSH	R15
+			MOV		&I2CRxStrt,R15			;Get the starting offset of the cyclic buffer
+			CMP		#I2CRXBUFFLEN,R15		;Is the receiving buffer full?
+			JHS		IRxIOvfl				;Signal that buffer is overflowed
+			ADD		&I2CRxStrt,R15			;Add the starting offset
+			CMP		#I2CRXBUFFLEN,R15		;Passed the end of buffer?
+			JLO		IRxISkipRvt				;No => Do not revert to its begining
+			SUB		#I2CRXBUFFLEN,R15		;Revert to its beginning
+IRxISkipRvt:MOV.B	R4,I2CRxBuff(R15)		;Store the new byte in receiver buffer
+			MOV		&I2CRxLen,R15			;Get the stored length in buffer
+			INC		R15						;One byte more in buffer
+			MOV		R15,&I2CRxLen			;Store the new value
+			CMP		#I2CRXBUFFLEN,R15		;Reached the limit?
+			JLO		IRxINoFull				;No => do not set the flag
+			BIS		#I2CRXFULL,&I2CStatus	;else, set it
+IRxINoFull:	CMP		#I2CRXTHRESHOLD,R15		;Did we reach the threshold limit?
+			JLO		IRxINoLimit				;No => then we are inside valid margins
+			BIS		#I2CRXLIMIT,&I2CStatus	;Flag that we reached the threshold limit
+IRxIExit:	BIC		#LPM4,4(SP)				;Wake the system up on exit
+IRxINoLimit:;In case of a jump to No Limit, the system does not have to wake up, so just exit
+			POP		R15						;Restore used registers
+			POP		R4
+			RETI
+
+IRxIOvfl:	;No attempt were made to store the newlly came byte, as there is no room in the
+			; receive buffer. Flag the error and wake the system up to handle it
+			BIS		#I2CRXOVFL,&I2CStatus	;Receiver System Overflow
+			JMP		IRxIExit
 
 
 ;----------------------------------------

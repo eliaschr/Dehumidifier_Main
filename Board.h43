@@ -111,5 +111,12 @@ Board_RelayFanHigh:		.equ	BIT2				;Relay that enables the fan at high speed
 Board_RelayAnion:		.equ	BIT3				;Relay that enables the Anionizer
 
 
+;----------------------------------------
+; Relays Definitions
+;========================================
+Board_THSensorI2CPort:	.equ	0					;I2C Port used for the Humidity and
+													; Tempertature sensor
+
+
 						.include "AutoDefs.h43"
 	.endif											;__BOARD_DEFS__

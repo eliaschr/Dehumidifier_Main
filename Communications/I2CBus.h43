@@ -55,10 +55,11 @@ __I2CBUSLIB_H43__:		.equ	1				;Must define this in order to avoid double
 ;========================================
 I2CTXBUFFLEN:			.equ	32				;Size of I2C transmission buffer in words
 I2CRXBUFFLEN:			.equ	32				;Size of I2C reception buffer
-I2CPORT:				.equ	0				;Number of eUSCI_B serial module to use for
-												; the sensor
+I2CRXTHRESHOLD:			.equ	24				;Receive threshold value
 I2COWNADDR:				.equ	076h			;The address of MSP if it was a slave (7 bits)
 I2C_BPS:				.equ	400000			;Bps of the I2C bus
+I2CPORT:				.equ	Board_THSensorI2CPort	;Number of eUSCI_B serial module to
+												; use for the sensor
 
 
 ;----------------------------------------
@@ -71,6 +72,7 @@ I2C_BPS:				.equ	400000			;Bps of the I2C bus
 						.global	I2CStop			;Sends a Stop Condition
 						.global	I2CStartRx		;Starts a communication as a receiver
 						.global	I2CReadBuf		;Reads a byte received through I2C
+						.global	I2CGetStatus	;Gets the status flags of I2C subsystem
 
 
 	.endif										;__I2CBUSLIB_H43__
