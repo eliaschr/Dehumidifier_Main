@@ -36,6 +36,8 @@
 			.include "Leds/Leds.h43"			;Leds handling library
 			.include "Buzzer/Buzzer.h43"		;Buzzer handling library
 			.include "Relays/Relays.h43"		;Relays handling library
+			.include "Communications/I2CBus.h43";I2C Bus library
+			.include "Sensors/HDC2080.h43"		;Humidity & Temperature
 
 
 ;*********************************************************************************************
@@ -179,11 +181,18 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#LedsPInit					;Initialize the ports used by the leds
 			CALL	#BuzzPInit					;Initialize the Buzzer subsystem
 			CALL	#RelaysPInit				;Initialize the Relays subsystem
+			CALL	#I2CPInit					;Initialize the I2C Bus pins
 			CALL	#InitSys					;Initialize clock, RAM and variables, eint
 
 			MOV		#KEYPOWER,R4
 			CALL	#KBDEINTKEYS				;Enable only the keyboard Power key
 			CALL	#LedsEnable					;Start led scanning
+			CALL	#I2CInit					;Initialize the I2C bus subsystem
+			
+			MOV		#0FCh,R10					;As a test we are going to get the ID of the
+			MOV		#004h,R11					; device, consisted of 4 bytes
+			CALL	#HDCReadRaw					;Read these data. When everything is fine the
+												; four bytes will be in the Receive Buffer
 
 			NOP
 ReSleep:	BIS		#LPM4 | GIE,SR				;Sleep...

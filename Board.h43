@@ -118,5 +118,6 @@ Board_THSensorI2CPort:	.equ	0					;I2C Port used for the Humidity and
 													; Tempertature sensor
 
 
+
 						.include "AutoDefs.h43"
 	.endif											;__BOARD_DEFS__

@@ -33,14 +33,43 @@
 ;*===========================================================================================*
 ;* Variables:                                                                                *
 ;* -----------                                                                               *
+;* I2CTxBuff : I2C Transmission buffer (contains words)                                      *
+;* I2CRxBuff : I2C Transmission buffer                                                       *
+;* I2CTxStrt : Starting offset of transmission buffer                                        *
+;* I2CTxLen  : Length of data in transmission buffer                                         *
+;* I2CRxStrt : Starting offset of reception buffer                                           *
+;* I2CRxLen  : Length of data written in reception buffer                                    *
+;* I2CStatus : Some status flags                                                             *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
 ;* --------------------------                                                                *
+;* I2CP_MASK   : Mask bit for the pins used as I2C bus                                       *
+;* Variable I2CStatus is consisted of bit flags that represent various states. The following *
+;* definitions describe the bits and their meanings:                                         *
+;* I2CBUZY     : I2C Bus is buzy (Transaction in progress). The bit is set when there is a   *
+;*               Start Condition and reset when there is a Stop one                          *
+;* I2CTRANSMIT : I2C Subsystem acts as Transmitter (Write data to device)                    *
+;* I2CPRESTOP  : I2C Early Stop condition met => Scheduled bytes were skipped                *
+;* I2CNACKRECV : I2C Received a NAck                                                         *
+;* I2CCOUNTOK  : Threashold counter reached                                                  *
+;* I2CRXOVFL   : Rx buffer overflow. Data were lost                                          *
+;* I2CRXFULL   : Rx Buffer is now full. No more bytes to store                               *
+;* I2CRXLIMIT  : When the Rx buffer has reached a threshold, this flag is set to notify for  *
+;*               Almost Full condition. The threshold is set by I2CRXTHRESHOLD.              *
+;* The transmission buffer contains words of data in order to keep not only the bytes to be  *
+;* sent, but also the slave addresses for Start Conditions, or Restart Conditions or Stop    *
+;* ones. The following flag defines if the word is a condition and if the master acts as a   *
+;* transmitter or receiver.                                                                  *
+;* I2CB_UCTR                                                                                 *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
 ;* ------------------------------------------------                                          *
+;* I2C_SCL      : I2C Clock line pin                                                         *
+;* I2C_SDA      : I2C Data line pin                                                          *
+;* I2CTXBUFFLEN : Size of the Tx Circular Buffer in words                                    *
+;* I2CRXBUFFLEN : Size of the Rx Circular Buffer in bytes                                    *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
@@ -312,12 +341,13 @@ I2CSpSchdD:	;The bus should schedule the transaction, by adding it in the transm
 ; Receiver mode, so it expects to receive data from the slave
 ; INPUT         : R4 contains the Slave to be addressed
 ;               : R5 contains the number of bytes to fetch from the slave
-; OUTPUT        : None
-; REGS USED     : None
-; REGS AFFECTED : None
-; STACK USAGE   : None
-; VARS USED     : I2CU_CTLW0, I2CU_I2CSA
-; OTHER FUNCS   : None
+; OUTPUT        : Carry Flag reflects if there was an error (when set)
+; REGS USED     : R4, R5, R15
+; REGS AFFECTED : R4, R15
+; STACK USAGE   : 2 (by I2CTx_Schd)
+; VARS USED     : I2CBUZY, I2CStatus, I2CTRANSMIT, I2CU_CTLW0, I2CU_I2CSA, I2CU_IE, I2CU_IFG,
+;                 I2CU_TBCNT
+; OTHER FUNCS   : I2CTx_Schd
 I2CStartRx:	CMP		#00080h,R4				;An address cannot exceed 7 bits
 			JHS		I2CTxError				;Flag the error
 			CMP		#00100h,R5				;The number of bytes to be received cannot exceed
@@ -344,6 +374,7 @@ I2CSTTRx:	;At this point, either the bus is free, or it expects data to be trans
 											;The bus now is buzy transmitting data
 			BIS		#UCTXSTT,&I2CU_CTLW0	;Generate the Start condition and send the address
 			BIS		#UCTXIE0|UCRXIE0|UCNACKIE|UCBCNTIE|UCSTPIE,&I2CU_IE;Enable necessary ints.
+			CLRC
 			RET
 
 I2CRxSchdSt:;The bus should schedule the transaction, by adding it in the transmission buffer.

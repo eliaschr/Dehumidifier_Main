@@ -1,7 +1,7 @@
 ;*********************************************************************************************
-;* I2C Bus Support Library                                                                   *
+;* HDC2080 Temperature/Humidity Sensor Library                                               *
 ;*-------------------------------------------------------------------------------------------*
-;* I2CBus.h43                                                                                *
+;* HDC2080.h43                                                                               *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -18,75 +18,47 @@
 ;* You should have received a copy of the GNU General Public License                         *
 ;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
 ;*-------------------------------------------------------------------------------------------*
-;* In this file all the necessary definitions for the use of an I2C bus are defined.         *
+;* In this file all the necessary definitions for controlling HDC2080 Temperature/Humidity   *
+;* Sensor are set.                                                                           *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
-			.title	"I2C Bus Supoort Library"
+			.title	"HDC2080 Temperature/Humidity Sensor Library"
 			.width	94
 			.tab	4
 
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developper):                                       *
 ;* ----------------------------------------------------                                      *
-;* I2CTXBUFFLEN   : Sets the size of I2C transmission buffer in words                        *
-;* I2CRXBUFFLEN   : Sets the size of I2C reception buffer in bytes                           *
-;* I2CRXTHRESHOLD : When the receive buffer has reached that value of bytes, it wakes the    *
-;*                  system up as the buffer is considered almost full.                       *
-;* I2COWNADDR     : The address of MSP if it was a slave (7 bits) (Not really needed here)   *
-;* I2C_BPS        : Bit rate of the I2C bus                                                  *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
-;* I2CPORT : The eUSCI_B module to be used as I2C port that communicates with the sensor     *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
-;* I2CPInit     : Initialize the port pins used as I2C                                       *
-;* I2CInit      : Initializes the eUSCI as I2C                                               *
-;* I2CStartTx   : Starts a communication as a transmitter                                    *
-;* I2CSend      : Continues a transmission                                                   *
-;* I2CStop      : Sends a Stop Condition                                                     *
-;* I2CStartRx   : Starts a communication as a receiver                                       *
-;* I2CReadBuf   : Reads a byte received through I2C                                          *
-;* I2CGetStatus : Gets the status flags of I2C subsystem                                     *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
 ;* ------------------------------------------------                                          *
-;* Board_THSensorI2CPort : Defined in Board.h file. Sets the eUSCI_B number of bus used for  *
-;*                         I2C communications                                                *
 ;*                                                                                           *
 ;*********************************************************************************************
 
-	.if  ($isdefed("__I2CBUSLIB_H43__") == 0)
+	.if  ($isdefed("__HDC2080_LIB_H43__") == 0)
 
-__I2CBUSLIB_H43__:		.equ	1				;Must define this in order to avoid double
+__HDC2080_LIB_H43__:.equ	1					;Must define this in order to avoid double
 												; inclusions
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-I2CTXBUFFLEN:			.equ	32				;Size of I2C transmission buffer in words
-I2CRXBUFFLEN:			.equ	32				;Size of I2C reception buffer
-I2CRXTHRESHOLD:			.equ	24				;Receive threshold value
-I2COWNADDR:				.equ	076h			;The address of MSP if it was a slave (7 bits)
-I2C_BPS:				.equ	400000			;Bps of the I2C bus
-I2CPORT:				.equ	Board_THSensorI2CPort	;Number of eUSCI_B serial module to
-												; use for the sensor
+HDCADDR:			.equ	040h				;I2C Address of the sensor (can be 40h or 41h)
 
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
-						.global	I2CPInit		;Initialize the port pins used as I2C
-						.global	I2CInit			;Initializes the eUSCI as I2C
-						.global	I2CStartTx		;Starts a communication as a transmitter
-						.global	I2CSend			;Continues a transmission
-						.global	I2CStop			;Sends a Stop Condition
-						.global	I2CStartRx		;Starts a communication as a receiver
-						.global	I2CReadBuf		;Reads a byte received through I2C
-						.global	I2CGetStatus	;Gets the status flags of I2C subsystem
+					.global	HDCSendRaw			;Sends raw data to HDC2080
+					.global	HDCReadRaw			;Reads raw data from HDC2080
 
 
-	.endif										;__I2CBUSLIB_H43__
+	.endif										;__HDC2080_LIB_H43__
