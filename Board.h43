@@ -114,7 +114,7 @@ Board_RelayAnion:		.equ	BIT3				;Relay that enables the Anionizer
 ;----------------------------------------
 ; Relays Definitions
 ;========================================
-Board_THSensorI2CPort:	.equ	0					;I2C Port used for the Humidity and
+Board_THSensorI2CPort:	.equ	2					;I2C Port used for the Humidity and
 													; Tempertature sensor
 
 

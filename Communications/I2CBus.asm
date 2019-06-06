@@ -94,6 +94,7 @@ I2CRXOVFL:	.equ	BITA					;Rx buffer overflow
 I2CRXFULL:	.equ	BIT9					;Rx Buffer is now full. No more bytes to store
 I2CRXLIMIT:	.equ	BIT8					;When the Rx buffer has reached a threshold, this
 											; flag is set to notify for Almost Full condition
+I2CTXINUSE:	.equ	BIT7					;Flags that the transmitter is in use now
 
 ;Flag in TxBuffer word that presents UCRX of the following Start Condition
 I2CB_UCTR:	.equ	BITF					;UCTR Flag for the following Start Condition
@@ -188,8 +189,8 @@ I2CInit:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep associated module in reset to configure
 ; REGS USED     : R4, R5, R15
 ; REGS AFFECTED : R4, R15
 ; STACK USAGE   : 2
-; VARS USED     : I2CB_UCTX, I2CBUZY, I2CTxBuff, I2CTxStrt, I2CStatus, I2CTxLen, I2CTXBUFFLEN,
-;                 I2CU_CTLW0, I2CU_I2CSA, I2CU_IE, I2CU_IFG
+; VARS USED     : I2CB_UCTX, I2CBUZY, I2CTxBuff, I2CTxStrt, I2CStatus, I2CTXINUSE, I2CTxLen,
+;                 I2CTXBUFFLEN, I2CU_CTLW0, I2CU_I2CSA, I2CU_IE, I2CU_IFG
 ; OTHER FUNCS   : None
 I2CStartTx:	CMP		#00080h,R4				;The slave address cannot be greater than 7 bits
 			JHS		I2CTxError				;Signal the error and exit
@@ -198,7 +199,7 @@ I2CStartTx:	CMP		#00080h,R4				;The slave address cannot be greater than 7 bits
 			BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
 			JZ		I2CSTTTx				;No => Start the communication at once
 			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
-			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			BIT		#I2CTXINUSE,&I2CStatus	;is the transmission sybsystem in use?
 			JZ		I2CTxSchdSt				;Yes => then schedule the transmission
 			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
 			JNZ		I2CTxSchdSt				;Yes => Schedule this transmission
@@ -266,7 +267,8 @@ I2CTxError:	SETC							;Set carry flag to express there was an error
 ; REGS USED     : R4, R15 (Through I2CTx_Schd)
 ; REGS AFFECTED : R4, R15
 ; STACK USAGE   : 2 (by I2CTx_Schd)
-; VARS USED     : I2CBUZY, I2CStatus, I2CTRANSMIT, I2CTXBUF, I2CTxLen, I2CU_IE, I2CU_IFG
+; VARS USED     : I2CBUZY, I2CStatus, I2CTRANSMIT, I2CTXBUF, I2CTXINUSE, I2CTxLen, I2CU_IE,
+;                 I2CU_IFG
 ; OTHER FUNCS   : I2CTx_Schd, I2CTxError
 I2CSend:	;In order to send a byte, the bus must be in Buzy mode (a transaction must have
 			; started before, using a Start Condition) and act as a Transmitter. Otherwise it
@@ -276,7 +278,7 @@ I2CSend:	;In order to send a byte, the bus must be in Buzy mode (a transaction m
 			BIT		#I2CTRANSMIT,&I2CStatus	;Is the Master acting as a Transmitter?
 			JZ		I2CTxError				;No => Illegal again...
 			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
-			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			BIT		#I2CTXINUSE,&I2CStatus	;is the transmission sybsystem in use?
 			JZ		I2CTxSchdD				;Yes => then schedule the transmission
 			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
 			JNZ		I2CTxSchdD				;Yes => Schedule this transmission
@@ -284,6 +286,7 @@ I2CSend:	;In order to send a byte, the bus must be in Buzy mode (a transaction m
 I2CTxNow:	;At this point, either the bus is free, or it expects data to be transmitted (all
 			; the previous scheduled data were transmitted and be ready for the next action).
 			; The bus must be used at once
+			BIS		#I2CTXINUSE,&I2CStatus	;Flag that the transmitter is in use now
 			MOV.B	R4,&I2CU_TXBUF			;Send it at once
 			BIS		#UCTXIE0,&I2CU_IE		;Enable the transmission interrupt
 			CLRC							;Clear carry flag to signal the validity
@@ -308,13 +311,13 @@ I2CTxSchdD:	;The system should schedule the byte, by adding it in the transmissi
 ; REGS USED     : R4, R15 (by I2CTx_Schd)
 ; REGS AFFECTED : R4, R15 (by I2CTx_Schd)
 ; STACK USAGE   : 2 (by I2CTx_Schd)
-; VARS USED     : I2CB_UCTR, I2CU_CTLW0, I2CBUZY, I2CStatus, I2CTXBUF, I2CTxLen, I2CU_IE,
-;                 I2CU_IFG
+; VARS USED     : I2CB_UCTR, I2CU_CTLW0, I2CBUZY, I2CStatus, I2CTXBUF, I2CTXINUSE, I2CTxLen,
+;                 I2CU_IE, I2CU_IFG
 ; OTHER FUNCS   : I2CTx_Schd
 I2CStop:	BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
 			JZ		I2CTxError				;No => Illegal to send a Stop Condition
 			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
-			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			BIT		#I2CTXINUSE,&I2CStatus	;is the transmission sybsystem in use?
 			JZ		I2CSpSchdD				;Yes => then schedule the transmission
 			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
 			JNZ		I2CSpSchdD				;Yes => Schedule this transmission
@@ -345,8 +348,8 @@ I2CSpSchdD:	;The bus should schedule the transaction, by adding it in the transm
 ; REGS USED     : R4, R5, R15
 ; REGS AFFECTED : R4, R15
 ; STACK USAGE   : 2 (by I2CTx_Schd)
-; VARS USED     : I2CBUZY, I2CStatus, I2CTRANSMIT, I2CU_CTLW0, I2CU_I2CSA, I2CU_IE, I2CU_IFG,
-;                 I2CU_TBCNT
+; VARS USED     : I2CBUZY, I2CStatus, I2CTRANSMIT, I2CTXINUSE, I2CU_CTLW0, I2CU_I2CSA,
+;                 I2CU_IE, I2CU_IFG, I2CU_TBCNT
 ; OTHER FUNCS   : I2CTx_Schd
 I2CStartRx:	CMP		#00080h,R4				;An address cannot exceed 7 bits
 			JHS		I2CTxError				;Flag the error
@@ -355,7 +358,7 @@ I2CStartRx:	CMP		#00080h,R4				;An address cannot exceed 7 bits
 			BIT		#I2CBUZY,&I2CStatus		;Is the bus buzy?
 			JZ		I2CSTTRx				;No => Start the communication at once
 			BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
-			BIT		#UCTXIFG0,&I2CU_IFG		;is the transmission sybsystem in use?
+			BIT		#I2CTXINUSE,&I2CStatus	;is the transmission sybsystem in use?
 			JZ		I2CRxSchdSt				;Yes => then schedule the transmission
 
 			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
@@ -454,10 +457,10 @@ I2CGetStatus:
 ; REGS USED     : R4, R15
 ; REGS AFFECTED : None
 ; STACK USAGE   : 4 = 2x Push
-; VARS USED     : I2CB_UCTR, I2CStatus, I2CTRANSMIT, I2CTxBuf, I2CTXBUFFLEN, I2CTxLen,
-;                 I2CTxStrt, I2CU_CTLW0, I2CU_I2CSA, I2CU_IE, I2CU_TBCNT, I2CU_TXBUF
+; VARS USED     : I2CB_UCTR, I2CStatus, I2CTRANSMIT, I2CTxBuf, I2CTXBUFFLEN, I2CTXINUSE,
+;                 I2CTxLen, I2CTxStrt, I2CU_CTLW0, I2CU_I2CSA, I2CU_IE, I2CU_TBCNT, I2CU_TXBUF
 ; OTHER FUNCS   : None
-I2CTxISR:	
+I2CTxISR:	BIC		#I2CTXINUSE,&I2CStatus	;Transmitter for now is free
 			CMP		#00000h,&I2CTxLen		;Is there any scheduled data to be transmitted?
 			JZ		ITxISREnd				;No => Then exit the interrupt
 			PUSH	R4						;Gonna need some registers
@@ -470,8 +473,8 @@ I2CTxISR:
 			MOV		#00000h,R15				;else, point to the beginning of the table
 ITxNoRvt:	MOV		R15,&I2CTxStrt			;Store the new pointer
 			DECD	&I2CTxLen				;One word less in the buffer
-			JNZ		ITxISRKeep				;Still data in buffer? => Keep this ISR enabled
-			BIC		#UCTXIE0,&I2CU_IE		;else, disable it
+;			JNZ		ITxISRKeep				;Still data in buffer? => Keep this ISR enabled
+;			BIC		#UCTXIE0,&I2CU_IE		;else, disable it
 			;Now R4 contains the data word fetched from Tx Buffer. R4 may contain 0 at its MSB
 			; to signal the presence of data at its LSB, or /= 0 to signal a Start/Stop
 			; condition to be sent and a counter at its lower byte. Need to figure out if this
@@ -486,11 +489,12 @@ ITxISRStp:	;When a Stop Condition is scheduled, the lower byte of R4 is irreleva
 			POP		R15						;Restore used registers
 			POP		R4
 
-ITxISREnd:	BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
+ITxISREnd:	;BIC		#UCTXIE0,&I2CU_IE		;Disable transmission interrupt
 			RETI
 			
 ITxISRDat:	;Just a clear byte to send
 			MOV.B	R4,&I2CU_TXBUF			;Go!...
+			BIS		#I2CTXINUSE,&I2CStatus	;Flag that the transmitter is in use now
 			POP		R15						;And exit, restoring the used registers
 			POP		R4
 			RETI
