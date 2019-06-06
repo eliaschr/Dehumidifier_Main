@@ -67,26 +67,40 @@ __I2CBUSLIB_H43__:		.equ	1				;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-I2CTXBUFFLEN:			.equ	32				;Size of I2C transmission buffer in words
-I2CRXBUFFLEN:			.equ	32				;Size of I2C reception buffer
-I2CRXTHRESHOLD:			.equ	24				;Receive threshold value
-I2COWNADDR:				.equ	076h			;The address of MSP if it was a slave (7 bits)
-I2C_BPS:				.equ	400000			;Bps of the I2C bus
-I2CPORT:				.equ	Board_THSensorI2CPort	;Number of eUSCI_B serial module to
+I2CTXBUFFLEN:		.equ	32					;Size of I2C transmission buffer in words
+I2CRXBUFFLEN:		.equ	32					;Size of I2C reception buffer
+I2CRXTHRESHOLD:		.equ	24					;Receive threshold value
+I2COWNADDR:			.equ	076h				;The address of MSP if it was a slave (7 bits)
+I2C_BPS:			.equ	400000				;Bps of the I2C bus
+I2CPORT:			.equ	Board_THSensorI2CPort	;Number of eUSCI_B serial module to
 												; use for the sensor
+;Flags that appear in I2CStatus variable to describe the status of I2C subsystem
+I2CBUZY:			.equ	BITF				;I2C Bus is buzy (Transaction in progress)
+I2CTRANSMIT:		.equ	BITE				;I2C Subsystem sends data
+I2CPRESTOP:			.equ	BITD				;I2C Early Stop condition met => Scheduled
+												; bytes were skipped
+I2CNACKRECV:		.equ	BITC				;I2C Received a NAck
+I2CCOUNTOK:			.equ	BITB				;Threashold counter reached
+I2CRXOVFL:			.equ	BITA				;Rx buffer overflow
+I2CRXFULL:			.equ	BIT9				;Rx Buffer is now full. No more bytes to store
+I2CRXLIMIT:			.equ	BIT8				;When the Rx buffer has reached a threshold,
+												; this flag is set to notify for Almost Full
+												; condition
+I2CTXINUSE:			.equ	BIT7				;Flags that the transmitter is in use now
+I2CRXINUSE:			.equ	BIT6				;Flags that the receiver expects more data
 
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
-						.global	I2CPInit		;Initialize the port pins used as I2C
-						.global	I2CInit			;Initializes the eUSCI as I2C
-						.global	I2CStartTx		;Starts a communication as a transmitter
-						.global	I2CSend			;Continues a transmission
-						.global	I2CStop			;Sends a Stop Condition
-						.global	I2CStartRx		;Starts a communication as a receiver
-						.global	I2CReadBuf		;Reads a byte received through I2C
-						.global	I2CGetStatus	;Gets the status flags of I2C subsystem
+					.global	I2CPInit			;Initialize the port pins used as I2C
+					.global	I2CInit				;Initializes the eUSCI as I2C
+					.global	I2CStartTx			;Starts a communication as a transmitter
+					.global	I2CSend				;Continues a transmission
+					.global	I2CStop				;Sends a Stop Condition
+					.global	I2CStartRx			;Starts a communication as a receiver
+					.global	I2CReadBuf			;Reads a byte received through I2C
+					.global	I2CGetStatus		;Gets the status flags of I2C subsystem
 
 
 	.endif										;__I2CBUSLIB_H43__

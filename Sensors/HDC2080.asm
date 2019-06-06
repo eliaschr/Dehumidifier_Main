@@ -123,8 +123,8 @@ HDCReadRaw:	MOV		#HDCADDR,R4					;Address the HDC2080
 			MOV		#HDCADDR,R4					;Going to issue a Restart Condition
 			MOV		R11,R5						; to receive R11 bytes
 			CALL	#I2CStartRx					;Send the Restart condition and fetch R5 bytes
-			JC		HDCRREnd					;In case of an error exit
-			CALL	#I2CStop					;Then Stop the transaction
+;			JC		HDCRREnd					;In case of an error exit
+;			CALL	#I2CStop					;Then Stop the transaction
 HDCRREnd:	RET
 
 

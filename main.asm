@@ -197,9 +197,18 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			NOP
 ReSleep:	BIS		#LPM4 | GIE,SR				;Sleep...
 			NOP
+MainLoop:	MOV		#I2CCOUNTOK,R4				;Clear I2CCOUNTOK flag if set
+			CALL	#I2CGetStatus				;Get the status of the I2C bus
+			BIT		#I2CCOUNTOK,R4				;Is this flag set? (New data to read?)
+			JZ		KeybLoop					;No => Skip handling I2C data
+			;Should handle I2C received data here. A Breakpoint should be placed here to see
+			; the I2CRxBuffer if it contains the valid Manufacturer and Device IDs
+			;If there are 49 54 D0 07 in the buffer, then the system communicated correctly
+			; with HDC2080
+			NOP
 
 			;Lets prepare the keyboard loop
-MainLoop:	CALL	#KBDReadKey					;Is there a key to use?
+KeybLoop:	CALL	#KBDReadKey					;Is there a key to use?
 			JC		ReSleep						;No => Nothing to do
 
 			CMP.B	#KEYPOWER,R4				;Is it a normal press of the Power key?
