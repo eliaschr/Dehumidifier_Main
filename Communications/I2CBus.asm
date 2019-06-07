@@ -64,6 +64,39 @@
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
 ;* --------------------------                                                                *
+;* I2CPInit     : Initialize the port pins used as I2C                                       *
+;* I2CInit      : Initializes the eUSCI as I2C                                               *
+;* I2CStartTx   : Starts a communication as a transmitter, by sending a Start condition and  *
+;*                the Slave Address with the R/W bit cleared                                 *
+;* I2CSend      : Continues a transmission by sending new bytes (used only in transmitter)   *
+;* I2CStop      : Sends a Stop Condition                                                     *
+;* I2CStartRx   : Starts a communication as a receiver, by sending a Start condition and the *
+;*                Slave Address with the R/W bit set                                         *
+;* I2CReadBuf   : Reads a byte received through I2C, from the receiver buffer (if there is   *
+;*                any)                                                                       *
+;* I2CGetStatus : Gets the status flags of I2C subsystem so the caller can get the state of  *
+;*                the bus and the communication                                              *
+;* I2CTxISR     : Interrupt service routine that is triggered when the I2C trnasmit buffer   *
+;*                has already sent the byte and is ready to accept another one (UCTXIFG0)    *
+;* I2CRxISR     ; Interrupt service routine that is triggered when the I2C bus has received  *
+;*                a byte from a previously addressed slave device. It adds the new byte in   *
+;*                the receiver cyclic buffer. If there is a warning or critical condition of *
+;*                the cyclic buffer then it wakes the system up to handle the condition      *
+;* I2CNAckISR   : Interrupt service routine that handles an incoming NAck from a slave when  *
+;*                in transmitter mode. It sends a stop condition to the bus, sets the        *
+;*                appropriate flag and wakes the system to handle the condition. All the     *
+;*                scheduled data are discarder from the transmiting cyclic buffer, until a   *
+;*                start condition is met. The communication then resumes from that point.    *
+;* I2CBcntISR   : Interrupt service routine that is triggered when the number of bytes       *
+;*                threshold has been reached. Since this is a very low priority interrupt,   *
+;*                it is not used to handle conditions of the communication, but it flags the *
+;*                end of the receiving communication                                         *
+;* I2CStpISR    : Interrupt service routine that is triggered whenever there is a stop       *
+;*                condition met at the I2C bus. It resumes communication if there are more   *
+;*                scheduled transactions and wakes the system up to inform for a transaction *
+;*                completeness.                                                              *
+;* I2CDispatcher: It is the real interrupt service routine that dispatches to the previously *
+;*                mentioned ISRs according to the I2C flag that triggered an interrupt.      *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
@@ -105,13 +138,13 @@ I2CP_MASK:	.equ	(I2C_SCL | I2C_SDA)
 
 ;When debugging the subsystem, the variables should be global in order for CCS to address them
 ; When debugging uncomment the following lines
-			.global	I2CTxBuff
-			.global	I2CRxBuff
-			.global	I2CTxStrt
-			.global	I2CTxLen
-			.global	I2CRxStrt
-			.global	I2CRxLen
-			.global	I2CStatus
+;			.global	I2CTxBuff
+;			.global	I2CRxBuff
+;			.global	I2CTxStrt
+;			.global	I2CTxLen
+;			.global	I2CRxStrt
+;			.global	I2CRxLen
+;			.global	I2CStatus
 
 
 ;----------------------------------------
