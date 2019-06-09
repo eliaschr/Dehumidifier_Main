@@ -29,10 +29,90 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developper):                                       *
 ;* ----------------------------------------------------                                      *
+;* HDCADDR          : I2C Address of the sensor (can be 40h or 41h)                          *
+;* DEF_HDCTEMPRES   : Default resolution when taking temperature measurements                *
+;* DEF_HDCHUMIDRES  : Default resolution when taking humidity measurements                   *
+;* DEF_MEASMODE     : Default measurement mode (Temperature, Humidity or Both)               *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* DRDY Register is consisted of flag bits that describe interrupt status. The following     *
+;* definitions are for describing these bits and make the code more self documented          *
+;* HDC_DRDY_STATUS  : Data Readiness status                                                  *
+;* HDC_TH_STATUS    : Temperature crossed up the High Temperature Threshold level            *
+;* HDC_TL_STATUS    : Temperature crossed down the Lower Temperature Threshold level         *
+;* HDC_HH_STATUS    : Humidity crossed up the High Humidity Threshold level                  *
+;* HDC_HL_STATUS    : Humidity crossed down the Lower Humidity Threshold                     *
+;*                                                                                           *
+;* Interrupt Configuration Register is consisted of flag bits that enable various interrupts.*
+;* The following definitions are for describing these bits and make the code more self       *
+;* documented                                                                                *
+;* HDC_DRDY_ENABLE  : Data Ready Interrupt enable bit                                        *
+;* HDC_TH_ENABLE    : Temperature High Threshold Interrupt bit                               *
+;* HDC_TL_ENABLE    : Temperature Low Threshold Interrupt bit                                *
+;* HDC_HH_ENABLE    : Humidity High Threshold Interrupt bit                                  *
+;* HDC_HL_ENABLE    : Humidity Low Threshold Interrupt bit                                   *
+;*                                                                                           *
+;* Device Configuration Register is consisted of flag bits that enable various features. The *
+;* following definitions are for describing these bits and make the code more self           *
+;* documented.                                                                               *
+;* HDC_SOFT_RES     : Soft Reset of device                                                   *
+;* HDC_AMM          : Auto Measurement Mode                                                  *
+;* HDC_HEAT_EN      : Heater Enable                                                          *
+;* HDC_DRDY_INT_EN  : DRDY/INT enable                                                        *
+;* HDC_INT_POL      : Interrupt Polarity                                                     *
+;* HDC_MODE         : Interrupt Mode                                                         *
+;*                                                                                           *
+;* Auto Measurement Modes available                                                          *
+;* HDC_AMM_DISABLE  :Disabled. Measurement is initiated by I2C                               *
+;* HDC_AMM_1S2M     : 1 sample every 2 minutes                                               *
+;* HDC_AMM_1S1M     : 1 sample every 1 minute                                                *
+;* HDC_AMM_0_1HZ    : 1 sample every 10 seconds                                              *
+;* HDC_AMM_0_2HZ    : 1 sample every 5 seconds                                               *
+;* HDC_AMM_1HZ      : 1 sample every second                                                  *
+;* HDC_AMM_2HZ      : 2 samples every second                                                 *
+;* HDC_AMM_5HZ      : 5 samples every second                                                 *
+;*                                                                                           *
+;* Heater on/off                                                                             *
+;* HDC_HEATER_ON    : Heater On                                                              *
+;* HDC_HEATER_OFF   : Heater Off                                                             *
+;*                                                                                           *
+;* DRDY Enable/Disable                                                                       *
+;* HDC_DRDY_EN      : DRDY Enabled                                                           *
+;* HDC_DRDY_DIS     : DRDY in Hi-Z                                                           *
+;*                                                                                           *
+;* Interrupt Polarity                                                                        *
+;* HDC_POL_ACT_LOW  : Polarity of Interrupt is Active Low                                    *
+;* HDC_POL_ACT_HIGH : Polarity of Interrupt is Active High                                   *
+;*                                                                                           *
+;* Interrupt Level/Comparator more                                                           *
+;* HDC_MODE_LEVEL   : Interrupt mode is Level Sensitive                                      *
+;* HDC_MODE_COMP    : Interrupt mode is Comparator Sensitive                                 *
+;*                                                                                           *
+;* The following definitions are for the Measurement Configuration Register                  *
+;* HDC_MEAS_TRES    : Temperature Measurement Resolution                                     *
+;* HDC_MEAS_HRES    : Humidity Measurement Resolution                                        *
+;* HDC_MEAS_CONF    : Measurement type configuration                                         *
+;* HDC_MEAS_TRIG    : Trigger Manual Measurement                                             *
+;*                                                                                           *
+;* Definitions for temperature resolution setting                                            *
+;* HDC_TRES_14BIT   : 14 bit resolution for temperature reading                              *
+;* HDC_TRES_11BIT   : 11 bit resolution for temperature reading                              *
+;* HDC_TRES_8BIT    : 8 bit resolution for temperature reading                               *
+;*                                                                                           *
+;* Definitions for humidity resolution setting                                               *
+;* HDC_HRES_14BIT   : 14 bit resolution for humidity reading                                 *
+;* HDC_HRES_11BIT   : 11 bit resolution for humidity reading                                 *
+;* HDC_HRES_8BIT    : 8 bit resolution for temperature reading                               *
+;*                                                                                           *
+;* Defintions for measurement mode configuration                                             *
+;* HDC_CONF_BOTH    : Take both measurements                                                 *
+;* HDC_CONF_TEMP    : Measure only temperature                                               *
+;* HDC_CONF_HUMID   : Measure only humidity                                                  *
+;*                                                                                           *
+;* Definition to help starting a measurement                                                 *
+;* HDC_CONF_TRIGGER : Trigger a measurement set now (Self cleared flag when ready)           *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
@@ -52,13 +132,118 @@ __HDC2080_LIB_H43__:.equ	1					;Must define this in order to avoid double
 ; Global Definitions
 ;========================================
 HDCADDR:			.equ	040h				;I2C Address of the sensor (can be 40h or 41h)
+DEF_HDCTEMPRES:     .equ	HDC_TRES_14BIT		;Default temperature resolution
+DEF_HDCHUMIDRES:	.equ	HDC_HRES_14BIT		;Default humidity resolution
+DEF_MEASMODE:		.equ	HDC_CONF_BOTH		;Default measurement mode
+DEF_AMM:			.equ	HDC_AMM_1S1M		;Default sampling rate
+
+;DRDY Register is consisted of flag bits that describe interrupt status. The following
+; definitions are for describing these bits and make the code more self documented
+HDC_DRDY_STATUS:	.equ	BIT7				;Data Readiness status
+HDC_TH_STATUS:		.equ	BIT6				;Temperature crossed up the High Temperature
+                                                ; Threshold level
+HDC_TL_STATUS:		.equ	BIT5				;Temperature crossed down the Low Temperature
+                                                ; Threshold level
+HDC_HH_STATUS:		.equ	BIT4				;Humidity crossed up the High Humidity
+                                                ; Threshold level
+HDC_HL_STATUS:		.equ	BIT3				;Humidity crossed down the Low Humidity
+                                                ; Threshold level
+
+;Interrupt Configuration Register is consisted of flag bits that enable various interrupts.
+; The following definitions are for describing these bits and make the code more self
+; documented
+HDC_DRDY_ENABLE:	.equ	BIT7				;Data Ready Interrupt enable bit
+HDC_TH_ENABLE:		.equ	BIT6				;Temperature High Threshold Interrupt bit
+HDC_TL_ENABLE:		.equ	BIT5				;Temperature Low Threshold Interrupt bit
+HDC_HH_ENABLE:		.equ	BIT4				;Humidity High Threshold Interrupt bit
+HDC_HL_ENABLE:		.equ	BIT3				;Humidity Low Threshold Interrupt bit
+
+;Device Configuration Register is consisted of flag bits that enable various features. The
+; following definitions are for describing these bits and make the code more self documented.
+HDC_SOFT_RES:		.equ	BIT7				;Soft Reset of device
+HDC_AMM:			.equ	(BIT6 | BIT5 | BIT4);Auto Measurement Mode
+HDC_HEAT_EN:		.equ	BIT3				;Heater Enable
+HDC_DRDY_INT_EN:	.equ	BIT2				;DRDY/INT enable
+HDC_INT_POL:		.equ	BIT1				;Interrupt Polarity
+HDC_MODE:			.equ	BIT0				;Interrupt Mode
+
+;Auto Measurement Modes available
+HDC_AMM_DISABLE:	.equ	0					;Disabled. Measurement is initiated by I2C
+HDC_AMM_1S2M:		.equ	(1 << 4)			;1 sample every 2 minutes
+HDC_AMM_1S1M:		.equ	(2 << 4)			;1 sample every 1 minute
+HDC_AMM_0_1HZ:		.equ	(3 << 4)			;1 sample every 10 seconds
+HDC_AMM_0_2HZ:		.equ	(4 << 4)			;1 sample every 5 seconds
+HDC_AMM_1HZ:		.equ	(5 << 4)			;1 sample every second
+HDC_AMM_2HZ:		.equ	(6 << 4)			;2 samples every second
+HDC_AMM_5HZ:		.equ	(7 << 4)			;5 samples every second
+
+;Heater on/off
+HDC_HEATER_ON:		.equ	(1 * HDC_HEAT_EN)	;Heater On
+HDC_HEATER_OFF:		.equ	(0 * HDC_HEAT_EN)	;Heater Off
+
+;DRDY Enable/Disable
+HDC_DRDY_EN:		.equ	(1 * HDC_DRDY_INT_EN);DRDY Enabled
+HDC_DRDY_DIS:		.equ	(0 * HDC_DRDY_INT_EN);DRDY in Hi-Z
+
+;Interrupt Polarity
+HDC_POL_ACT_LOW:	.equ	(0 * HDC_INT_POL)	;Polarity of Interrupt is Active Low
+HDC_POL_ACT_HIGH:	.equ	(1 * HDC_INT_POL)	;Polarity of Interrupt is Active High
+
+;Interrupt Level/Comparator more
+HDC_MODE_LEVEL:		.equ	(0 * HDC_MODE)		;Interrupt mode is Level Sensitive
+HDC_MODE_COMP:		.equ	(1 * HDC_MODE)		;Interrupt mode is Comparator Sensitive
+
+;The following definitions are for the Measurement Configuration Register
+HDC_MEAS_TRES:		.equ	(BIT7 | BIT6)		;Temperature Measurement Resolution
+HDC_MEAS_HRES:		.equ	(BIT5 | BIT4)		;Humidity Measurement Resolution
+HDC_MEAS_CONF:		.equ	(BIT2 | BIT1)		;Measurement type configuration
+HDC_MEAS_TRIG:		.equ	BIT0				;Trigger Manual Measurement
+
+;Definitions for temperature resolution setting
+HDC_TRES_14BIT:		.equ	(0 << 6)			;14 bit resolution for temperature reading
+HDC_TRES_11BIT:		.equ	(1 << 6)			;11 bit resolution for temperature reading
+HDC_TRES_8BIT:		.equ	(2 << 6)			;8 bit resolution for temperature reading
+
+;Definitions for humidity resolution setting
+HDC_HRES_14BIT:		.equ	(0 << 4)			;14 bit resolution for humidity reading
+HDC_HRES_11BIT:		.equ	(1 << 4)			;11 bit resolution for humidity reading
+HDC_HRES_8BIT:		.equ	(2 << 4)			;8 bit resolution for temperature reading
+
+;Defintions for measurement mode configuration
+HDC_CONF_BOTH:		.equ	(0 << 1)			;Take both measurements
+HDC_CONF_TEMP:		.equ	(1 << 1)			;Measure only temperature
+HDC_CONF_HUMID:		.equ	(2 << 1)			;Measure only humidity
+
+;Definition to help starting a measurement
+HDC_CONF_TRIGGER:	.equ	BIT0				;Trigger a measurement set now (Self cleared)
 
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
+					.global	HDCInit				;Initializes the IC to the default values
 					.global	HDCSendRaw			;Sends raw data to HDC2080
 					.global	HDCReadRaw			;Reads raw data from HDC2080
+					.global	HDCSetConfig		;Sets the configuration register
+					.global	HDCSetMeasConfig	;Sets the Measurement Configuration register
+					.global	HDCSetTHighTh		;Sets the Temperature High Threshold
+					.global HDCSetTLowTh		;Sets the Temperature Low Threshold
+					.global	HDCSetTempOffs		;Sets the Temperature Offset of the reading
+					.global	HDCSetHHighTh		;Sets the Humnidity High Threshold
+					.global	HDCSetHLowTh		;Sets the Humidity Low Threshold
+					.global	HDCSetHumidOffs		;Sets the Humidity Offset
+					.global	HDCSetIntConf		;Sets the Interrupt Control register
+					.global	HDCSetRegister		;Sets a byte register
+					.global	HDCReadTH			;Reads the value of both Temperature and
+												; Humidity readings
+					.global	HDCReadT			;Reads the Temperature value
+					.global	HDCReadH			;Reads the Humidity value
+					.global	HDCReadDRDY			;Reads the DRDY/Interrupt Status register
+					.global	HDCReadMaxT			;Reads the Maximum Temperature recorded
+					.global	HDCReadMaxH			;Reads the Maximum Humidity recorded
+					.global	HDCReadMaxTH		;Reads both maximum recorded values for
+												; Temperature and Humidity
+					.global	HDCReadTH			;Reads the Manufacturer and Device IDs
 
 
 	.endif										;__HDC2080_LIB_H43__

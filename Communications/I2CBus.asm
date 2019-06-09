@@ -48,7 +48,15 @@
 ;* sent, but also the slave addresses for Start Conditions, or Restart Conditions or Stop    *
 ;* ones. The following flag defines if the word is a condition and if the master acts as a   *
 ;* transmitter or receiver.                                                                  *
-;* I2CB_UCTR                                                                                 *
+;* I2CB_UCTR   : This flag plays a double role. First it set at the scheduled word to flag a *
+;*               Start/Stop condition with UCTR bit set (acting as a transmitter). A Start   *
+;*               condition can set the bus as a transmitter or receiver by using the UCTR    *
+;*               and a slave address. A stop condition does not use a slave address, so in   *
+;*               order to schedule a stop condition and distinguish it from pure data, the   *
+;*               UCTR flag bit is set but the slave address is 0. This way a word in the Tx  *
+;*               buffer can describe a start condition (slave address present), pure data    *
+;*               (higher byte equals to 0 - Slave Address=0 and UCTR=0) or a stop condition  *
+;*               (Slave Address=0 and UCTR=1).                                               *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
@@ -76,6 +84,8 @@
 ;*                any)                                                                       *
 ;* I2CGetStatus : Gets the status flags of I2C subsystem so the caller can get the state of  *
 ;*                the bus and the communication                                              *
+;* I2CReset     : Resets the hardware I2C subsystem, flushes both Rx and Tx buffers and      *
+;*                restores the status flags                                                  *
 ;* I2CTxISR     : Interrupt service routine that is triggered when the I2C trnasmit buffer   *
 ;*                has already sent the byte and is ready to accept another one (UCTXIFG0)    *
 ;* I2CRxISR     ; Interrupt service routine that is triggered when the I2C bus has received  *
@@ -198,6 +208,28 @@ I2CInit:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep associated module in reset to configure
 			BIC		#UCSWRST,&I2CU_CTLW0	;Stop reset mode. I2C is ready to be used
 			RET
 			
+
+;----------------------------------------
+; I2CReset
+; Stops any communication, resets the hardware subsystem, flushes both receive and transmit
+; buffers and resets the status flags, bringing the state of the system at a valid point,
+; ready to start a normal communication
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : I2CRxLen, I2CRxStrt, I2CStatus, I2CTxLen, I2CTxStrt, I2CU_CTLW0
+; OTHER FUNCS   : None
+I2CReset:	BIS		#UCSWRST,&I2CU_CTLW0	;Keep associated module in reset to configure it
+			MOV		#00000h,&I2CTxStrt		;Flush Tx buffer
+			MOV		#00000h,&I2CTxLen
+			MOV		#00000h,&I2CRxStrt		;Flush Rx buffer
+			MOV		#00000h,&I2CRxLen
+			MOV		#00000h,&I2CStatus		;Clear status flags
+			BIC		#UCSWRST,&I2CU_CTLW0	;Stop reset mode. I2C is ready to be used
+			RET
+
 
 ;----------------------------------------
 ; I2CStartTx

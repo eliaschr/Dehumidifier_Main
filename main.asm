@@ -37,7 +37,7 @@
 			.include "Buzzer/Buzzer.h43"		;Buzzer handling library
 			.include "Relays/Relays.h43"		;Relays handling library
 			.include "Communications/I2CBus.h43";I2C Bus library
-			.include "Sensors/HDC2080.h43"		;Humidity & Temperature
+			.include "Sensors/HDC2080.h43"		;Humidity & Temperature Sensor library
 
 
 ;*********************************************************************************************
@@ -188,10 +188,16 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#KBDEINTKEYS				;Enable only the keyboard Power key
 			CALL	#LedsEnable					;Start led scanning
 			CALL	#I2CInit					;Initialize the I2C bus subsystem
+			CALL	#HDCInit					;Initialize the Temperature/Humidity sensor
 			
-			MOV		#0FCh,R10					;As a test we are going to get the ID of the
-			MOV		#004h,R11					; device, consisted of 4 bytes
-			CALL	#HDCReadRaw					;Read these data. When everything is fine the
+			;The following lines can be used as a simple test of the I2C and HDC2080 library.
+			; The system sends a request to the sensor to get its ID bytes. When they are
+			; read, the main loop wakes up and the I2CCOUNTOK flag of I2C Status word is set.
+			; The receive buffer of I2C contains 4 bytes which are the 4 ID bytes of the
+			; sensor: 49h, 54h, D0h, 07h
+;			MOV		#0FCh,R10					;As a test we are going to get the ID of the
+;			MOV		#004h,R11					; device, consisted of 4 bytes
+;			CALL	#HDCReadRaw					;Read these data. When everything is fine the
 												; four bytes will be in the Receive Buffer
 
 			NOP
@@ -205,7 +211,7 @@ MainLoop:	MOV		#I2CCOUNTOK,R4				;Clear I2CCOUNTOK flag if set
 			; the I2CRxBuffer if it contains the valid Manufacturer and Device IDs
 			;If there are 49 54 D0 07 in the buffer, then the system communicated correctly
 			; with HDC2080
-			NOP
+;			NOP
 
 			;Lets prepare the keyboard loop
 KeybLoop:	CALL	#KBDReadKey					;Is there a key to use?

@@ -51,6 +51,8 @@
 ;* I2CStartRx   : Starts a communication as a receiver                                       *
 ;* I2CReadBuf   : Reads a byte received through I2C                                          *
 ;* I2CGetStatus : Gets the status flags of I2C subsystem                                     *
+;* I2CReset     : Resets the I2C subsystem in a way to make it ready for starting a new      *
+;*                communication                                                              *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
@@ -101,6 +103,7 @@ I2CRXINUSE:			.equ	BIT6				;Flags that the receiver expects more data
 					.global	I2CStartRx			;Starts a communication as a receiver
 					.global	I2CReadBuf			;Reads a byte received through I2C
 					.global	I2CGetStatus		;Gets the status flags of I2C subsystem
+					.global	I2CReset			;Reset the I2C subsystem (Flushes buffers etc)
 
 
 	.endif										;__I2CBUSLIB_H43__

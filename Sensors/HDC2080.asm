@@ -29,6 +29,23 @@
 ;*===========================================================================================*
 ;* Names And Values:                                                                         *
 ;* ------------------                                                                        *
+;* The following definitions reflect the available registers of HDC2080.                     *
+;* HDCR_TEMP        : Register for reading temperature reading                               *
+;* HDCR_HUMID       : Register for reading humidity reading                                  *
+;* HDCR_DRDY        : Register for reading DRDY/Interrupts status                            *
+;* HDCR_MAXTEMP     : Register that holds the maximum temperature reading                    *
+;* HDCR_MAXHUMID    : Register that holds the maximum humidity reading                       *
+;* HDCR_INTCONF     : Register for configuring interrupts                                    *
+;* HDCR_TOFFSET     : Register to control temperature offset                                 *
+;* HDCR_HOFFSET     : Register to control humidity offset                                    *
+;* HDCR_TLOWTHRESH  : Register to control the low temperature threshold                      *
+;* HDCR_THIGHTHRESH : Register to control the high temperature threshold                     *
+;* HDCR_HLOWTHRESH  : Register to control the low humidity threshold                         *
+;* HDCR_HHIGHTHRESH : Register to control the high humidity threshold                        *
+;* HDCR_CONFIG      : Configuration register                                                 *
+;* HDCR_MEASCFG     : Register to configure measurements                                     *
+;* HDCR_MANID       : Register to read Manufacturer ID (2 bytes)                             *
+;* HDCR_DEVID       : Register to read Device ID (2 bytes)                                   *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
@@ -37,6 +54,27 @@
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
 ;* --------------------------                                                                *
+;* HDCInit          : Initializes the HDC2080 sensor to take automatic measurements at 1spm  *
+;* HDCSendRaw       : Sends raw data to HDC2080                                              *
+;* HDCReadRaw       : Reads raw data from HDC2080                                            *
+;* HDCSetConfig     : Sets the configuration register                                        *
+;* HDCSetMeasConfig : Sets the Measurement Configuration register                            *
+;* HDCSetTHighTh    : Sets the Temperature High Threshold                                    *
+;* HDCSetTLowTh     : Sets the Temperature Low Threshold                                     *
+;* HDCSetTempOffs   : Sets the Temperature Offset of the reading                             *
+;* HDCSetHHighTh    : Sets the Humnidity High Threshold                                      *
+;* HDCSetHLowTh     : Sets the Humidity Low Threshold                                        *
+;* HDCSetHumidOffs  : Sets the Humidity Offset                                               *
+;* HDCSetIntConf    : Sets the Interrupt Control register                                    *
+;* HDCSetRegister   : Sets a byte register                                                   *
+;* HDCReadTH        : eads the value of both Temperature and Humidity readings               *
+;* HDCReadT         : Reads the Temperature value                                            *
+;* HDCReadH         : Reads the Humidity value                                               *
+;* HDCReadDRDY      : Reads the DRDY/Interrupt Status register                               *
+;* HDCReadMaxT      : Reads the Maximum Temperature recorded                                 *
+;* HDCReadMaxH      : Reads the Maximum Humidity recorded                                    *
+;* HDCReadMaxTH     : Reads both maximum recorded values for Temperature and Humidity        *
+;* HDCReadTH        : Reads the Manufacturer and Device IDs                                  *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
@@ -74,41 +112,6 @@ HDCR_MEASCFG:		.equ	0Fh					;Register to configure measurements
 HDCR_MANID:			.equ	0FCh				;Register to read Manufacturer ID (2 bytes)
 HDCR_DEVID:			.equ	0FEh				;Register to read Device ID (2 bytes)
 
-;DRDY Register is consisted of flag bits that describe interrupt status. The following
-; definitions are for describing these bits and make the code more self documented
-HDC_DRDY_STATUS:	.equ	BIT7
-HDC_TH_STATUS:		.equ	BIT6
-HDC_TL_STATUS:		.equ	BIT5
-HDC_HH_STATUS:		.equ	BIT4
-HDC_HL_STATUS:		.equ	BIT3
-
-;Interrupt Configuration Register is consisted of flag bits that enable various interrupts.
-; The following definitions are for describing these bits and make the code more self
-; documented
-HDC_DRDY_ENABLE:	.equ	BIT7
-HDC_TH_ENABLE:		.equ	BIT6
-HDC_TL_ENABLE:		.equ	BIT5
-HDC_HH_ENABLE:		.equ	BIT4
-HDC_HL_ENABLE:		.equ	BIT3
-
-;Device Configuration Register is consisted of flag bits that enable various features. The
-; following definitions are for describing these bits and make the code more self documented.
-HDC_SOFT_RES:		.equ	BIT7				;Soft Reset of device
-HDC_AMM:			.equ	(BIT6 | BIT5 | BIT4);Auto Measurement Mode
-HDC_HEAT_EN:		.equ	BIT3				;Heater Enable
-HDC_DRDY_INT_EN:	.equ	BIT2				;DRDY/INT enable
-HDC_INT_POL:		.equ	BIT1				;Interrupt Polarity
-HDC_MODE:			.equ	BIT0				;Interrupt Mode
-
-;Auto Measurement Modes available
-HDC_AMM_DISABLE:	.equ	0					;Disabled. Measurement is initiated by I2C
-HDC_AMM_1S2M:		.equ	(1 << 4)			;1 sample every 2 minutes
-HDC_AMM_1S1M:		.equ	(2 << 4)			;1 sample every 1 minute
-HDC_AMM_0_1HZ:		.equ	(3 << 4)			;1 sample every 10 seconds
-HDC_AMM_0.2HZ:		.equ	(4 << 4)			;1 sample every 5 seconds
-HDC_AMM_1HZ:		.equ	(5 << 4)			;1 sample every second
-HDC_AMM_2HZ:		.equ	(6 << 4)			;2 samples every second
-HDC_AMM_5HZ:		.equ	(7 << 4)			;5 samples every second
 
 
 ;*********************************************************************************************
@@ -125,6 +128,28 @@ HDC_AMM_5HZ:		.equ	(7 << 4)			;5 samples every second
 ; Functions
 ;========================================
 			.text
+
+
+;----------------------------------------
+; HDCInit
+; Initializes the HDC2080 sensor to take automatically 1 sample per minute
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     :
+; REGS AFFECTED :
+; STACK USAGE   :
+; VARS USED     : DEF_AMM, DEF_HDCHUMIDRES, DEF_HDCTEMPRES, DEF_MEASMODE, HDC_SOFT_RES
+; OTHER FUNCS   : HDCSetConfig, HDCSetMeasConfig
+HDCInit:	MOV.B	#HDC_SOFT_RES,R10			;Software Reset of sensor IC
+			CALL	#HDCSetConfig
+			MOV.B	#000h,R10					;Do not activate the automatic measurement yet
+			CALL	#HDCSetConfig				; but exit reset mode
+			;Set the mode register according to the default values
+			MOV.B	#DEF_HDCTEMPRES | DEF_HDCHUMIDRES | DEF_MEASMODE,R10
+			CALL	#HDCSetMeasConfig			;Set the register
+			MOV.B	#DEF_AMM,R10				;Set the default measurement rate
+			CALL	#HDCSetConfig
+			RET
 
 
 ;----------------------------------------
@@ -470,7 +495,7 @@ HDCReadMaxTH:
 ; STACK USAGE   : 4 = 2 by Call +2 by calling functions
 ; VARS USED     : HDCR_MANID
 ; OTHER FUNCS   : HDCReadRaw
-HDCReadTH:	MOV		#HDCR_MANID,R10
+HDCReadID:	MOV		#HDCR_MANID,R10
 			MOV		#00004h,R11
 			JMP		HDCReadRaw
 
