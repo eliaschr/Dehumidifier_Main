@@ -1,0 +1,67 @@
+;*********************************************************************************************
+;* ADC Library                                                                               *
+;*-------------------------------------------------------------------------------------------*
+;* ADC.h43                                                                                   *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* In this file all the necessary definitions for the ADC handling are set and the functions *
+;* that need to be available to the rest of the program are made global.                     *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Analog to Digital Converter Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library (Set by the developper):                                       *
+;* ----------------------------------------------------                                      *
+;*                                                                                           *
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Global functions of the Library:                                                          *
+;* ---------------------------------                                                         *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if  ($isdefed("__ADCONV_LIB_H43__") == 0)
+
+__ADCONV_LIB_H43__:	.equ	1					;Must define this in order to avoid double
+												; inclusions
+;----------------------------------------
+; Global Definitions
+;========================================
+DEF_ADCSHT1:		.equ	ADC12SHT1_2			;16 clock cycles of 4.8MHz
+DEF_ADCSHT0:		.equ	ADC12SHT0_8			;256 clock cycles of 4.8MHz (Internal
+												; temperature sensor)
+DEF_ADCRESOL:		.equ	ADC12RES_2			;12 bit resolution for ADC
+DEF_ADCDF:			.equ	ADC12DF				;Read back format is left aligned signed bin.
+
+
+;----------------------------------------
+; Global Functions
+;========================================
+					.global	ADCInit				;Initializes the ADC subsystem
+
+
+	.endif										;__ADCONV_LIB_H43__

@@ -1,0 +1,53 @@
+;*********************************************************************************************
+;* ADC Library                                                                               *
+;*-------------------------------------------------------------------------------------------*
+;* ADCAutoDefs.h43                                                                          *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
+;* Example of automatic definitions is the computation of interrupt vectors according to     *
+;* the timer module used for the ADC control.                                                *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"Analog to Digital Converter Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if ($isdefed("__ADCONV_LIB_AUTO_DEFS__") == 0)
+	.if ($isdefed("__ADCONV_LIB_H43__") == 0)
+		.emsg "ADC.h43 must have been included in the file before ADCAutoDefs.h43"
+	.endif
+
+__ADCONV_LIB_AUTO_DEFS__:.equ	1				;Need to define this in order to avoid
+												; double inclusions
+
+;----------------------------------------
+; Definitions
+;========================================
+
+	.endif										;__ADCONV_LIB_AUTO_DEFS__
