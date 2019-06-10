@@ -51,6 +51,7 @@ __ADCONV_LIB_H43__:	.equ	1					;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
+ADCBUFFLEN:			.equ	32					;Length of the results buffer in words
 DEF_ADCSHT1:		.equ	ADC12SHT1_2			;16 clock cycles of 4.8MHz
 DEF_ADCSHT0:		.equ	ADC12SHT0_8			;256 clock cycles of 4.8MHz (Internal
 												; temperature sensor)
@@ -62,6 +63,7 @@ DEF_ADCDF:			.equ	ADC12DF				;Read back format is left aligned signed bin.
 ; Global Functions
 ;========================================
 					.global	ADCInit				;Initializes the ADC subsystem
+					.global	ADCSetChannel		;Sets the MCTLx register of a ADC channel
 
 
 	.endif										;__ADCONV_LIB_H43__
