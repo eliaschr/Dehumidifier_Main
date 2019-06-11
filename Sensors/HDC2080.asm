@@ -499,6 +499,8 @@ HDCReadID:	MOV		#HDCR_MANID,R10
 			MOV		#00004h,R11
 			JMP		HDCReadRaw
 
+CPU40Errata:NOP
+
 
 ;----------------------------------------
 ; Interrupt Service Routines

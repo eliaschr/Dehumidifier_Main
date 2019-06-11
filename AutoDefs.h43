@@ -696,7 +696,7 @@ NTCP_INTE:		.equ	P1IE						;Interrupt enable register
 NTCP_INTES:		.equ	P1IES						;Interrupt edge selector register
 NTCP_INTF:		.equ	P1IFG						;Interrupt flags register
 NTCP_INTV:		.equ	P1IV						;Interrupt vector register
-				.define	"PORT1_VECTOR", NTCP_Vector;Interrupt Vector Memory Segment
+				.define	"PORT1_VECTOR", NTCP_Vector	;Interrupt Vector Memory Segment
 	.elseif (Board_NTCPort == 2)
 NTCP_DIN:		.equ	P2IN
 NTCP_DOUT:		.equ	P2OUT
@@ -788,22 +788,22 @@ NTCP_INTV:		.equ	P8IV
 ;The following definitions are for the ADC channel and I/O pin the selected ADC channel is
 ; multiplexed
 	.if (Board_ADCChannel == 0)
-NTCA_DIN:		.equ	P1IN
-NTCA_DOUT:		.equ	P1OUT
-NTCA_DIR:		.equ	P1DIR
-NTCA_REN:		.equ	P1REN
-NTCA_SEL0:		.equ	P1SEL0
+NTCA_DIN:		.equ	P1IN						;Data Input Register
+NTCA_DOUT:		.equ	P1OUT						;Data output register for enabling NTC
+NTCA_DIR:		.equ	P1DIR						;Direction selection register
+NTCA_REN:		.equ	P1REN						;Resistor setup register
+NTCA_SEL0:		.equ	P1SEL0						;Special function selection registers
 NTCA_SEL1:		.equ	P1SEL1
-NTCA_INTE:		.equ	P1IE
-NTCA_INTES:		.equ	P1IES
-NTCA_INTF:		.equ	P1IFG
-NTCA_INTV:		.equ	P1IV
-				.define	"PORT1_VECTOR", NTCA_Vector
-NTCA_PMASK:		.equ	BIT0
-NTCA_IEMASK:	.equ	ADC12IE0
-NTCA_IFGMASK:	.equ	ADC12IFG0
-NTCA_IEREG:		.equ	ADC12IER0
-NTCA_IFGREG:	.equ	ADC12IFGR0
+NTCA_INTE:		.equ	P1IE						;Interrupt enable register
+NTCA_INTES:		.equ	P1IES						;Interrupt edge selector register
+NTCA_INTF:		.equ	P1IFG						;Interrupt flags register
+NTCA_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", NTCA_Vector	;Interrupt Vector Memory Segment
+NTCA_PMASK:		.equ	BIT0						;Pin in the NTCA Port the Analog Input is
+NTCA_IEMASK:	.equ	ADC12IE0					;Associated Interrupt Enable of ADC
+NTCA_IFGMASK:	.equ	ADC12IFG0					;Associated Interrupt Flag of ADC
+NTCA_IEREG:		.equ	ADC12IER0					;Associated Interrupt Enable register
+NTCA_IFGREG:	.equ	ADC12IFGR0					;Associated Interrupt Flag register
 	.elseif (Board_ADCChannel == 1)
 NTCA_DIN:		.equ	P1IN
 NTCA_DOUT:		.equ	P1OUT

@@ -57,6 +57,8 @@
 			.bss	ADCBuffer, ADCBUFFLEN*2	;Buffer to hold the conversion results
 			.bss	ADCBufStrt, 2			;Starting offset of the data in ADCBuffer
 			.bss	ADCBufLen, 2			;Length of data stored in ADBuffer, in bytes
+			.bss	ADCLastIV, 2			;The last interrupt vector that triggered ADC
+											; interrupt
 
 
 ;----------------------------------------
@@ -101,7 +103,7 @@ ADCInit:	BIC		#ADC12ENC,&ADC12CTL0		;Ensure ENC=0
 			MOV		#DEF_ADCRESOL | DEF_ADCDF,&ADC12CTL2
 			;Use the internal temperature and battery channels
 			MOV		#ADC12TCMAP | ADC12BATMAP,&ADC12CTL3
-			MOV		#00000h,&ADCBuffStrt		;Clear the starting offset of the ADC Buffer
+			MOV		#00000h,&ADCBufStrt		;Clear the starting offset of the ADC Buffer
 			MOV		#00000h,&ADCBufLen			;No data stored in it
 ;			BIS		#ADC12ENC,&ADC12CTL0		;Enable conversions
 			RET

@@ -97,7 +97,7 @@ Board_DispDp:			.equ	Board_Led5			;Display Segment point
 ; Buzzer Definitions
 ;========================================
 Board_BuzzerPort:		.equ	1					;Port the Buzzer is connected to
-Board_BuzzerPin:		.equ	BIT0				;Port pin used to drive the buzzer
+Board_BuzzerPin:		.equ	BIT1				;Port pin used to drive the buzzer
 
 
 ;----------------------------------------
@@ -121,9 +121,9 @@ Board_THSensorI2CPort:	.equ	2					;I2C Port used for the Humidity and
 ;----------------------------------------
 ; NTC Sensor Definitions
 ;========================================
-Board_NTCPort:			.equ	2					;The port the NTC sensor enable is
+Board_NTCPort:			.equ	1					;The port the NTC sensor enable is
 													; connected to
-Board_NTCEnable:		.equ	BIT1				;The pin of the port the enable of the NTC
+Board_NTCEnable:		.equ	BIT4				;The pin of the port the enable of the NTC
 													; is connected to
 Board_ADCChannel:		.equ	5					;The ADC input channel that will take the
 													; NTC measurements
