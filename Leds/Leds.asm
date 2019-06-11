@@ -597,6 +597,7 @@ LEDTimerISR:
 ; OTHER FUNCS   : None
 LedScan:
 			BIS.B	#LEDC_MASK,&LEDC_DOUT		;Disable all led groups
+			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Light off the Non-Scanning Leds
 			PUSH	R4							;Need to keep registers unaffected (ISR)
 			PUSH	R5
 			PUSH	R6
@@ -613,7 +614,7 @@ LSISR_SkipOff:
 			;Now have to decide for the non scanning leds also (Inverse logic on them)
 			CMP.B	#LEDOFFS,R4					;Do we have data for the Leds?
 			JNZ		LSISR_NoNS					;No => Then we do not care about No Scan leds
-			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Light off both leds temporarily
+;			BIS.B	#LEDNS_MASK,&LEDNS_DOUT		;Light off both leds temporarily
 			BIT.B	#LEDTANK,R6					;Is the Tank led on?
 			JZ		LSISR_NoTank				;No => keep it off
 			BIC.B	#LEDNSTANK,&LEDNS_DOUT		;else Light it up
