@@ -112,11 +112,21 @@ Board_RelayAnion:		.equ	BIT3				;Relay that enables the Anionizer
 
 
 ;----------------------------------------
-; Relays Definitions
+; Humidity Sensor Definitions
 ;========================================
 Board_THSensorI2CPort:	.equ	2					;I2C Port used for the Humidity and
 													; Tempertature sensor
 
+
+;----------------------------------------
+; NTC Sensor Definitions
+;========================================
+Board_NTCPort:			.equ	2					;The port the NTC sensor enable is
+													; connected to
+Board_NTCEnable:		.equ	BIT1				;The pin of the port the enable of the NTC
+													; is connected to
+Board_ADCChannel:		.equ	5					;The ADC input channel that will take the
+													; NTC measurements
 
 
 						.include "AutoDefs.h43"

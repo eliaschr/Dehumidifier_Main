@@ -671,10 +671,489 @@ RELP_INTE:		.equ	P8IE
 RELP_INTES:		.equ	P8IES
 RELP_INTF:		.equ	P8IFG
 RELP_INTV:		.equ	P8IV
-				.define	"PORT8_VECTOR", BUZZP_Vector
+				.define	"PORT8_VECTOR", RELP_Vector
 	.else
 		.emsg "Board_RelPort definition in Board.h43 file has to be between 1 and 8"
 	.endif											;Board_RelPort
+
+
+;----------------------------------------
+; NTC Definitions
+;========================================
+;The NTC sensor is placed on the compressor's cooler to monitor its temperature. In order to
+; minimize the autoheating effect, it is controlled by an I/O that enables the sensor divider
+; and another input to ADC module to measure its temperature.
+;The following definition set is for setting the port registers according to selections made
+; in Board.h43 file
+	.if (Board_NTCPort == 1)
+NTCP_DIN:		.equ	P1IN						;Data input register
+NTCP_DOUT:		.equ	P1OUT						;Data output register for enabling NTC
+NTCP_DIR:		.equ	P1DIR						;Direction selection register
+NTCP_REN:		.equ	P1REN						;Resistor setup register
+NTCP_SEL0:		.equ	P1SEL0						;Special function selection registers
+NTCP_SEL1:		.equ	P1SEL1
+NTCP_INTE:		.equ	P1IE						;Interrupt enable register
+NTCP_INTES:		.equ	P1IES						;Interrupt edge selector register
+NTCP_INTF:		.equ	P1IFG						;Interrupt flags register
+NTCP_INTV:		.equ	P1IV						;Interrupt vector register
+				.define	"PORT1_VECTOR", NTCP_Vector;Interrupt Vector Memory Segment
+	.elseif (Board_NTCPort == 2)
+NTCP_DIN:		.equ	P2IN
+NTCP_DOUT:		.equ	P2OUT
+NTCP_DIR:		.equ	P2DIR
+NTCP_REN:		.equ	P2REN
+NTCP_SEL0:		.equ	P2SEL0
+NTCP_SEL1:		.equ	P2SEL1
+NTCP_INTE:		.equ	P2IE
+NTCP_INTES:		.equ	P2IES
+NTCP_INTF:		.equ	P2IFG
+NTCP_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", NTCP_Vector
+	.elseif (Board_NTCPort == 3)
+NTCP_DIN:		.equ	P3IN
+NTCP_DOUT:		.equ	P3OUT
+NTCP_DIR:		.equ	P3DIR
+NTCP_REN:		.equ	P3REN
+NTCP_SEL0:		.equ	P3SEL0
+NTCP_SEL1:		.equ	P3SEL1
+NTCP_INTE:		.equ	P3IE
+NTCP_INTES:		.equ	P3IES
+NTCP_INTF:		.equ	P3IFG
+NTCP_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", NTCP_Vector
+	.elseif (Board_NTCPort == 4)
+NTCP_DIN:		.equ	P4IN
+NTCP_DOUT:		.equ	P4OUT
+NTCP_DIR:		.equ	P4DIR
+NTCP_REN:		.equ	P4REN
+NTCP_SEL0:		.equ	P4SEL0
+NTCP_SEL1:		.equ	P4SEL1
+NTCP_INTE:		.equ	P4IE
+NTCP_INTES:		.equ	P4IES
+NTCP_INTF:		.equ	P4IFG
+NTCP_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", NTCP_Vector
+	.elseif (Board_NTCPort == 5)
+NTCP_DIN:		.equ	P5IN
+NTCP_DOUT:		.equ	P5OUT
+NTCP_DIR:		.equ	P5DIR
+NTCP_REN:		.equ	P5REN
+NTCP_SEL0:		.equ	P5SEL0
+NTCP_SEL1:		.equ	P5SEL1
+NTCP_INTE:		.equ	P5IE
+NTCP_INTES:		.equ	P5IES
+NTCP_INTF:		.equ	P5IFG
+NTCP_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", NTCP_Vector
+	.elseif (Board_NTCPort == 6)
+NTCP_DIN:		.equ	P6IN
+NTCP_DOUT:		.equ	P6OUT
+NTCP_DIR:		.equ	P6DIR
+NTCP_REN:		.equ	P6REN
+NTCP_SEL0:		.equ	P6SEL0
+NTCP_SEL1:		.equ	P6SEL1
+NTCP_INTE:		.equ	P6IE
+NTCP_INTES:		.equ	P6IES
+NTCP_INTF:		.equ	P6IFG
+NTCP_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", NTCP_Vector
+	.elseif (Board_NTCPort == 7)
+NTCP_DIN:		.equ	P7IN
+NTCP_DOUT:		.equ	P7OUT
+NTCP_DIR:		.equ	P7DIR
+NTCP_REN:		.equ	P7REN
+NTCP_SEL0:		.equ	P7SEL0
+NTCP_SEL1:		.equ	P7SEL1
+NTCP_INTE:		.equ	P7IE
+NTCP_INTES:		.equ	P7IES
+NTCP_INTF:		.equ	P7IFG
+NTCP_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", NTCP_Vector
+	.elseif (Board_NTCPort == 8)
+NTCP_DIN:		.equ	P8IN
+NTCP_DOUT:		.equ	P8OUT
+NTCP_DIR:		.equ	P8DIR
+NTCP_REN:		.equ	P8REN
+NTCP_SEL0:		.equ	P8SEL0
+NTCP_SEL1:		.equ	P8SEL1
+NTCP_INTE:		.equ	P8IE
+NTCP_INTES:		.equ	P8IES
+NTCP_INTF:		.equ	P8IFG
+NTCP_INTV:		.equ	P8IV
+				.define	"PORT8_VECTOR", NTCP_Vector
+	.else
+		.emsg "Board_NTCPort definition in Board.h43 file has to be between 1 and 8"
+	.endif											;Board_NTCPort
+
+;The following definitions are for the ADC channel and I/O pin the selected ADC channel is
+; multiplexed
+	.if (Board_ADCChannel == 0)
+NTCA_DIN:		.equ	P1IN
+NTCA_DOUT:		.equ	P1OUT
+NTCA_DIR:		.equ	P1DIR
+NTCA_REN:		.equ	P1REN
+NTCA_SEL0:		.equ	P1SEL0
+NTCA_SEL1:		.equ	P1SEL1
+NTCA_INTE:		.equ	P1IE
+NTCA_INTES:		.equ	P1IES
+NTCA_INTF:		.equ	P1IFG
+NTCA_INTV:		.equ	P1IV
+				.define	"PORT1_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT0
+NTCA_IEMASK:	.equ	ADC12IE0
+NTCA_IFGMASK:	.equ	ADC12IFG0
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 1)
+NTCA_DIN:		.equ	P1IN
+NTCA_DOUT:		.equ	P1OUT
+NTCA_DIR:		.equ	P1DIR
+NTCA_REN:		.equ	P1REN
+NTCA_SEL0:		.equ	P1SEL0
+NTCA_SEL1:		.equ	P1SEL1
+NTCA_INTE:		.equ	P1IE
+NTCA_INTES:		.equ	P1IES
+NTCA_INTF:		.equ	P1IFG
+NTCA_INTV:		.equ	P1IV
+				.define	"PORT1_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT1
+NTCA_IEMASK:	.equ	ADC12IE1
+NTCA_IFGMASK:	.equ	ADC12IFG1
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 2)
+NTCA_DIN:		.equ	P1IN
+NTCA_DOUT:		.equ	P1OUT
+NTCA_DIR:		.equ	P1DIR
+NTCA_REN:		.equ	P1REN
+NTCA_SEL0:		.equ	P1SEL0
+NTCA_SEL1:		.equ	P1SEL1
+NTCA_INTE:		.equ	P1IE
+NTCA_INTES:		.equ	P1IES
+NTCA_INTF:		.equ	P1IFG
+NTCA_INTV:		.equ	P1IV
+				.define	"PORT1_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT2
+NTCA_IEMASK:	.equ	ADC12IE2
+NTCA_IFGMASK:	.equ	ADC12IFG2
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 3)
+NTCA_DIN:		.equ	P1IN
+NTCA_DOUT:		.equ	P1OUT
+NTCA_DIR:		.equ	P1DIR
+NTCA_REN:		.equ	P1REN
+NTCA_SEL0:		.equ	P1SEL0
+NTCA_SEL1:		.equ	P1SEL1
+NTCA_INTE:		.equ	P1IE
+NTCA_INTES:		.equ	P1IES
+NTCA_INTF:		.equ	P1IFG
+NTCA_INTV:		.equ	P1IV
+				.define	"PORT1_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT3
+NTCA_IEMASK:	.equ	ADC12IE3
+NTCA_IFGMASK:	.equ	ADC12IFG3
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 4)
+NTCA_DIN:		.equ	P1IN
+NTCA_DOUT:		.equ	P1OUT
+NTCA_DIR:		.equ	P1DIR
+NTCA_REN:		.equ	P1REN
+NTCA_SEL0:		.equ	P1SEL0
+NTCA_SEL1:		.equ	P1SEL1
+NTCA_INTE:		.equ	P1IE
+NTCA_INTES:		.equ	P1IES
+NTCA_INTF:		.equ	P1IFG
+NTCA_INTV:		.equ	P1IV
+				.define	"PORT1_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT4
+NTCA_IEMASK:	.equ	ADC12IE4
+NTCA_IFGMASK:	.equ	ADC12IFG4
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 5)
+NTCA_DIN:		.equ	P1IN
+NTCA_DOUT:		.equ	P1OUT
+NTCA_DIR:		.equ	P1DIR
+NTCA_REN:		.equ	P1REN
+NTCA_SEL0:		.equ	P1SEL0
+NTCA_SEL1:		.equ	P1SEL1
+NTCA_INTE:		.equ	P1IE
+NTCA_INTES:		.equ	P1IES
+NTCA_INTF:		.equ	P1IFG
+NTCA_INTV:		.equ	P1IV
+				.define	"PORT1_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT5
+NTCA_IEMASK:	.equ	ADC12IE5
+NTCA_IFGMASK:	.equ	ADC12IFG5
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 6)
+NTCA_DIN:		.equ	P2IN
+NTCA_DOUT:		.equ	P2OUT
+NTCA_DIR:		.equ	P2DIR
+NTCA_REN:		.equ	P2REN
+NTCA_SEL0:		.equ	P2SEL0
+NTCA_SEL1:		.equ	P2SEL1
+NTCA_INTE:		.equ	P2IE
+NTCA_INTES:		.equ	P2IES
+NTCA_INTF:		.equ	P2IFG
+NTCA_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT3
+NTCA_IEMASK:	.equ	ADC12IE6
+NTCA_IFGMASK:	.equ	ADC12IFG6
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 7)
+NTCA_DIN:		.equ	P2IN
+NTCA_DOUT:		.equ	P2OUT
+NTCA_DIR:		.equ	P2DIR
+NTCA_REN:		.equ	P2REN
+NTCA_SEL0:		.equ	P2SEL0
+NTCA_SEL1:		.equ	P2SEL1
+NTCA_INTE:		.equ	P2IE
+NTCA_INTES:		.equ	P2IES
+NTCA_INTF:		.equ	P2IFG
+NTCA_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT4
+NTCA_IEMASK:	.equ	ADC12IE7
+NTCA_IFGMASK:	.equ	ADC12IFG7
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 8)
+NTCA_DIN:		.equ	P4IN
+NTCA_DOUT:		.equ	P4OUT
+NTCA_DIR:		.equ	P4DIR
+NTCA_REN:		.equ	P4REN
+NTCA_SEL0:		.equ	P4SEL0
+NTCA_SEL1:		.equ	P4SEL1
+NTCA_INTE:		.equ	P4IE
+NTCA_INTES:		.equ	P4IES
+NTCA_INTF:		.equ	P4IFG
+NTCA_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT0
+NTCA_IEMASK:	.equ	ADC12IE8
+NTCA_IFGMASK:	.equ	ADC12IFG8
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 9)
+NTCA_DIN:		.equ	P4IN
+NTCA_DOUT:		.equ	P4OUT
+NTCA_DIR:		.equ	P4DIR
+NTCA_REN:		.equ	P4REN
+NTCA_SEL0:		.equ	P4SEL0
+NTCA_SEL1:		.equ	P4SEL1
+NTCA_INTE:		.equ	P4IE
+NTCA_INTES:		.equ	P4IES
+NTCA_INTF:		.equ	P4IFG
+NTCA_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT1
+NTCA_IEMASK:	.equ	ADC12IE9
+NTCA_IFGMASK:	.equ	ADC12IFG9
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 10)
+NTCA_DIN:		.equ	P4IN
+NTCA_DOUT:		.equ	P4OUT
+NTCA_DIR:		.equ	P4DIR
+NTCA_REN:		.equ	P4REN
+NTCA_SEL0:		.equ	P4SEL0
+NTCA_SEL1:		.equ	P4SEL1
+NTCA_INTE:		.equ	P4IE
+NTCA_INTES:		.equ	P4IES
+NTCA_INTF:		.equ	P4IFG
+NTCA_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT2
+NTCA_IEMASK:	.equ	ADC12IE10
+NTCA_IFGMASK:	.equ	ADC12IFG10
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 11)
+NTCA_DIN:		.equ	P4IN
+NTCA_DOUT:		.equ	P4OUT
+NTCA_DIR:		.equ	P4DIR
+NTCA_REN:		.equ	P4REN
+NTCA_SEL0:		.equ	P4SEL0
+NTCA_SEL1:		.equ	P4SEL1
+NTCA_INTE:		.equ	P4IE
+NTCA_INTES:		.equ	P4IES
+NTCA_INTF:		.equ	P4IFG
+NTCA_INTV:		.equ	P4IV
+				.define	"PORT4_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT3
+NTCA_IEMASK:	.equ	ADC12IE11
+NTCA_IFGMASK:	.equ	ADC12IFG11
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 12)
+NTCA_DIN:		.equ	P3IN
+NTCA_DOUT:		.equ	P3OUT
+NTCA_DIR:		.equ	P3DIR
+NTCA_REN:		.equ	P3REN
+NTCA_SEL0:		.equ	P3SEL0
+NTCA_SEL1:		.equ	P3SEL1
+NTCA_INTE:		.equ	P3IE
+NTCA_INTES:		.equ	P3IES
+NTCA_INTF:		.equ	P3IFG
+NTCA_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT0
+NTCA_IEMASK:	.equ	ADC12IE12
+NTCA_IFGMASK:	.equ	ADC12IFG12
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 13)
+NTCA_DIN:		.equ	P3IN
+NTCA_DOUT:		.equ	P3OUT
+NTCA_DIR:		.equ	P3DIR
+NTCA_REN:		.equ	P3REN
+NTCA_SEL0:		.equ	P3SEL0
+NTCA_SEL1:		.equ	P3SEL1
+NTCA_INTE:		.equ	P3IE
+NTCA_INTES:		.equ	P3IES
+NTCA_INTF:		.equ	P3IFG
+NTCA_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT1
+NTCA_IEMASK:	.equ	ADC12IE13
+NTCA_IFGMASK:	.equ	ADC12IFG13
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 14)
+NTCA_DIN:		.equ	P3IN
+NTCA_DOUT:		.equ	P3OUT
+NTCA_DIR:		.equ	P3DIR
+NTCA_REN:		.equ	P3REN
+NTCA_SEL0:		.equ	P3SEL0
+NTCA_SEL1:		.equ	P3SEL1
+NTCA_INTE:		.equ	P3IE
+NTCA_INTES:		.equ	P3IES
+NTCA_INTF:		.equ	P3IFG
+NTCA_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT2
+NTCA_IEMASK:	.equ	ADC12IE14
+NTCA_IFGMASK:	.equ	ADC12IFG14
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 15)
+NTCA_DIN:		.equ	P3IN
+NTCA_DOUT:		.equ	P3OUT
+NTCA_DIR:		.equ	P3DIR
+NTCA_REN:		.equ	P3REN
+NTCA_SEL0:		.equ	P3SEL0
+NTCA_SEL1:		.equ	P3SEL1
+NTCA_INTE:		.equ	P3IE
+NTCA_INTES:		.equ	P3IES
+NTCA_INTF:		.equ	P3IFG
+NTCA_INTV:		.equ	P3IV
+				.define	"PORT3_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT3
+NTCA_IEMASK:	.equ	ADC12IE15
+NTCA_IFGMASK:	.equ	ADC12IFG15
+NTCA_IEREG:		.equ	ADC12IER0
+NTCA_IFGREG:	.equ	ADC12IFGR0
+	.elseif (Board_ADCChannel == 16)
+NTCA_DIN:		.equ	P7IN
+NTCA_DOUT:		.equ	P7OUT
+NTCA_DIR:		.equ	P7DIR
+NTCA_REN:		.equ	P7REN
+NTCA_SEL0:		.equ	P7SEL0
+NTCA_SEL1:		.equ	P7SEL1
+NTCA_INTE:		.equ	P7IE
+NTCA_INTES:		.equ	P7IES
+NTCA_INTF:		.equ	P7IFG
+NTCA_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT4
+NTCA_IEMASK:	.equ	ADC12IE16
+NTCA_IFGMASK:	.equ	ADC12IFG16
+NTCA_IEREG:		.equ	ADC12IER1
+NTCA_IFGREG:	.equ	ADC12IFGR1
+	.elseif (Board_ADCChannel == 17)
+NTCA_DIN:		.equ	P7IN
+NTCA_DOUT:		.equ	P7OUT
+NTCA_DIR:		.equ	P7DIR
+NTCA_REN:		.equ	P7REN
+NTCA_SEL0:		.equ	P7SEL0
+NTCA_SEL1:		.equ	P7SEL1
+NTCA_INTE:		.equ	P7IE
+NTCA_INTES:		.equ	P7IES
+NTCA_INTF:		.equ	P7IFG
+NTCA_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT5
+NTCA_IEMASK:	.equ	ADC12IE17
+NTCA_IFGMASK:	.equ	ADC12IFG17
+NTCA_IEREG:		.equ	ADC12IER1
+NTCA_IFGREG:	.equ	ADC12IFGR1
+	.elseif (Board_ADCChannel == 18)
+NTCA_DIN:		.equ	P7IN
+NTCA_DOUT:		.equ	P7OUT
+NTCA_DIR:		.equ	P7DIR
+NTCA_REN:		.equ	P7REN
+NTCA_SEL0:		.equ	P7SEL0
+NTCA_SEL1:		.equ	P7SEL1
+NTCA_INTE:		.equ	P7IE
+NTCA_INTES:		.equ	P7IES
+NTCA_INTF:		.equ	P7IFG
+NTCA_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT6
+NTCA_IEMASK:	.equ	ADC12IE18
+NTCA_IFGMASK:	.equ	ADC12IFG18
+NTCA_IEREG:		.equ	ADC12IER1
+NTCA_IFGREG:	.equ	ADC12IFGR1
+	.elseif (Board_ADCChannel == 19)
+NTCA_DIN:		.equ	P7IN
+NTCA_DOUT:		.equ	P7OUT
+NTCA_DIR:		.equ	P7DIR
+NTCA_REN:		.equ	P7REN
+NTCA_SEL0:		.equ	P7SEL0
+NTCA_SEL1:		.equ	P7SEL1
+NTCA_INTE:		.equ	P7IE
+NTCA_INTES:		.equ	P7IES
+NTCA_INTF:		.equ	P7IFG
+NTCA_INTV:		.equ	P7IV
+				.define	"PORT7_VECTOR", NTCA_Vector
+NTCA_PMASK:		.equ	BIT7
+NTCA_IEMASK:	.equ	ADC12IE19
+NTCA_IFGMASK:	.equ	ADC12IFG19
+NTCA_IEREG:		.equ	ADC12IER1
+NTCA_IFGREG:	.equ	ADC12IFGR1
+	.elseif (Board_ADCChannel == 20)
+		.emsg "Board_ADCChannel 20 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 21)
+		.emsg "Board_ADCChannel 21 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 22)
+		.emsg "Board_ADCChannel 22 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 23)
+		.emsg "Board_ADCChannel 23 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 24)
+		.emsg "Board_ADCChannel 24 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 25)
+		.emsg "Board_ADCChannel 25 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 26)
+		.emsg "Board_ADCChannel 26 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 27)
+		.emsg "Board_ADCChannel 27 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 28)
+		.emsg "Board_ADCChannel 28 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 29)
+		.emsg "Board_ADCChannel 29 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 30)
+		.emsg "Board_ADCChannel 30 is not available at a pin of MSP430FR5994"
+	.elseif (Board_ADCChannel == 31)
+		.emsg "Board_ADCChannel 31 is not available at a pin of MSP430FR5994"
+	.else
+		.emsg "Board_ADCChannel definition in Board.h43 file has to be between 0 and 31"
+	.endif											;Board_ADCChannel
 
 
 	.endif											;__BOARD_AUTO_DEFS__
