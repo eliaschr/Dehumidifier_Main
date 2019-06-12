@@ -54,6 +54,9 @@
 ;*********************************************************************************************
 ; Variables Definitions
 ;-------------------------------------------
+			.bss	ADCCallbacks, 32 *2		;Callback functions for ADC channels
+			.bss	ADCLastVals, 32 *2		;Buffer that contains the last converted values of
+											; each analog channel
 			.bss	ADCBuffer, ADCBUFFLEN*2	;Buffer to hold the conversion results
 			.bss	ADCBufStrt, 2			;Starting offset of the data in ADCBuffer
 			.bss	ADCBufLen, 2			;Length of data stored in ADBuffer, in bytes
@@ -103,7 +106,7 @@ ADCInit:	BIC		#ADC12ENC,&ADC12CTL0		;Ensure ENC=0
 			MOV		#DEF_ADCRESOL | DEF_ADCDF,&ADC12CTL2
 			;Use the internal temperature and battery channels
 			MOV		#ADC12TCMAP | ADC12BATMAP,&ADC12CTL3
-			MOV		#00000h,&ADCBufStrt		;Clear the starting offset of the ADC Buffer
+			MOV		#00000h,&ADCBufStrt			;Clear the starting offset of the ADC Buffer
 			MOV		#00000h,&ADCBufLen			;No data stored in it
 ;			BIS		#ADC12ENC,&ADC12CTL0		;Enable conversions
 			RET
@@ -253,49 +256,107 @@ ADCTrigger:
 
 
 ;----------------------------------------
+; ADCChannelCb
+; Associates a callback function that will be called automatically when ADC has finished the
+; conversion of the specified channel. The converted value entered to the callback function is
+; stored in R4, so the callback function can handle it. The callback function is responsible
+; for not altering any other register than R4 and return as soon as possiible due to the fact
+; that it runs in Interrupt context.
+; INPUT         : R10 contains the channel number
+;                 R12 contains the address of the callback function
+; OUTPUT        : None
+; REGS USED     : R4, R10, R12
+; REGS AFFECTED : R4
+; STACK USAGE   : None
+; VARS USED     : ADCCallbacks
+; OTHER FUNCS   : None
+ADCChannelCb:
+			MOV		R10,R4					;Get a copy of the channel
+			ADD		R4,R4					;Convert it to word offset
+			MOV		R12,ADCCallbacks(R4)	;Add the callback in the list
+			RET								;Return to caller
+
+;----------------------------------------
+; ADCGetChannelISR
+; 
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+ADCGetChannelISR:
+			PUSH	R4
+			PUSH	R5
+			PUSH	R15
+			MOV		&ADCLastIV,R5			;Get the last vector that triggered the interrupt
+			SUB		#0000Ch,R5				;Since it is a channel ISR, sub the value of the
+											; first (channel 0). Now R4 = word offset of the
+											; triggered channel
+			MOV		ADC12MEMCTL0(R5),R15	;Get the current MCTLx value
+			AND 	#ADC12INCH_31,R15		;Keep only the memory cell
+			ADD		R15,R15					;Convert it to word offset
+			ADD		ADC12MEM0(R15),R4		;Get the converted value in R4
+			MOV		R4,ADCLastVals(R15)		;Store the value read into last values buffer
+			CALL	#ADCStoreVal			;Store the value into the cyclic buffer
+			CMP		#00000h,ADCCallbacks(R5);Do we have to call a callback?
+			JEQ		ADCGCI_SkipCb			;No => skip calling one
+			CALL	ADCCallbacks(R5)		;else call the stored callback function to handle
+											; the value
+ADCGCI_SkipCb:
+			POP		R15
+			POP		R5
+			POP		R4
+			RETI
+
+
+;----------------------------------------
 ; Interrupt Service Routines
 ;========================================
 ADCIDispatcher:
-			ADD		&ADC12IV,PC
+			MOV		&ADC12IV,&ADCLastIV		;Keep the last Interrupt Vector that triggered the
+			ADD		&ADCLastIV,PC			; interrupt and jump to the associated function
 			RETI							;00: No Interrupt
 			RETI							;02: ADC Overflow (ADC12OVIFG)
 			RETI							;04: ADC Timing Overflow (ADC12TOVIFG)
 			RETI							;06: ADC High Window Level (ADC12HIIFG)
 			RETI							;08: ADC Low Window Level (ADC12LOIFG)
 			RETI							;0A: ADC In Window (ADC12INIFG)
-			RETI							;0C: ADC Channel 0 (ADC12IFG0)
-			RETI							;0E: ADC Channel 1 (ADC12IFG1)
-			RETI							;10: ADC Channel 2 (ADC12IFG2)
-			RETI							;12: ADC Channel 3 (ADC12IFG3)
-			RETI							;14: ADC Channel 4 (ADC12IFG4)
-			RETI							;16: ADC Channel 5 (ADC12IFG5)
-			RETI							;18: ADC Channel 6 (ADC12IFG6)
-			RETI							;1A: ADC Channel 7 (ADC12IFG7)
-			RETI							;1C: ADC Channel 8 (ADC12IFG8)
-			RETI							;1E: ADC Channel 9 (ADC12IFG9)
-			RETI							;20: ADC Channel 10 (ADC12IFG10)
-			RETI							;22: ADC Channel 11 (ADC12IFG11)
-			RETI							;24: ADC Channel 12 (ADC12IFG12)
-			RETI							;26: ADC Channel 13 (ADC12IFG13)
-			RETI							;28: ADC Channel 14 (ADC12IFG14)
-			RETI							;2A: ADC Channel 15 (ADC12IFG15)
-			RETI							;2C: ADC Channel 16 (ADC12IFG16)
-			RETI							;2E: ADC Channel 17 (ADC12IFG17)
-			RETI							;30: ADC Channel 18 (ADC12IFG18)
-			RETI							;32: ADC Channel 19 (ADC12IFG19)
-			RETI							;34: ADC Channel 20 (ADC12IFG20)
-			RETI							;36: ADC Channel 21 (ADC12IFG21)
-			RETI							;38: ADC Channel 22 (ADC12IFG22)
-			RETI							;3A: ADC Channel 23 (ADC12IFG23)
-			RETI							;3C: ADC Channel 24 (ADC12IFG24)
-			RETI							;3E: ADC Channel 25 (ADC12IFG25)
-			RETI							;40: ADC Channel 26 (ADC12IFG26)
-			RETI							;42: ADC Channel 27 (ADC12IFG27)
-			RETI							;44: ADC Channel 28 (ADC12IFG28)
-			RETI							;46: ADC Channel 29 (ADC12IFG29)
-			RETI							;48: ADC Channel 30 (ADC12IFG30)
-			RETI							;4A: ADC Channel 31 (ADC12IFG31)
+			ADCGetChannelISR				;0C: ADC Channel 0 (ADC12IFG0)
+			ADCGetChannelISR				;0E: ADC Channel 1 (ADC12IFG1)
+			ADCGetChannelISR				;10: ADC Channel 2 (ADC12IFG2)
+			ADCGetChannelISR				;12: ADC Channel 3 (ADC12IFG3)
+			ADCGetChannelISR				;14: ADC Channel 4 (ADC12IFG4)
+			ADCGetChannelISR				;16: ADC Channel 5 (ADC12IFG5)
+			ADCGetChannelISR				;18: ADC Channel 6 (ADC12IFG6)
+			ADCGetChannelISR				;1A: ADC Channel 7 (ADC12IFG7)
+			ADCGetChannelISR				;1C: ADC Channel 8 (ADC12IFG8)
+			ADCGetChannelISR				;1E: ADC Channel 9 (ADC12IFG9)
+			ADCGetChannelISR				;20: ADC Channel 10 (ADC12IFG10)
+			ADCGetChannelISR				;22: ADC Channel 11 (ADC12IFG11)
+			ADCGetChannelISR				;24: ADC Channel 12 (ADC12IFG12)
+			ADCGetChannelISR				;26: ADC Channel 13 (ADC12IFG13)
+			ADCGetChannelISR				;28: ADC Channel 14 (ADC12IFG14)
+			ADCGetChannelISR				;2A: ADC Channel 15 (ADC12IFG15)
+			ADCGetChannelISR				;2C: ADC Channel 16 (ADC12IFG16)
+			ADCGetChannelISR				;2E: ADC Channel 17 (ADC12IFG17)
+			ADCGetChannelISR				;30: ADC Channel 18 (ADC12IFG18)
+			ADCGetChannelISR				;32: ADC Channel 19 (ADC12IFG19)
+			ADCGetChannelISR				;34: ADC Channel 20 (ADC12IFG20)
+			ADCGetChannelISR				;36: ADC Channel 21 (ADC12IFG21)
+			ADCGetChannelISR				;38: ADC Channel 22 (ADC12IFG22)
+			ADCGetChannelISR				;3A: ADC Channel 23 (ADC12IFG23)
+			ADCGetChannelISR				;3C: ADC Channel 24 (ADC12IFG24)
+			ADCGetChannelISR				;3E: ADC Channel 25 (ADC12IFG25)
+			ADCGetChannelISR				;40: ADC Channel 26 (ADC12IFG26)
+			ADCGetChannelISR				;42: ADC Channel 27 (ADC12IFG27)
+			ADCGetChannelISR				;44: ADC Channel 28 (ADC12IFG28)
+			ADCGetChannelISR				;46: ADC Channel 29 (ADC12IFG29)
+			ADCGetChannelISR				;48: ADC Channel 30 (ADC12IFG30)
+			ADCGetChannelISR				;4A: ADC Channel 31 (ADC12IFG31)
 			RETI							;4C: ADC Ready (ADC12RDYIFG)
+
 
 ;----------------------------------------
 ; Interrupt Vectors

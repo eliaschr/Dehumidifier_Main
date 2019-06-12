@@ -51,12 +51,16 @@ __NTCONV_LIB_H43__:	.equ	1					;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
+DEF_NTCMCTL:		.equ	(0 | NTC_ACHANNEL)	;Default settings (Vref=3V3)
+NTC_ENABLE:			.equ	Board_NTCEnable		;The mask bit of the Enable pin of NTC
+NTC_ACHANNEL:		.equ	Board_NTCChannel	;The ADC channel used for NTC measurements
 
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
 					.global	NTCPInit			;Initializes the NTC I/O port pins used
+					.global	NTCTrigger			;Starts a temperature measurement from NTC
 
 
 	.endif										;__NTCONV_LIB_H43__

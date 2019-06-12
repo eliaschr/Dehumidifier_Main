@@ -787,7 +787,7 @@ NTCP_INTV:		.equ	P8IV
 
 ;The following definitions are for the ADC channel and I/O pin the selected ADC channel is
 ; multiplexed
-	.if (Board_ADCChannel == 0)
+	.if (Board_NTCChannel == 0)
 NTCA_DIN:		.equ	P1IN						;Data Input Register
 NTCA_DOUT:		.equ	P1OUT						;Data output register for enabling NTC
 NTCA_DIR:		.equ	P1DIR						;Direction selection register
@@ -804,7 +804,7 @@ NTCA_IEMASK:	.equ	ADC12IE0					;Associated Interrupt Enable of ADC
 NTCA_IFGMASK:	.equ	ADC12IFG0					;Associated Interrupt Flag of ADC
 NTCA_IEREG:		.equ	ADC12IER0					;Associated Interrupt Enable register
 NTCA_IFGREG:	.equ	ADC12IFGR0					;Associated Interrupt Flag register
-	.elseif (Board_ADCChannel == 1)
+	.elseif (Board_NTCChannel == 1)
 NTCA_DIN:		.equ	P1IN
 NTCA_DOUT:		.equ	P1OUT
 NTCA_DIR:		.equ	P1DIR
@@ -821,7 +821,7 @@ NTCA_IEMASK:	.equ	ADC12IE1
 NTCA_IFGMASK:	.equ	ADC12IFG1
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 2)
+	.elseif (Board_NTCChannel == 2)
 NTCA_DIN:		.equ	P1IN
 NTCA_DOUT:		.equ	P1OUT
 NTCA_DIR:		.equ	P1DIR
@@ -838,7 +838,7 @@ NTCA_IEMASK:	.equ	ADC12IE2
 NTCA_IFGMASK:	.equ	ADC12IFG2
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 3)
+	.elseif (Board_NTCChannel == 3)
 NTCA_DIN:		.equ	P1IN
 NTCA_DOUT:		.equ	P1OUT
 NTCA_DIR:		.equ	P1DIR
@@ -855,7 +855,7 @@ NTCA_IEMASK:	.equ	ADC12IE3
 NTCA_IFGMASK:	.equ	ADC12IFG3
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 4)
+	.elseif (Board_NTCChannel == 4)
 NTCA_DIN:		.equ	P1IN
 NTCA_DOUT:		.equ	P1OUT
 NTCA_DIR:		.equ	P1DIR
@@ -872,7 +872,7 @@ NTCA_IEMASK:	.equ	ADC12IE4
 NTCA_IFGMASK:	.equ	ADC12IFG4
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 5)
+	.elseif (Board_NTCChannel == 5)
 NTCA_DIN:		.equ	P1IN
 NTCA_DOUT:		.equ	P1OUT
 NTCA_DIR:		.equ	P1DIR
@@ -889,7 +889,7 @@ NTCA_IEMASK:	.equ	ADC12IE5
 NTCA_IFGMASK:	.equ	ADC12IFG5
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 6)
+	.elseif (Board_NTCChannel == 6)
 NTCA_DIN:		.equ	P2IN
 NTCA_DOUT:		.equ	P2OUT
 NTCA_DIR:		.equ	P2DIR
@@ -906,7 +906,7 @@ NTCA_IEMASK:	.equ	ADC12IE6
 NTCA_IFGMASK:	.equ	ADC12IFG6
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 7)
+	.elseif (Board_NTCChannel == 7)
 NTCA_DIN:		.equ	P2IN
 NTCA_DOUT:		.equ	P2OUT
 NTCA_DIR:		.equ	P2DIR
@@ -923,7 +923,7 @@ NTCA_IEMASK:	.equ	ADC12IE7
 NTCA_IFGMASK:	.equ	ADC12IFG7
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 8)
+	.elseif (Board_NTCChannel == 8)
 NTCA_DIN:		.equ	P4IN
 NTCA_DOUT:		.equ	P4OUT
 NTCA_DIR:		.equ	P4DIR
@@ -940,7 +940,7 @@ NTCA_IEMASK:	.equ	ADC12IE8
 NTCA_IFGMASK:	.equ	ADC12IFG8
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 9)
+	.elseif (Board_NTCChannel == 9)
 NTCA_DIN:		.equ	P4IN
 NTCA_DOUT:		.equ	P4OUT
 NTCA_DIR:		.equ	P4DIR
@@ -957,7 +957,7 @@ NTCA_IEMASK:	.equ	ADC12IE9
 NTCA_IFGMASK:	.equ	ADC12IFG9
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 10)
+	.elseif (Board_NTCChannel == 10)
 NTCA_DIN:		.equ	P4IN
 NTCA_DOUT:		.equ	P4OUT
 NTCA_DIR:		.equ	P4DIR
@@ -974,7 +974,7 @@ NTCA_IEMASK:	.equ	ADC12IE10
 NTCA_IFGMASK:	.equ	ADC12IFG10
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 11)
+	.elseif (Board_NTCChannel == 11)
 NTCA_DIN:		.equ	P4IN
 NTCA_DOUT:		.equ	P4OUT
 NTCA_DIR:		.equ	P4DIR
@@ -991,7 +991,7 @@ NTCA_IEMASK:	.equ	ADC12IE11
 NTCA_IFGMASK:	.equ	ADC12IFG11
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 12)
+	.elseif (Board_NTCChannel == 12)
 NTCA_DIN:		.equ	P3IN
 NTCA_DOUT:		.equ	P3OUT
 NTCA_DIR:		.equ	P3DIR
@@ -1008,7 +1008,7 @@ NTCA_IEMASK:	.equ	ADC12IE12
 NTCA_IFGMASK:	.equ	ADC12IFG12
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 13)
+	.elseif (Board_NTCChannel == 13)
 NTCA_DIN:		.equ	P3IN
 NTCA_DOUT:		.equ	P3OUT
 NTCA_DIR:		.equ	P3DIR
@@ -1025,7 +1025,7 @@ NTCA_IEMASK:	.equ	ADC12IE13
 NTCA_IFGMASK:	.equ	ADC12IFG13
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 14)
+	.elseif (Board_NTCChannel == 14)
 NTCA_DIN:		.equ	P3IN
 NTCA_DOUT:		.equ	P3OUT
 NTCA_DIR:		.equ	P3DIR
@@ -1042,7 +1042,7 @@ NTCA_IEMASK:	.equ	ADC12IE14
 NTCA_IFGMASK:	.equ	ADC12IFG14
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 15)
+	.elseif (Board_NTCChannel == 15)
 NTCA_DIN:		.equ	P3IN
 NTCA_DOUT:		.equ	P3OUT
 NTCA_DIR:		.equ	P3DIR
@@ -1059,7 +1059,7 @@ NTCA_IEMASK:	.equ	ADC12IE15
 NTCA_IFGMASK:	.equ	ADC12IFG15
 NTCA_IEREG:		.equ	ADC12IER0
 NTCA_IFGREG:	.equ	ADC12IFGR0
-	.elseif (Board_ADCChannel == 16)
+	.elseif (Board_NTCChannel == 16)
 NTCA_DIN:		.equ	P7IN
 NTCA_DOUT:		.equ	P7OUT
 NTCA_DIR:		.equ	P7DIR
@@ -1076,7 +1076,7 @@ NTCA_IEMASK:	.equ	ADC12IE16
 NTCA_IFGMASK:	.equ	ADC12IFG16
 NTCA_IEREG:		.equ	ADC12IER1
 NTCA_IFGREG:	.equ	ADC12IFGR1
-	.elseif (Board_ADCChannel == 17)
+	.elseif (Board_NTCChannel == 17)
 NTCA_DIN:		.equ	P7IN
 NTCA_DOUT:		.equ	P7OUT
 NTCA_DIR:		.equ	P7DIR
@@ -1093,7 +1093,7 @@ NTCA_IEMASK:	.equ	ADC12IE17
 NTCA_IFGMASK:	.equ	ADC12IFG17
 NTCA_IEREG:		.equ	ADC12IER1
 NTCA_IFGREG:	.equ	ADC12IFGR1
-	.elseif (Board_ADCChannel == 18)
+	.elseif (Board_NTCChannel == 18)
 NTCA_DIN:		.equ	P7IN
 NTCA_DOUT:		.equ	P7OUT
 NTCA_DIR:		.equ	P7DIR
@@ -1110,7 +1110,7 @@ NTCA_IEMASK:	.equ	ADC12IE18
 NTCA_IFGMASK:	.equ	ADC12IFG18
 NTCA_IEREG:		.equ	ADC12IER1
 NTCA_IFGREG:	.equ	ADC12IFGR1
-	.elseif (Board_ADCChannel == 19)
+	.elseif (Board_NTCChannel == 19)
 NTCA_DIN:		.equ	P7IN
 NTCA_DOUT:		.equ	P7OUT
 NTCA_DIR:		.equ	P7DIR
@@ -1127,33 +1127,33 @@ NTCA_IEMASK:	.equ	ADC12IE19
 NTCA_IFGMASK:	.equ	ADC12IFG19
 NTCA_IEREG:		.equ	ADC12IER1
 NTCA_IFGREG:	.equ	ADC12IFGR1
-	.elseif (Board_ADCChannel == 20)
-		.emsg "Board_ADCChannel 20 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 21)
-		.emsg "Board_ADCChannel 21 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 22)
-		.emsg "Board_ADCChannel 22 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 23)
-		.emsg "Board_ADCChannel 23 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 24)
-		.emsg "Board_ADCChannel 24 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 25)
-		.emsg "Board_ADCChannel 25 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 26)
-		.emsg "Board_ADCChannel 26 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 27)
-		.emsg "Board_ADCChannel 27 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 28)
-		.emsg "Board_ADCChannel 28 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 29)
-		.emsg "Board_ADCChannel 29 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 30)
-		.emsg "Board_ADCChannel 30 is not available at a pin of MSP430FR5994"
-	.elseif (Board_ADCChannel == 31)
-		.emsg "Board_ADCChannel 31 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 20)
+		.emsg "Board_NTCChannel 20 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 21)
+		.emsg "Board_NTCChannel 21 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 22)
+		.emsg "Board_NTCChannel 22 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 23)
+		.emsg "Board_NTCChannel 23 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 24)
+		.emsg "Board_NTCChannel 24 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 25)
+		.emsg "Board_NTCChannel 25 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 26)
+		.emsg "Board_NTCChannel 26 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 27)
+		.emsg "Board_NTCChannel 27 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 28)
+		.emsg "Board_NTCChannel 28 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 29)
+		.emsg "Board_NTCChannel 29 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 30)
+		.emsg "Board_NTCChannel 30 is not available at a pin of MSP430FR5994"
+	.elseif (Board_NTCChannel == 31)
+		.emsg "Board_NTCChannel 31 is not available at a pin of MSP430FR5994"
 	.else
-		.emsg "Board_ADCChannel definition in Board.h43 file has to be between 0 and 31"
-	.endif											;Board_ADCChannel
+		.emsg "Board_NTCChannel definition in Board.h43 file has to be between 0 and 31"
+	.endif											;Board_NTCChannel
 
 
 	.endif											;__BOARD_AUTO_DEFS__

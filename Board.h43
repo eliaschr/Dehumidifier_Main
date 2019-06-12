@@ -125,7 +125,7 @@ Board_NTCPort:			.equ	1					;The port the NTC sensor enable is
 													; connected to
 Board_NTCEnable:		.equ	BIT4				;The pin of the port the enable of the NTC
 													; is connected to
-Board_ADCChannel:		.equ	5					;The ADC input channel that will take the
+Board_NTCChannel:		.equ	5					;The ADC input channel that will take the
 													; NTC measurements
 
 

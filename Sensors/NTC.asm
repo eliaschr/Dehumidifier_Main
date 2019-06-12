@@ -41,6 +41,7 @@
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
 			.include "Board.h43"			;Hardware Connections
 			.include "Definitions.h43"		;Global definitions
+			.include "Resources/ADC.h43"	;Use the ADC library
 			.include "NTC.h43"				;Local definitions
 			.include "NTCAutoDefs.h43"		;Auto definitions according to settings in
 											; NTC.h43
@@ -75,12 +76,37 @@
 ; OUTPUT        : None
 ; REGS USED     : None
 ; REGS AFFECTED : None
-; STACK USAGE   : None
-; VARS USED     : None
-; OTHER FUNCS   : None
+; STACK USAGE   : 4 = Call + Stack from called function
+; VARS USED     : DEF_NTCMCTL, NTC_ACHANNEL, NTC_ENABLE, NTCA_PMASK, NTCA_SEL0, NTCA_SEL1,
+;                 NTCP_DIR, NTCP_DOUT
+; OTHER FUNCS   : ADCSetChannel
 NTCPInit:	
+			BIC.B	#NTC_ENABLE,&NTCP_DOUT			;Disable the NTC
+			BIS.B	#NTC_ENABLE,&NTCP_DIR			;Enable pin is output
+			BIS.B	#NTCA_PMASK,&NTCA_SEL0			;The input pin is an Analog Input to ADC
+			BIS.B	#NTCA_PMASK,&NTCA_SEL1
+			MOV		#NTC_ACHANNEL,R10				;Going to setup the NTC Analog Channel
+			MOV		#DEF_NTCMCTL,R11				;The value to be used as MCTLx
+			CALL	#ADCSetChannel					;Setup the channel
 			RET
 			
+
+;----------------------------------------
+; NTCTrigger
+; Initializes the NTC I/O port pins
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : 2 = 1x Call
+; VARS USED     : NTC_ACHANNEL
+; OTHER FUNCS   : ADCStartSingle
+NTCTrigger:
+			BIS.B	#NTC_ENABLE,&NTCPDOUT			;Enable the NTC divider
+			MOV		#NTC_ACHANNEL,R10				;Channel to be sampled is the NTC one
+			CALL	#ADCStartSingle					;Start sampling of NTC divider voltage
+			RET
+
 
 ;----------------------------------------
 ; Interrupt Service Routines

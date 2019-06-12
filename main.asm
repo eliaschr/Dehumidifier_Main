@@ -37,7 +37,9 @@
 			.include "Buzzer/Buzzer.h43"		;Buzzer handling library
 			.include "Relays/Relays.h43"		;Relays handling library
 			.include "Communications/I2CBus.h43";I2C Bus library
+			.include "Resources/ADC.h43"		;ADC converter subsystem library
 			.include "Sensors/HDC2080.h43"		;Humidity & Temperature Sensor library
+			.include "Sensors/NTC.h43"			;NTC handling library
 
 
 ;*********************************************************************************************
@@ -188,7 +190,9 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#KBDEINTKEYS				;Enable only the keyboard Power key
 			CALL	#LedsEnable					;Start led scanning
 			CALL	#I2CInit					;Initialize the I2C bus subsystem
+			CALL	#ADCInit					;Initialize the ADC hardware module
 			CALL	#HDCInit					;Initialize the Temperature/Humidity sensor
+			CALL	#NTCPInit					;Initialize the NTC subsystem
 			
 			;The following lines can be used as a simple test of the I2C and HDC2080 library.
 			; The system sends a request to the sensor to get its ID bytes. When they are

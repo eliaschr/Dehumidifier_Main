@@ -81,5 +81,7 @@ ADC_TRG_TA4CCR1:	.equ	7					;ADC conversion triggered by Timer A4 CCR1
 												; channel - single conversion
 					.global	ADCTrigger			;Triggers the ADC ta start conversion at the
 												; current mode
+					.global	ADCChannelCb		;Set a callback function to be used when a
+												; specific channel is converted
 
 	.endif										;__ADCONV_LIB_H43__
