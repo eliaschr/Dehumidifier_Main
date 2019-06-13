@@ -56,8 +56,8 @@
 ;-------------------------------------------
 			.bss	ADCCallbacks, 32 *2		;Callback functions for ADC channels
 			.bss	ADCLastVals, 32 *2		;Buffer that contains the last converted values of
-											; each analog channel
-			.bss	ADCBuffer, ADCBUFFLEN*2	;Buffer to hold the conversion results
+											; each analog input
+			.bss	ADCBuffer, ADCBUFFSIZE*2;Buffer to hold the conversion results
 			.bss	ADCBufStrt, 2			;Starting offset of the data in ADCBuffer
 			.bss	ADCBufLen, 2			;Length of data stored in ADBuffer, in bytes
 			.bss	ADCLastIV, 2			;The last interrupt vector that triggered ADC
@@ -276,16 +276,89 @@ ADCChannelCb:
 			MOV		R12,ADCCallbacks(R4)	;Add the callback in the list
 			RET								;Return to caller
 
+
+;----------------------------------------
+; ADCReadBuffer
+; Reads the first available value stored in the cyclic buffer
+; INPUT         : None
+; OUTPUT        : R4 contains the value read (if there is any).
+;                 Carry Flag is set if there was no value available (empty buffer) or cleared
+;                 if there is a new value in R4
+; REGS USED     : R4
+; REGS AFFECTED : R4
+; STACK USAGE   : 2 = 1x Push
+; VARS USED     : ADCBuffer, ADCBUFFSIZE, ADCBufLen, ADCBufStrt
+; OTHER FUNCS   : None
+ADCReadBuffer:
+			CMP		#00000h,&ADCBufLen		;Is there a value available in cyclic buffer?
+			JZ		ADCRB_NoVal				;No => then exit with carry flag set
+			MOV		&ADCBufStrt,R4			;Get the offset of the first available value
+			MOV		ADCBuffer(R4),R4		;Get this value in R4
+			PUSH	SR						;Need to keep interrupts status
+			DINT							;Disable interrupts - Critical section
+			NOP
+			INCD	&ADCBufStrt				;Advance the starting pointer to the next cell
+			CMP		#ADCBUFFSIZE,&ADCBufStrt;Passed the end of it?
+			JLO		ADCRB_SkipRvt			;No => do not revert to its beginning
+			MOV		#00000h,&ADCBufStrt		;else, move the pointer to the beginning of the
+											; cyclic buffer
+ADCRB_SkipRvt:
+			DECD	&ADCBufLen				;One word less in the buffer
+			POP		SR						;Restore Interrupts status
+			CLRC							;Clear carry to flag that there is a new value
+ADCRB_NoVal:RET
+
+
+;----------------------------------------
+; Interrupt Service Routines
+;========================================
+;----------------------------------------
+; ADCStoreVal
+; The function adds the input value to the FIFO ADC cyclic buffer. The addition is always
+; performed. The buffer keeps always the last (up to x, where x is its size in words) values.
+; It doesnot overflow, it just forgets the previous values even if they were not read.
+; eliaschr@NOTE: The function normally is called in ISR context. If it must be called outside
+; of ISR context, the interrupts should be disabled!
+; INPUT         : R4 contains the value to be added into cyclic buffer
+; OUTPUT        : None
+; REGS USED     : R15
+; REGS AFFECTED : R15
+; STACK USAGE   : None
+; VARS USED     : ADCBuffer, ADCBUFFSIZE, ADCBufLen, ADCBufStrt
+; OTHER FUNCS   : None
+ADCStoreVal:
+			MOV		&ADCBufStrt,R15			;Get the starting offset in cyclic buffer
+			ADD		&ADCBufLen,R15			;Add the length of the stored data in buffer to
+											; find the first "empty" cell
+			CMP		#ADCBUFFSIZE,R15		;Passed the border of the buffer?
+			JLO		ADCSV_SkipRvt			;No => then do not revert to its beginning
+			SUB		#ADCBUFFSIZE,R15		;else, bring the pointer in buffer
+ADCSV_SkipRvt:
+			MOV		R4,ADCBuffer(R15)		;Store the value in buffer
+			CMP		#ADCBUFFSIZE,&ADCBufLen	;Are all the cells of the buffer occupied?
+			JHS		ADCSV_MStrt				;Yes => then have to move the starting pointer
+			INCD	&ADCBufLen				;else, another word is added into the buffer
+			RET
+ADCSV_MStrt:
+			INCD	&ADCBufStrt				;Forget the older word
+			CMP		#ADCBUFFSIZE,&ADCBufStrt;Passed the end of the buffer?
+			JLO		ADCSV_NoStrt			;No => Keep on
+			MOV		#00000h,ADCBufStrt		;Revert to the beginning
+ADCSV_NoStrt:
+			RET
+
+
 ;----------------------------------------
 ; ADCGetChannelISR
-; 
+; This is the real interrupt service routine that is triggered when ADC has finished the
+; conversion of an analog channel
 ; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     : None
+; REGS USED     : R4, R5, R15
 ; REGS AFFECTED : None
-; STACK USAGE   : None
-; VARS USED     : None
-; OTHER FUNCS   : None
+; STACK USAGE   : 8+ = 3x Push + 1x Call +Usage of callback function is there is one
+; VARS USED     : ADCCallbacks, ADCLastIV, ADCLastVals
+; OTHER FUNCS   : ADCStoreVal
 ADCGetChannelISR:
 			PUSH	R4
 			PUSH	R5
@@ -294,26 +367,36 @@ ADCGetChannelISR:
 			SUB		#0000Ch,R5				;Since it is a channel ISR, sub the value of the
 											; first (channel 0). Now R4 = word offset of the
 											; triggered channel
+			MOV		ADC12MEM0(R5),R4		;Get the converted value in R4
 			MOV		ADC12MEMCTL0(R5),R15	;Get the current MCTLx value
 			AND 	#ADC12INCH_31,R15		;Keep only the memory cell
 			ADD		R15,R15					;Convert it to word offset
-			ADD		ADC12MEM0(R15),R4		;Get the converted value in R4
 			MOV		R4,ADCLastVals(R15)		;Store the value read into last values buffer
 			CALL	#ADCStoreVal			;Store the value into the cyclic buffer
 			CMP		#00000h,ADCCallbacks(R5);Do we have to call a callback?
 			JEQ		ADCGCI_SkipCb			;No => skip calling one
 			CALL	ADCCallbacks(R5)		;else call the stored callback function to handle
 											; the value
+			JNC		ADCGCI_SkipCb			;Do we need to wake the system up?
+			BIC		#LPM4,6(SP)				;Yes => then wake it up on exit
 ADCGCI_SkipCb:
-			POP		R15
+			POP		R15						;else, just leave
 			POP		R5
 			POP		R4
 			RETI
 
 
 ;----------------------------------------
-; Interrupt Service Routines
-;========================================
+; ADCIDispatcher
+; This is the Interrupt Service Routine called whenever there is an ADC event. It dispatches
+; to the real ISR that will server the specific event.
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : R4, R5, R15
+; REGS AFFECTED : None
+; STACK USAGE   : According to the ISR called
+; VARS USED     : ADCLastIV
+; OTHER FUNCS   : ADCGetChannelISR
 ADCIDispatcher:
 			MOV		&ADC12IV,&ADCLastIV		;Keep the last Interrupt Vector that triggered the
 			ADD		&ADCLastIV,PC			; interrupt and jump to the associated function

@@ -55,6 +55,8 @@
 ;*********************************************************************************************
 ; Variables Definitions
 ;-------------------------------------------
+			.bss	NTCStatus, 2			;Flags that describe the status of the NTC system
+			.bss	NTCLastVal, 2			;Value fetched by the ADC
 
 
 ;----------------------------------------
@@ -88,6 +90,8 @@ NTCPInit:
 			MOV		#NTC_ACHANNEL,R10				;Going to setup the NTC Analog Channel
 			MOV		#DEF_NTCMCTL,R11				;The value to be used as MCTLx
 			CALL	#ADCSetChannel					;Setup the channel
+			MOV		#NTCCallback,R12				;Get the callback function to use
+			CALL	#ADCChannelCb					;Set it as a callback
 			RET
 			
 
@@ -111,6 +115,25 @@ NTCTrigger:
 ;----------------------------------------
 ; Interrupt Service Routines
 ;========================================
+;----------------------------------------
+; NTCCallback
+; Not a real ISR, but it is called by the ADC ISR to inform that a new value is ready from NTC
+; sensor. This, of course means that the used registers should stay unaffected. The ISR though
+; uses R4 to keep the value fetched
+; INPUT         : R4 contains the value read from the ADC
+; OUTPUT        : Carry flag is set to signal the calling ISR the need to wake the system up
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : NTC_ENABLE, NTC_READY, NTCLastVal, NTCP_DOUT, NTCStatus
+; OTHER FUNCS   : None
+NTCCallback:
+			BIC.B	#NTC_ENABLE,&NTCP_DOUT			;Disable the NTC subsystem
+			MOV		R4,&NTCLastVal					;Store the new value
+			BIS		#NTC_READY,&NTCStatus			;Flag that there is a new value stored
+			SETC									;Flag the need to wake the system up, to
+													; the calling ISR
+			RET
 
 
 ;----------------------------------------

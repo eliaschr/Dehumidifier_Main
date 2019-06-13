@@ -55,12 +55,16 @@ DEF_NTCMCTL:		.equ	(0 | NTC_ACHANNEL)	;Default settings (Vref=3V3)
 NTC_ENABLE:			.equ	Board_NTCEnable		;The mask bit of the Enable pin of NTC
 NTC_ACHANNEL:		.equ	Board_NTCChannel	;The ADC channel used for NTC measurements
 
+;The following definitions are for the flags that describe the status of the NTC subsystem
+NTC_READY:			.equ	BITF				;Flags that there is new data fetched from NTC
+
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
 					.global	NTCPInit			;Initializes the NTC I/O port pins used
 					.global	NTCTrigger			;Starts a temperature measurement from NTC
+					.global	NTCGetCelcius		;Converts the NTC reading to Celcius
 
 
 	.endif										;__NTCONV_LIB_H43__
