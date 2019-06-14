@@ -57,6 +57,8 @@ DEF_ADCSHT0:		.equ	ADC12SHT0_8			;256 clock cycles of 4.8MHz (Internal
 												; temperature sensor)
 DEF_ADCRESOL:		.equ	ADC12RES_2			;12 bit resolution for ADC
 DEF_ADCDF:			.equ	0					;Read back format is right aligned unsigned
+DEF_TEMPEOS:		.equ	ADC12EOS			;End of sequence for MCTLx of internal
+												; temperature sensor
 
 ADC_TRG_NONE:		.equ	0					;ADC Trigger by ADC12SC bit, manually
 ADC_TRG_TB0CCR0:	.equ	2					;ADC conversion triggered by Timer B0 CCR0
@@ -72,7 +74,11 @@ ADC_TRG_TA4CCR1:	.equ	7					;ADC conversion triggered by Timer A4 CCR1
 ; Global Functions
 ;========================================
 					.global	ADCInit				;Initializes the ADC subsystem
+					.global	ADCSetRefV			;Configures the Voltage Reference for the
+												; specified voltage generation
 					.global	ADCSetChannel		;Sets the MCTLx register of a ADC channel
+					.global	ADCSetTempChannel	;Sets the MCTLx thet will be used for internal
+												; temperature sensor
 					.global	ADCSetWindow		;Sets the window limits (Low and High)
 					.global	ADCSetTrigger		;Sets the trigger input of the ADC
 					.global	ADCStartSingle		;Starts a single channel - single conversion
