@@ -32,9 +32,25 @@ __MAIN_DEFINITIONS__:		.equ	1				;Need to define this in order to avoid
 ;----------------------------------------
 ; Definitions
 ;========================================
+;Basic clock settings
 ACLKFreq:	.equ	32768							;AClk Clock Frequency in Hz
 MAINFreq:	.equ	8000000							;MClk Clock Frequency in Hz
 SMCLKFreq:	.equ	8000000							;SMClk Clock Frequency in Hz
+
+;Internal reference, ADC and its internal Temperature Sensor
+DEF_ADCTEMPCHANNEL:	.equ	1						;Default ADC Internal Temperature Sensor
+													; MCTLx to be used
+DEF_ADCSHT1:		.equ	ADC12SHT1_2				;16 clock cycles of 4.8MHz
+DEF_ADCSHT0:		.equ	ADC12SHT0_8				;256 clock cycles of 4.8MHz (for Internal
+													; temperature sensor)
+DEF_ADCRESOL:		.equ	ADC12RES_2				;12 bit resolution for ADC
+DEF_ADCDF:			.equ	0						;Read back format is right aligned
+													; unsigned binary number
+DEF_TEMPEOS:		.equ	ADC12EOS				;End of sequence for MCTLx of internal
+													; temperature sensor
+
+;NTC temperature sensor definitions
+DEF_NTCMCHANNEL:	.equ	0						;Will use MCTL0 for NTC reading
 
 
 	.endif											;__MAIN_DEFINITIONS__

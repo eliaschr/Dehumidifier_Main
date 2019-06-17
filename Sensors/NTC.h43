@@ -54,9 +54,12 @@ __NTCONV_LIB_H43__:	.equ	1					;Must define this in order to avoid double
 DEF_NTCMCTL:		.equ	(0 | NTC_ACHANNEL)	;Default settings (Vref=3V3)
 NTC_ENABLE:			.equ	Board_NTCEnable		;The mask bit of the Enable pin of NTC
 NTC_ACHANNEL:		.equ	Board_NTCChannel	;The ADC channel used for NTC measurements
+NTC_MCHANNEL:		.equ	DEF_NTCMCHANNEL		;The default MCTL channel for NTC reading
 
 ;The following definitions are for the flags that describe the status of the NTC subsystem
 NTC_READY:			.equ	BITF				;Flags that there is new data fetched from NTC
+NTC_CONVERTED:		.equ	BITE				;Flags that the NTC value currently read is
+												; converted
 
 
 ;----------------------------------------
@@ -64,7 +67,11 @@ NTC_READY:			.equ	BITF				;Flags that there is new data fetched from NTC
 ;========================================
 					.global	NTCPInit			;Initializes the NTC I/O port pins used
 					.global	NTCTrigger			;Starts a temperature measurement from NTC
-					.global	NTCGetCelcius		;Converts the NTC reading to Celcius
+					.global	NTCEnable			;Enables the NTC hardware to be ready to fetch
+												; a reading
+					.global	NTCDisable			;Disables the NTC hardware to avoid
+												; sel heating of the sensor
+					.global	NTCReadTemp			;Converts the NTC reading to Celcius
 
 
 	.endif										;__NTCONV_LIB_H43__

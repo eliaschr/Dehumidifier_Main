@@ -52,3 +52,5 @@ Mkfile.old
 dkms.conf
 /Debug/
 /Temp_NTC.ods
+/.ccsproject
+/.cproject

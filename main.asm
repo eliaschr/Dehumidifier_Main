@@ -191,6 +191,7 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			CALL	#LedsEnable					;Start led scanning
 			CALL	#I2CInit					;Initialize the I2C bus subsystem
 			CALL	#ADCInit					;Initialize the ADC hardware module
+			CALL	#ADCEnableTempSensor		;Setup the temperature sensor subsystem
 			CALL	#HDCInit					;Initialize the Temperature/Humidity sensor
 			CALL	#NTCPInit					;Initialize the NTC subsystem
 			
@@ -204,18 +205,27 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 ;			CALL	#HDCReadRaw					;Read these data. When everything is fine the
 												; four bytes will be in the Receive Buffer
 
+			CALL	#NTCTrigger					;Trigger a single channel conversion for NTC
+
 			NOP
 ReSleep:	BIS		#LPM4 | GIE,SR				;Sleep...
 			NOP
 MainLoop:	MOV		#I2CCOUNTOK,R4				;Clear I2CCOUNTOK flag if set
 			CALL	#I2CGetStatus				;Get the status of the I2C bus
 			BIT		#I2CCOUNTOK,R4				;Is this flag set? (New data to read?)
-			JZ		KeybLoop					;No => Skip handling I2C data
+			JZ		NTCLoop						;No => Skip handling I2C data
 			;Should handle I2C received data here. A Breakpoint should be placed here to see
 			; the I2CRxBuffer if it contains the valid Manufacturer and Device IDs
 			;If there are 49 54 D0 07 in the buffer, then the system communicated correctly
 			; with HDC2080
 ;			NOP
+
+NTCLoop:	CALL	#NTCReadTemp				;Try to read the NTC temperature
+			JC		KeybLoop					;No new value? => proceed to next event
+			;Here there should be the new temperature reading handling. A breakpoint should be
+			; placed here for NTC library functionality test.
+			;Note that the temperature returned is multiplied by 10 to include
+			NOP
 
 			;Lets prepare the keyboard loop
 KeybLoop:	CALL	#KBDReadKey					;Is there a key to use?

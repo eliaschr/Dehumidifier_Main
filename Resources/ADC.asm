@@ -41,6 +41,7 @@
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
 			.include "Board.h43"			;Hardware Connections
 			.include "Definitions.h43"		;Global definitions
+			.include "Math.h43"				;Need some maths (Div32By16)
 			.include "ADC.h43"				;Local definitions
 			.include "ADCAutoDefs.h43"		;Auto definitions according to settings in
 											; ADC.h43
@@ -64,6 +65,9 @@
 											; interrupt
 			.bss	ADCCalMult, 4			;ADC Calibration multiplier
 			.bss	ADCCalDiff, 2			;ADC Calibration Divider (ADCAL85-ADCCAL30)
+			.bss	ADCStatus, 2			;Status word for the ADC subsystem
+			.bss	ADCLastTemp, 2			;Last converted temperature (ADC value)
+			.bss	ADCLastCelcius, 2		;Last converted value to Celcius
 
 
 ;----------------------------------------
@@ -134,7 +138,7 @@ ADCSetRefV:
 			;Lets find the correct calibration values to use
 			MOV		#01A1Ah,R4					;Assume calibration for 1.2V
 			CMP		#00000h,R10					;Is it 1.2V?
-			JZ		Calc						;Yes => Calculate the values needed
+			JZ		ADREF_Calc					;Yes => Calculate the values needed
 			
 			MOV		#01A1Eh,R4					;Assume calibration for 2.0V
 			CMP		#REFVSEL_1,R10				;Is it 2.0V?
@@ -149,6 +153,7 @@ ADREF_Calc:	;Calculate the necessary factors for the temperature equation
 												; calculation formula
 			PUSH	SR							;Going to use Multiplier, so keep GIE state
 			DINT
+			NOP
 			MOV		R4,&MPY						;Going to multiply ADCCAL85...
 			MOV		#300,&OP2					;... by 300
 			NOP
@@ -166,6 +171,28 @@ ADREF_Calc:	;Calculate the necessary factors for the temperature equation
 ADREF_Wait:	BIT		#REFGENRDY,&REFCTL0			;Is the reference ready to be used?
 			JZ		ADREF_Wait					;No => Wait until it is ready
 			RET									;The internal reference is ready to be used
+
+
+;----------------------------------------
+; ADCEnableTempSensor
+; Enables the internal voltage reference at its defautl voltage, configures a default
+; ADC12MCTLx register to be used for the internal temperature sensor. The setup is based on
+; the default values
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : R4, R5, R6, R7, R10, R11, R12
+; REGS AFFECTED : R4, R5, R6, R7, R10, R11, R12
+; STACK USAGE   : 2 = 1x Call + 1x Push in ADCSetRefV
+; VARS USED     : ADCMCtlArr, DEF_ADCTEMPCHANNEL, DEF_ADCTEMPVREF, DEF_TEMPEOS
+; OTHER FUNCS   : ADCChannelCb, ADCSetChannel, ADCSetRefV, ADCSetTempChannel, ADCTemperatureCb
+ADCEnableTempSensor:
+			MOV		#DEF_ADCTEMPVREF,R10
+			CALL	#ADCSetRefV					;Setup internal VRef
+			MOV		#ADCTemperatureCb,R12		;The callback function of the temperatue
+			CALL	#ADCChannelCb				; sensor channel is set
+			MOV		#DEF_ADCTEMPCHANNEL,R10
+			;JMP	ADCSetTempChannel			;No need to have it here, as ADCSetTempChannel
+												; function follows, but inserted for clarity
 
 
 ;----------------------------------------
@@ -334,13 +361,35 @@ ADCTrigger:
 ; with one fractional digit, multiplied by 10. i.e. the temperature of 25,3 degrees Celcius is
 ; returned as 253
 ; INPUT         : None
-; OUTPUT        : None
-; REGS USED     : None
-; REGS AFFECTED : None
-; STACK USAGE   : None
-; VARS USED     : None
-; OTHER FUNCS   : None
+; OUTPUT        : R4 contains the temperature in Celcius degrees (x10)
+; REGS USED     : R4, R5, R6, R7, R15
+; REGS AFFECTED : R4, R5, R6, R7
+; STACK USAGE   : 6 = 1x Call + 4 by called function (Div32By16)
+; VARS USED     : ADCCalDiff, ADCCalMult, ADCF_TEMPCONVOK, ADCF_TEMPOK, ADCLastCelcius,
+;                 ADCStatus
+; OTHER FUNCS   : Div32By16
 ADCGetTemperature:
+			BIT		#ADCF_TEMPCONVOK,&ADCStatus	;Is there a converted value already?
+			JNZ		ADCGT_Good					;Yes => no need to convert it. Get the result
+			PUSH	SR							;Need to disable temporarily the interrupts
+			DINT								;Noone should disturb hardware multiplier
+			NOP
+			MOV		&ADCCalMult,&RESLO			;Prepare the "previous value" as ADCCalMult
+			MOV		&ADCCalMult+2,&RESHI
+			MOV		R4,&MAC						;Going to Multiply ADC value to ...
+			MOV		#550,&OP2					;... 550 and add it to ADCCalMult
+			NOP
+			MOV		&RESHI,R4					;... and divide it by...
+			MOV		&RESLO,R5
+			POP		SR							;Restore interupts status.
+			MOV		&ADCCalDiff,R6				;The calculated difference of the factors
+			CALL	#Div32By16					;Perform the division
+			;Now R4:R5 contain the result. Well only the 16 lower bits can have a value!
+			MOV		R5,&ADCLastCelcius			;Store the new temperature value in Celcius
+			BIS		#ADCF_TEMPCONVOK,&ADCStatus	;Flag that the copnversion is done
+ADCGT_Good:	BIC		#ADCF_TEMPOK,&ADCStatus		;Last reading done
+			MOV		&ADCLastCelcius,R4			;Get the last calculated Celcius value
+			RET
 
 
 ;----------------------------------------
@@ -394,12 +443,38 @@ ADCRB_SkipRvt:
 			DECD	&ADCBufLen					;One word less in the buffer
 			POP		SR							;Restore Interrupts status
 			CLRC								;Clear carry to flag that there is a new value
-ADCRB_NoVal:RET
+ADCRB_NoVal:
+			RET
 
 
 ;----------------------------------------
 ; Interrupt Service Routines
 ;========================================
+;----------------------------------------
+; ADCTemperatureCb
+; Not a real ISR, but it is called withing ISR context. This is the callback function of the
+; internal temperature sensor reading.
+; INPUT         : R4 contains the value read from the sensor
+; OUTPUT        : Carry flag is set if there is a new value and the system needs to handle it
+;                 or cleared if there is nothing new
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : ADCF_TEMPCONVOK, ADCF_TEMPOK, ADCLastTemp, ADCStatus
+; OTHER FUNCS   : None
+ADCTemperatureCb:
+			CMP		R4,&ADCLastTemp				;Is this a new value?
+			JEQ		ADCTCb_Out					;Nope => nothing to do
+			MOV		R4,&ADCLastTemp				;OK, Store the new value
+			BIS		#ADCF_TEMPOK,&ADCStatus		;Flag there is a new value fetched
+			BIC		#ADCF_TEMPCONVOK,&ADCStatus	;Flag that this value has not been converted
+												; to Celcius degrees
+			SETC								;Set carry flag to signal the need to wake up
+												; the system to handle the new value
+ADCTCb_Out:
+			RET
+
+
 ;----------------------------------------
 ; ADCStoreVal
 ; The function adds the input value to the FIFO ADC cyclic buffer. The addition is always
@@ -456,7 +531,7 @@ ADCGetChannelISR:
 												; the first (channel 0). Now R4 = word offset
 												; of the triggered channel
 			MOV		ADC12MEM0(R5),R4			;Get the converted value in R4
-			MOV		ADC12MEMCTL0(R5),R15		;Get the current MCTLx value
+			MOV		ADC12MCTL0(R5),R15			;Get the current MCTLx value
 			AND 	#ADC12INCH_31,R15			;Keep only the memory cell
 			ADD		R15,R15						;Convert it to word offset
 			MOV		R4,ADCLastVals(R15)			;Store the value read into last values buffer
@@ -494,38 +569,38 @@ ADCIDispatcher:
 			RETI								;06: ADC High Window Level (ADC12HIIFG)
 			RETI								;08: ADC Low Window Level (ADC12LOIFG)
 			RETI								;0A: ADC In Window (ADC12INIFG)
-			ADCGetChannelISR					;0C: ADC Channel 0 (ADC12IFG0)
-			ADCGetChannelISR					;0E: ADC Channel 1 (ADC12IFG1)
-			ADCGetChannelISR					;10: ADC Channel 2 (ADC12IFG2)
-			ADCGetChannelISR					;12: ADC Channel 3 (ADC12IFG3)
-			ADCGetChannelISR					;14: ADC Channel 4 (ADC12IFG4)
-			ADCGetChannelISR					;16: ADC Channel 5 (ADC12IFG5)
-			ADCGetChannelISR					;18: ADC Channel 6 (ADC12IFG6)
-			ADCGetChannelISR					;1A: ADC Channel 7 (ADC12IFG7)
-			ADCGetChannelISR					;1C: ADC Channel 8 (ADC12IFG8)
-			ADCGetChannelISR					;1E: ADC Channel 9 (ADC12IFG9)
-			ADCGetChannelISR					;20: ADC Channel 10 (ADC12IFG10)
-			ADCGetChannelISR					;22: ADC Channel 11 (ADC12IFG11)
-			ADCGetChannelISR					;24: ADC Channel 12 (ADC12IFG12)
-			ADCGetChannelISR					;26: ADC Channel 13 (ADC12IFG13)
-			ADCGetChannelISR					;28: ADC Channel 14 (ADC12IFG14)
-			ADCGetChannelISR					;2A: ADC Channel 15 (ADC12IFG15)
-			ADCGetChannelISR					;2C: ADC Channel 16 (ADC12IFG16)
-			ADCGetChannelISR					;2E: ADC Channel 17 (ADC12IFG17)
-			ADCGetChannelISR					;30: ADC Channel 18 (ADC12IFG18)
-			ADCGetChannelISR					;32: ADC Channel 19 (ADC12IFG19)
-			ADCGetChannelISR					;34: ADC Channel 20 (ADC12IFG20)
-			ADCGetChannelISR					;36: ADC Channel 21 (ADC12IFG21)
-			ADCGetChannelISR					;38: ADC Channel 22 (ADC12IFG22)
-			ADCGetChannelISR					;3A: ADC Channel 23 (ADC12IFG23)
-			ADCGetChannelISR					;3C: ADC Channel 24 (ADC12IFG24)
-			ADCGetChannelISR					;3E: ADC Channel 25 (ADC12IFG25)
-			ADCGetChannelISR					;40: ADC Channel 26 (ADC12IFG26)
-			ADCGetChannelISR					;42: ADC Channel 27 (ADC12IFG27)
-			ADCGetChannelISR					;44: ADC Channel 28 (ADC12IFG28)
-			ADCGetChannelISR					;46: ADC Channel 29 (ADC12IFG29)
-			ADCGetChannelISR					;48: ADC Channel 30 (ADC12IFG30)
-			ADCGetChannelISR					;4A: ADC Channel 31 (ADC12IFG31)
+			JMP		ADCGetChannelISR			;0C: ADC Channel 0 (ADC12IFG0)
+			JMP		ADCGetChannelISR			;0E: ADC Channel 1 (ADC12IFG1)
+			JMP		ADCGetChannelISR			;10: ADC Channel 2 (ADC12IFG2)
+			JMP		ADCGetChannelISR			;12: ADC Channel 3 (ADC12IFG3)
+			JMP		ADCGetChannelISR			;14: ADC Channel 4 (ADC12IFG4)
+			JMP		ADCGetChannelISR			;16: ADC Channel 5 (ADC12IFG5)
+			JMP		ADCGetChannelISR			;18: ADC Channel 6 (ADC12IFG6)
+			JMP		ADCGetChannelISR			;1A: ADC Channel 7 (ADC12IFG7)
+			JMP		ADCGetChannelISR			;1C: ADC Channel 8 (ADC12IFG8)
+			JMP		ADCGetChannelISR			;1E: ADC Channel 9 (ADC12IFG9)
+			JMP		ADCGetChannelISR			;20: ADC Channel 10 (ADC12IFG10)
+			JMP		ADCGetChannelISR			;22: ADC Channel 11 (ADC12IFG11)
+			JMP		ADCGetChannelISR			;24: ADC Channel 12 (ADC12IFG12)
+			JMP		ADCGetChannelISR			;26: ADC Channel 13 (ADC12IFG13)
+			JMP		ADCGetChannelISR			;28: ADC Channel 14 (ADC12IFG14)
+			JMP		ADCGetChannelISR			;2A: ADC Channel 15 (ADC12IFG15)
+			JMP		ADCGetChannelISR			;2C: ADC Channel 16 (ADC12IFG16)
+			JMP		ADCGetChannelISR			;2E: ADC Channel 17 (ADC12IFG17)
+			JMP		ADCGetChannelISR			;30: ADC Channel 18 (ADC12IFG18)
+			JMP		ADCGetChannelISR			;32: ADC Channel 19 (ADC12IFG19)
+			JMP		ADCGetChannelISR			;34: ADC Channel 20 (ADC12IFG20)
+			JMP		ADCGetChannelISR			;36: ADC Channel 21 (ADC12IFG21)
+			JMP		ADCGetChannelISR			;38: ADC Channel 22 (ADC12IFG22)
+			JMP		ADCGetChannelISR			;3A: ADC Channel 23 (ADC12IFG23)
+			JMP		ADCGetChannelISR			;3C: ADC Channel 24 (ADC12IFG24)
+			JMP		ADCGetChannelISR			;3E: ADC Channel 25 (ADC12IFG25)
+			JMP		ADCGetChannelISR			;40: ADC Channel 26 (ADC12IFG26)
+			JMP		ADCGetChannelISR			;42: ADC Channel 27 (ADC12IFG27)
+			JMP		ADCGetChannelISR			;44: ADC Channel 28 (ADC12IFG28)
+			JMP		ADCGetChannelISR			;46: ADC Channel 29 (ADC12IFG29)
+			JMP		ADCGetChannelISR			;48: ADC Channel 30 (ADC12IFG30)
+			JMP		ADCGetChannelISR			;4A: ADC Channel 31 (ADC12IFG31)
 			RETI								;4C: ADC Ready (ADC12RDYIFG)
 
 

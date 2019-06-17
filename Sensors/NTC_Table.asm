@@ -47,6 +47,11 @@
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
 
+;The table and its end must be global in order for the rest program to access it
+			.global	NTC_Table
+			.global	NTC_Table_END
+
+
 ;----------------------------------------
 ; Constants
 ;========================================
