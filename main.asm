@@ -215,9 +215,18 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 			; The system triggers the ADC to start a conversion on the internal temperature
 			; sensor channel. When the conversion is ready, the thread wakes up and using
 			; ADCTempLoop gets the new reading in Celcius, multiplied by 10
-			MOV		#DEF_ADCTEMPCHANNEL,R10		;Channel to be used is the one of Internal
-												; Temperature Sensor
-			CALL	#ADCStartSingle				;Start the conversion
+;			MOV		#DEF_ADCTEMPCHANNEL,R10		;Channel to be used is the one of Internal
+;												; Temperature Sensor
+;			CALL	#ADCStartSingle				;Start the conversion
+
+			;Another test that can be performed is the sequence of channels test. The NTC and
+			; internal temperature sensors are both sampled and converted. In that case, both
+			; temperature readings should be acquired. The following lines make this happen.
+			; By placing a breakpoint at ADCTempLoop as before and observing the variables of
+			; both NTC and ADC we can test both measurements
+			CALL	#NTCEnable					;Enable NTC hardware in order to read a value!
+			MOV		#DEF_NTCMCHANNEL,R10		;First channel of sequence is for the NTC
+			CALL	#ADCStartSequence			;Start the sequence
 			
 			NOP
 ReSleep:	BIS		#LPM4 | GIE,SR				;Sleep...
@@ -238,7 +247,7 @@ NTCLoop:	CALL	#NTCReadTemp				;Try to read the NTC temperature
 			;Here there should be the new temperature reading handling. A breakpoint should be
 			; placed here for NTC library functionality test.
 			;Note that the temperature returned is multiplied by 10 to include
-			;NOP
+			NOP
 
 ADCTempLoop:
 			CALL	#ADCGetTemperature			;Try to read the temperature
