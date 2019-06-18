@@ -1,7 +1,7 @@
 ;*********************************************************************************************
-;* ADC Library                                                                               *
+;* UART - RS232 Library                                                                      *
 ;*-------------------------------------------------------------------------------------------*
-;* ADC.h43                                                                                   *
+;* UART.h43                                                                                  *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -18,11 +18,12 @@
 ;* You should have received a copy of the GNU General Public License                         *
 ;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
 ;*-------------------------------------------------------------------------------------------*
-;* In this file all the necessary definitions for the ADC handling are set and the functions *
-;* that need to be available to the rest of the program are made global.                     *
+;* In this file all the necessary definitions for the UART communication handling library    *
+;* are  set and the functions that need to be available to the rest of the program are made  *
+;* global.                                                                                   *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
-			.title	"Analog to Digital Converter Library"
+			.title	"UART - RS232 Library"
 			.width	94
 			.tab	4
 
@@ -44,59 +45,29 @@
 ;*                                                                                           *
 ;*********************************************************************************************
 
-	.if  ($isdefed("__ADCONV_LIB_H43__") == 0)
+	.if  ($isdefed("__UART_RS232_LIB_H43__") == 0)
 
-__ADCONV_LIB_H43__:	.equ	1					;Must define this in order to avoid double
-												; inclusions
+__UART_RS232_LIB_H43__:	.equ	1			;Must define this in order to avoid double
+											; inclusions
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-ADCBUFFSIZE:		.equ	32					;Length of the results buffer in words
+TXBUFLEN:	.equ	32						;The number of bytes in cyclic transmit buffer
+RXBUFLEN:	.equ	512						;The number of bytes in cyclic receive buffer
+RXWAKELIM:	.equ	128						;The number of bytes that when the buffer reaches
+											; it will wake up the system
+DATABITS:	.equ	8						;Number of data bits (7 or 8)
+PARITY:		.equ	"NONE"					;Expresses the parity setting. Can be one of
+											; "NONE", "ODD" or "EVEN"
+STOPBITS:	.equ	1						;Number of stop bits
+BAUDRATE:	.equ	115200					;The Baud Rate needed
 
-ADC_TRG_NONE:		.equ	0					;ADC Trigger by ADC12SC bit, manually
-ADC_TRG_TB0CCR0:	.equ	2					;ADC conversion triggered by Timer B0 CCR0
-ADC_TRG_TB0CCR1:	.equ	3					;ADC conversion triggered by Timer B0 CCR1
-ADC_TRG_TA0CCR1:	.equ	1					;ADC conversion triggered by Timer A0 CCR1
-ADC_TRG_TA1CCR1:	.equ	4					;ADC conversion triggered by Timer A1 CCR1
-ADC_TRG_TA2CCR1:	.equ	5					;ADC conversion triggered by Timer A2 CCR1
-ADC_TRG_TA3CCR1:	.equ	6					;ADC conversion triggered by Timer A3 CCR1
-ADC_TRG_TA4CCR1:	.equ	7					;ADC conversion triggered by Timer A4 CCR1
-
-DEF_ADCTEMPVREF:	.equ	REFVSEL_2			;ADC voltage reference for internal
-												; temperature sensor = 2.5V
-
-;The ADCStatus word is consisted of flags that describe the status of the software subsytem.
-; The following definitions describe these flags
-ADCF_TEMPOK:		.equ	BITF				;Flags there is a new temperature value in
-												; memory
-ADCF_TEMPCONVOK:	.equ	BITE				;Flags that the new value is already converted
-
+UARTBUS:	.equ	Board_CommPort			;The number of eUSCI_A port to be used
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
-					.global	ADCInit				;Initializes the ADC subsystem
-					.global	ADCSetRefV			;Configures the Voltage Reference for the
-												; specified voltage generation
-					.global	ADCEnableTempSensor	;Enables the use of temperature sensor
-					.global	ADCSetChannel		;Sets the MCTLx register of a ADC channel
-					.global	ADCSetTempChannel	;Sets the MCTLx thet will be used for internal
-												; temperature sensor
-					.global	ADCSetWindow		;Sets the window limits (Low and High)
-					.global	ADCSetTrigger		;Sets the trigger input of the ADC
-					.global	ADCStartSingle		;Starts a single channel - single conversion
-												; at once
-					.global	ADCPrepareSingle	;Prepares the ADC module to perform a single
-												; channel - single conversion
-					.global	ADCStartSequence	;Starts a conversion of sequence of channels
-					.global	ADCPrepareSequence	;Prepares the ADC module to perform a sequence
-												; of channels conversion, to be started later
-					.global	ADCTrigger			;Triggers the ADC ta start conversion at the
-												; current mode
-					.global	ADCChannelCb		;Set a callback function to be used when a
-												; specific channel is converted
-					.global	ADCReadBuffer		;Reads the first available value stored in ADC
-												; buffer
-					.global	ADCGetTemperature	;Reads the temperature in Celcius
+			.global	UARTPInit				;Initializes the port pins used for RS232
+			
 
-	.endif										;__ADCONV_LIB_H43__
+	.endif									;__UART_RS232_LIB_H43__

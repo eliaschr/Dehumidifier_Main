@@ -75,9 +75,9 @@
 
 ;In case of debugging NTC library, the following lines should be uncommented to make the
 ; variables global in order for the CCS to be able to know their names
-			.global	NTCStatus
-			.global	NTCLastVal
-			.global	NTCLastTemp
+;			.global	NTCStatus
+;			.global	NTCLastVal
+;			.global	NTCLastTemp
 
 
 ;----------------------------------------

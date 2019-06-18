@@ -205,8 +205,20 @@ StopWDT:	MOV.W	#WDTPW|WDTHOLD,&WDTCTL		;Stop watchdog timer
 ;			CALL	#HDCReadRaw					;Read these data. When everything is fine the
 												; four bytes will be in the Receive Buffer
 
-			CALL	#NTCTrigger					;Trigger a single channel conversion for NTC
+			;The following line is for testing the NTC triggering and temperature reading. The
+			; system triggers the ADC to start a conversion on the NTC channel. When the
+			; conversion is ready, the thread wakes up and using NTCLoop gets the new NTC
+			; temperature value in Celcius, multiplied by 10
+;			CALL	#NTCTrigger					;Trigger a single channel conversion for NTC
 
+			;The following lines are for testing the ADC intenral temperature sensor reading.
+			; The system triggers the ADC to start a conversion on the internal temperature
+			; sensor channel. When the conversion is ready, the thread wakes up and using
+			; ADCTempLoop gets the new reading in Celcius, multiplied by 10
+			MOV		#DEF_ADCTEMPCHANNEL,R10		;Channel to be used is the one of Internal
+												; Temperature Sensor
+			CALL	#ADCStartSingle				;Start the conversion
+			
 			NOP
 ReSleep:	BIS		#LPM4 | GIE,SR				;Sleep...
 			NOP
@@ -220,11 +232,20 @@ MainLoop:	MOV		#I2CCOUNTOK,R4				;Clear I2CCOUNTOK flag if set
 			; with HDC2080
 ;			NOP
 
+			;The followiong part is for fetching the reading of NTC temperature sensor
 NTCLoop:	CALL	#NTCReadTemp				;Try to read the NTC temperature
-			JC		KeybLoop					;No new value? => proceed to next event
+			JC		ADCTempLoop					;No new value? => proceed to next event
 			;Here there should be the new temperature reading handling. A breakpoint should be
 			; placed here for NTC library functionality test.
 			;Note that the temperature returned is multiplied by 10 to include
+			;NOP
+
+ADCTempLoop:
+			CALL	#ADCGetTemperature			;Try to read the temperature
+			JC		KeybLoop					;No new value => proceed to next event
+			;At this point the code that handles the new reading is placed. In case of ADC
+			; library and internal temperature sensor testing, there should be placed a 
+			; breakpoint at the following NOP to check the value of the reading
 			NOP
 
 			;Lets prepare the keyboard loop

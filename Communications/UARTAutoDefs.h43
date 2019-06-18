@@ -1,0 +1,178 @@
+;*********************************************************************************************
+;* UART - RS232 Library                                                                      *
+;*-------------------------------------------------------------------------------------------*
+;* UARTAutoDefs.h43                                                                          *
+;* Author: eliaschr                                                                          *
+;* Copyright (c) 2019, Elias Chrysocheris                                                    *
+;*                                                                                           *
+;* This program is free software: you can redistribute it and/or modify                      *
+;* it under the terms of the GNU General Public License as published by                      *
+;* the Free Software Foundation, either version 3 of the License, or                         *
+;* (at your option) any later version.                                                       *
+;*                                                                                           *
+;* This program is distributed in the hope that it will be useful,                           *
+;* but WITHOUT ANY WARRANTY; without even the implied warranty of                            *
+;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                             *
+;* GNU General Public License for more details.                                              *
+;*                                                                                           *
+;* You should have received a copy of the GNU General Public License                         *
+;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
+;*-------------------------------------------------------------------------------------------*
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
+;* Example of automatic definitions is the computation of register values according to baud  *
+;* rate needed                                                                               *
+;*********************************************************************************************
+;* Note: Correct format of the file is presented when tab space is set to 4
+			.title	"UART - RS232 Library"
+			.width	94
+			.tab	4
+
+;*===========================================================================================*
+;* Definitions of the Library:                                                               *
+;* ----------------------------                                                              *
+;*                                                                                           *
+;*===========================================================================================*
+;* Predefined Definitions Expected by the Library:                                           *
+;* ------------------------------------------------                                          *
+;*                                                                                           *
+;*********************************************************************************************
+
+	.if ($isdefed("__UART_RS232_LIB_AUTO_DEFS__") == 0)
+	.if ($isdefed("__UART_RS232_LIB_H43__") == 0)
+		.emsg "UART.h43 must have been included in the file before UARTAutoDefs.h43"
+	.endif
+
+__UART_RS232_LIB_AUTO_DEFS__:.equ	1			;Need to define this in order to avoid
+												; double inclusions
+
+;----------------------------------------
+; UART Definitions for RS232
+;========================================
+	.if (UARTBUS == 0)
+COMM_TXD:		.equ	BIT0						;Bit mask for Tx pin
+COMM_RXD:		.equ	BIT1						;Bit mask for Rx pin
+COMM_SEL0VAL:	.equ	0							;Default value of SEL0 register
+COMM_SEL1VAL:	.equ	(COMM_TXD | COMM_RXD)		;Default value of SEL1 register
+COMM_IN:		.equ	P2IN						;Data input register of the port pins
+COMM_OUT:		.equ	P2OUT						;Data output register of the port pins
+COMM_DIR:		.equ	P2DIR						;Data direction register
+COMM_REN:		.equ	P2REN						;Pull-up/down resistor enable register
+COMM_SEL0:		.equ	P2SEL0						;Special function selection registers
+COMM_SEL1:		.equ	P2SEL1
+COMM_INTE:		.equ	P2IE						;Interrupt enable register
+COMM_INTES:		.equ	P2IES						;Interrupt edge selector register
+COMM_INTF:		.equ	P2IFG						;Interrupt flags register
+COMM_INTV:		.equ	P2IV						;Interrupt vector register
+				.define	"PORT2_VECTOR", COMMP_Vector;Interrupt Vector Memory Segment
+
+COMM_CTLW0:		.equ	UCA0CTLW0
+COMM_CTLW1:		.equ	UCA0CTLW1
+COMM_BRW:		.equ	UCA0BRW
+COMM_MCTLW:		.equ	UCA0MCTLW
+COMM_STATW:		.equ	UCA0STATW
+COMM_RXBUF:		.equ	UCA0RXBUF
+COMM_TXBUF:		.equ	UCA0TXBUF
+COMM_ABCTL:		.equ	UCA0ABCTL
+COMM_IRCLT:		.equ	UCA0IRCTL
+COMM_IE:		.equ	UCA0IE
+COMM_IFG:		.equ	UCA0IFG
+COMM_IV:		.equ	UCA0IV
+				.define "", COMMU_Vector	;eUSCI_A interrupt vector memory segment
+	.elseif (UARTBUS == 1)
+COMM_TXD:		.equ	BIT5
+COMM_RXD:		.equ	BIT6
+COMM_SEL0VAL:	.equ	0
+COMM_SEL1VAL:	.equ	(COMM_TXD | COMM_RXD)
+COMM_IN:		.equ	P2IN
+COMM_OUT:		.equ	P2OUT
+COMM_DIR:		.equ	P2DIR
+COMM_REN:		.equ	P2REN
+COMM_SEL0:		.equ	P2SEL0
+COMM_SEL1:		.equ	P2SEL1
+COMM_INTE:		.equ	P2IE
+COMM_INTES:		.equ	P2IES
+COMM_INTF:		.equ	P2IFG
+COMM_INTV:		.equ	P2IV
+				.define	"PORT2_VECTOR", COMMP_Vector
+
+COMM_CTLW0:		.equ	UCA1CTLW0
+COMM_CTLW1:		.equ	UCA1CTLW1
+COMM_BRW:		.equ	UCA1BRW
+COMM_MCTLW:		.equ	UCA1MCTLW
+COMM_STATW:		.equ	UCA1STATW
+COMM_RXBUF:		.equ	UCA1RXBUF
+COMM_TXBUF:		.equ	UCA1TXBUF
+COMM_ABCTL:		.equ	UCA1ABCTL
+COMM_IRCLT:		.equ	UCA1IRCTL
+COMM_IE:		.equ	UCA1IE
+COMM_IFG:		.equ	UCA1IFG
+COMM_IV:		.equ	UCA1IV
+				.define "", COMMU_Vector
+	.elseif (UARTBUS == 2)
+COMM_TXD:		.equ	BIT4
+COMM_RXD:		.equ	BIT5
+COMM_SEL0VAL:	.equ	(COMM_TXD | COMM_RXD)
+COMM_SEL1VAL:	.equ	0
+COMM_IN:		.equ	P5IN
+COMM_OUT:		.equ	P5OUT
+COMM_DIR:		.equ	P5DIR
+COMM_REN:		.equ	P5REN
+COMM_SEL0:		.equ	P5SEL0
+COMM_SEL1:		.equ	P5SEL1
+COMM_INTE:		.equ	P5IE
+COMM_INTES:		.equ	P5IES
+COMM_INTF:		.equ	P5IFG
+COMM_INTV:		.equ	P5IV
+				.define	"PORT5_VECTOR", COMMP_Vector
+
+COMM_CTLW0:		.equ	UCA2CTLW0
+COMM_CTLW1:		.equ	UCA2CTLW1
+COMM_BRW:		.equ	UCA2BRW
+COMM_MCTLW:		.equ	UCA2MCTLW
+COMM_STATW:		.equ	UCA2STATW
+COMM_RXBUF:		.equ	UCA2RXBUF
+COMM_TXBUF:		.equ	UCA2TXBUF
+COMM_ABCTL:		.equ	UCA2ABCTL
+COMM_IRCLT:		.equ	UCA2IRCTL
+COMM_IE:		.equ	UCA2IE
+COMM_IFG:		.equ	UCA2IFG
+COMM_IV:		.equ	UCA2IV
+				.define "", COMMU_Vector
+	.elseif (UARTBUS == 3)
+COMM_TXD:		.equ	BIT0
+COMM_RXD:		.equ	BIT1
+COMM_SEL0VAL:	.equ	(COMM_TXD | COMM_RXD)
+COMM_SEL1VAL:	.equ	0
+COMM_IN:		.equ	P6IN
+COMM_OUT:		.equ	P6OUT
+COMM_DIR:		.equ	P6DIR
+COMM_REN:		.equ	P6REN
+COMM_SEL0:		.equ	P6SEL0
+COMM_SEL1:		.equ	P6SEL1
+COMM_INTE:		.equ	P6IE
+COMM_INTES:		.equ	P6IES
+COMM_INTF:		.equ	P6IFG
+COMM_INTV:		.equ	P6IV
+				.define	"PORT6_VECTOR", COMMP_Vector
+
+COMM_CTLW0:		.equ	UCA3CTLW0
+COMM_CTLW1:		.equ	UCA3CTLW1
+COMM_BRW:		.equ	UCA3BRW
+COMM_MCTLW:		.equ	UCA3MCTLW
+COMM_STATW:		.equ	UCA3STATW
+COMM_RXBUF:		.equ	UCA3RXBUF
+COMM_TXBUF:		.equ	UCA3TXBUF
+COMM_ABCTL:		.equ	UCA3ABCTL
+COMM_IRCLT:		.equ	UCA3IRCTL
+COMM_IE:		.equ	UCA3IE
+COMM_IFG:		.equ	UCA3IFG
+COMM_IV:		.equ	UCA3IV
+				.define "", COMMU_Vector
+	.else
+		.emsg	"UARTBUS must be between 0 and 3!"
+	.endif										;UARTBUS
+
+COMM_ALL	.equ	COMM_RXD | COMM_TXD			;Mask bit for both Receive and Transmit pins
+
+	.endif										;__UART_RS232_LIB_AUTO_DEFS__

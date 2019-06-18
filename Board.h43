@@ -129,5 +129,11 @@ Board_NTCChannel:		.equ	5					;The ADC input channel that will take the
 													; NTC measurements
 
 
+;----------------------------------------
+; UART RS232 Communication Definitions
+;========================================
+Board_CommPort:			.equ	0					;The UCAx number to be used for RS232 UART
+
+
 						.include "AutoDefs.h43"
 	.endif											;__BOARD_DEFS__

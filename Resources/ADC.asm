@@ -68,6 +68,21 @@
 			.bss	ADCStatus, 2			;Status word for the ADC subsystem
 			.bss	ADCLastTemp, 2			;Last converted temperature (ADC value)
 			.bss	ADCLastCelcius, 2		;Last converted value to Celcius
+			
+;When debugging the ADC library, perhaps the following lines should be uncommented. They make
+; the variables global in order for CCS Debugger to know the names and use them in watch
+; windows, etc.
+			.global	ADCCallbacks
+			.global	ADCLastVals
+			.global	ADCBuffer
+			.global	ADCBufStrt
+			.global	ADCBufLen
+			.global	ADCLastIV
+			.global	ADCCalMult
+			.global	ADCCalDiff
+			.global	ADCStatus
+			.global	ADCLastTemp
+			.global	ADCLastCelcius
 
 
 ;----------------------------------------
@@ -299,7 +314,7 @@ ADCStartSingle:
 			BIC		#ADC12CONSEQ_3,&ADC12CTL1	;Single Channel, Single Conversion mode
 			BIC		#ADC12CSTARTADD_31,&ADC12CTL3;Clear the channel bits
 			BIS		R10,&ADC12CTL3				;and set only the needed ones
-			MOV		#00000h,&ADC12IFGR0			;Clear all pending interrupts
+ADCStrtIE:	MOV		#00000h,&ADC12IFGR0			;Clear all pending interrupts
 			MOV		#00000h,&ADC12IFGR1
 			MOV		#00000h,&ADC12IFGR2
 			MOV		#0FFFFh,&ADC12IER0			;Enable interrupts for all input channels
@@ -328,7 +343,7 @@ ADCPrepareSingle:
 			BIC		#ADC12CONSEQ_3,&ADC12CTL1	;Single Channel, Single Conversion mode
 			BIC		#ADC12CSTARTADD_31,&ADC12CTL3;Clear the channel bits
 			BIS		R10,&ADC12CTL3				;and set only the needed ones
-			MOV		#00000h,&ADC12IFGR0			;Clear all pending interrupts
+ADCPrepIE:	MOV		#00000h,&ADC12IFGR0			;Clear all pending interrupts
 			MOV		#00000h,&ADC12IFGR1
 			MOV		#00000h,&ADC12IFGR2
 			MOV		#0FFFFh,&ADC12IER0			;Enable interrupts for all input channels
@@ -337,6 +352,51 @@ ADCPrepareSingle:
 												;Enable and start the conversion
 			BIS		#ADC12ENC,&ADC12CTL0
 			RET
+			
+			
+;----------------------------------------
+; ADCStartSequence
+; Starts a conversion of sequence of channels, manually (using ADC12SC bit)
+; INPUT         : R10 contains the starting channel (MCTLx) to be converted
+; OUTPUT        : None
+; REGS USED     : R10
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : ADCStrtIE
+ADCStartSequence:
+			BIT		#ADC12BUSY,&ADC12CTL1		;is the ADC Busy?
+			JNZ		ADCStartSequence			;Yes => wait...
+			BIC		#ADC12ENC,&ADC12CTL0		;Ensure ENC=0
+			BIC		#ADC12CONSEQ_3,&ADC12CTL1	;Single Channel, Single Conversion mode
+			BIS		#ADC12CONSEQ_1,&ADC12CTL1	;Set Sequence of channels
+			BIC		#ADC12CSTARTADD_31,&ADC12CTL3;Clear the channel bits
+			BIS		R10,&ADC12CTL3				;and set only the needed ones
+			BIS		#ADC12MSC,&ADC12CTL0		;Multiple sample and conversion mode
+			JMP		ADCStrtIE					;Enable interrupts and start scanning
+
+
+;----------------------------------------
+; ADCPrepareSequence
+; Prepares the system to be ready for a conversion of sequence of channels. The triggering can
+; be set either by ADC12SC bit later, or by another source, according to ADC12SHSx value
+; INPUT         : R10 contains the channel (MCTLx) to be converted
+; OUTPUT        : None
+; REGS USED     : R10
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+ADCPrepareSequence:
+			BIT		#ADC12BUSY,&ADC12CTL1		;is the ADC Busy?
+			JNZ		ADCStartSequence			;Yes => wait...
+			BIC		#ADC12ENC,&ADC12CTL0		;Ensure ENC=0
+			BIS		#ADC12MSC,&ADC12CTL0		;Multiple sample and conversion mode
+			BIC		#ADC12CONSEQ_3,&ADC12CTL1	;Single Channel, Single Conversion mode
+			BIS		#ADC12CONSEQ_1,&ADC12CTL1	;Set Sequence of channels
+			BIC		#ADC12CSTARTADD_31,&ADC12CTL3;Clear the channel bits
+			BIS		R10,&ADC12CTL3				;and set only the needed ones
+			JMP		ADCPrepIE					;Enable interrupts and start scanning
 
 
 ;----------------------------------------
