@@ -52,17 +52,20 @@ __UART_RS232_LIB_H43__:	.equ	1			;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-TXBUFLEN:	.equ	32						;The number of bytes in cyclic transmit buffer
-RXBUFLEN:	.equ	512						;The number of bytes in cyclic receive buffer
-RXWAKELIM:	.equ	128						;The number of bytes that when the buffer reaches
-											; it will wake up the system
-DATABITS:	.equ	8						;Number of data bits (7 or 8)
-PARITY:		.equ	"NONE"					;Expresses the parity setting. Can be one of
-											; "NONE", "ODD" or "EVEN"
-STOPBITS:	.equ	1						;Number of stop bits
-BAUDRATE:	.equ	115200					;The Baud Rate needed
+UART_TIMERA:	.equ	4					;The TimerA module used for UART timeout counting
 
-UARTBUS:	.equ	Board_CommPort			;The number of eUSCI_A port to be used
+UARTTXSIZE:		.equ	32					;The number of bytes in cyclic transmit buffer
+UARTRXSIZE:		.equ	512					;The number of bytes in cyclic receive buffer
+UARTRXWAKELIM:	.equ	128					;The number of bytes that when the buffer reaches
+											; it will wake up the system
+UARTDATABITS:	.equ	8					;Number of data bits (7 or 8)
+UARTPARITY:		.equ	"NONE"				;Expresses the parity setting. Can be one of
+											; "NONE", "ODD" or "EVEN"
+UARTSTOPBITS:	.equ	1					;Number of stop bits
+UARTBAUDRATE:	.equ	115200				;The Baud Rate needed
+
+UARTUSCIBUS:	.equ	Board_CommPort		;The number of eUSCI_A port to be used
+
 
 ;----------------------------------------
 ; Global Functions

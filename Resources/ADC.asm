@@ -72,17 +72,17 @@
 ;When debugging the ADC library, perhaps the following lines should be uncommented. They make
 ; the variables global in order for CCS Debugger to know the names and use them in watch
 ; windows, etc.
-			.global	ADCCallbacks
-			.global	ADCLastVals
-			.global	ADCBuffer
-			.global	ADCBufStrt
-			.global	ADCBufLen
-			.global	ADCLastIV
-			.global	ADCCalMult
-			.global	ADCCalDiff
-			.global	ADCStatus
-			.global	ADCLastTemp
-			.global	ADCLastCelcius
+;			.global	ADCCallbacks
+;			.global	ADCLastVals
+;			.global	ADCBuffer
+;			.global	ADCBufStrt
+;			.global	ADCBufLen
+;			.global	ADCLastIV
+;			.global	ADCCalMult
+;			.global	ADCCalDiff
+;			.global	ADCStatus
+;			.global	ADCLastTemp
+;			.global	ADCLastCelcius
 
 
 ;----------------------------------------

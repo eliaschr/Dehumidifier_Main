@@ -49,7 +49,8 @@ __UART_RS232_LIB_AUTO_DEFS__:.equ	1			;Need to define this in order to avoid
 ;----------------------------------------
 ; UART Definitions for RS232
 ;========================================
-	.if (UARTBUS == 0)
+;First lets create definitions for I/O ports and pins and eUSCI_A module to be used
+	.if (UARTUSCIBUS == 0)
 COMM_TXD:		.equ	BIT0						;Bit mask for Tx pin
 COMM_RXD:		.equ	BIT1						;Bit mask for Rx pin
 COMM_SEL0VAL:	.equ	0							;Default value of SEL0 register
@@ -78,8 +79,8 @@ COMM_IRCLT:		.equ	UCA0IRCTL
 COMM_IE:		.equ	UCA0IE
 COMM_IFG:		.equ	UCA0IFG
 COMM_IV:		.equ	UCA0IV
-				.define "", COMMU_Vector	;eUSCI_A interrupt vector memory segment
-	.elseif (UARTBUS == 1)
+				.define "EUSCI_A0_VECTOR", COMMU_Vector	;eUSCI_A interrupt vector memory segment
+	.elseif (UARTUSCIBUS == 1)
 COMM_TXD:		.equ	BIT5
 COMM_RXD:		.equ	BIT6
 COMM_SEL0VAL:	.equ	0
@@ -108,8 +109,8 @@ COMM_IRCLT:		.equ	UCA1IRCTL
 COMM_IE:		.equ	UCA1IE
 COMM_IFG:		.equ	UCA1IFG
 COMM_IV:		.equ	UCA1IV
-				.define "", COMMU_Vector
-	.elseif (UARTBUS == 2)
+				.define "EUSCI_A1_VECTOR", COMMU_Vector
+	.elseif (UARTUSCIBUS == 2)
 COMM_TXD:		.equ	BIT4
 COMM_RXD:		.equ	BIT5
 COMM_SEL0VAL:	.equ	(COMM_TXD | COMM_RXD)
@@ -138,8 +139,8 @@ COMM_IRCLT:		.equ	UCA2IRCTL
 COMM_IE:		.equ	UCA2IE
 COMM_IFG:		.equ	UCA2IFG
 COMM_IV:		.equ	UCA2IV
-				.define "", COMMU_Vector
-	.elseif (UARTBUS == 3)
+				.define "EUSCI_A2_VECTOR", COMMU_Vector
+	.elseif (UARTUSCIBUS == 3)
 COMM_TXD:		.equ	BIT0
 COMM_RXD:		.equ	BIT1
 COMM_SEL0VAL:	.equ	(COMM_TXD | COMM_RXD)
@@ -168,11 +169,82 @@ COMM_IRCLT:		.equ	UCA3IRCTL
 COMM_IE:		.equ	UCA3IE
 COMM_IFG:		.equ	UCA3IFG
 COMM_IV:		.equ	UCA3IV
-				.define "", COMMU_Vector
+				.define "EUSCI_A3_VECTOR", COMMU_Vector
 	.else
-		.emsg	"UARTBUS must be between 0 and 3!"
-	.endif										;UARTBUS
+		.emsg	"UARTUSCIBUS must be between 0 and 3!"
+	.endif										;UARTUSCIBUS
 
 COMM_ALL	.equ	COMM_RXD | COMM_TXD			;Mask bit for both Receive and Transmit pins
+
+;Time to setup the timer definitions according to the defined timer used for waking up the
+; system when binary reception mode is used
+	.if (UART_TIMERA == 0)							;Lets define the led timer registers
+COMMTCTL:				.equ	TA0CTL
+COMMTCCTL0:				.equ	TA0CCTL0
+COMMTCCTL1:				.equ	TA0CCTL1
+COMMTCCTL2:				.equ	TA0CCTL2
+COMMTR:					.equ	TA0R
+COMMTCCR0:				.equ	TA0CCR0
+COMMTCCR1:				.equ	TA0CCR1
+COMMTCCR2:				.equ	TA0CCR2
+COMMTEX0:				.equ	TA0EX0
+COMMTIV:				.equ	TA0IV
+						.define	"TIMER0_A0_VECTOR", COMMTVECTOR0
+						.define "TIMER0_A1_VECTOR", COMMTVECTOR1
+	.elseif (UART_TIMERA == 1)
+COMMTCTL:				.equ	TA1CTL
+COMMTCCTL0:				.equ	TA1CCTL0
+COMMTCCTL1:				.equ	TA1CCTL1
+COMMTCCTL2:				.equ	TA1CCTL2
+COMMTR:					.equ	TA1R
+COMMTCCR0:				.equ	TA1CCR0
+COMMTCCR1:				.equ	TA1CCR1
+COMMTCCR2:				.equ	TA1CCR2
+COMMTEX0:				.equ	TA1EX0
+COMMTIV:				.equ	TA1IV
+						.define	"TIMER1_A0_VECTOR", COMMTVECTOR0
+						.define "TIMER1_A1_VECTOR", COMMTVECTOR1
+	.elseif (UART_TIMERA == 2)
+COMMTCTL:				.equ	TA2CTL
+COMMTCCTL0:				.equ	TA2CCTL0
+COMMTCCTL1:				.equ	TA2CCTL1
+;COMMTCCTL2:			.equ	TA2CCTL2			;Timer A2 does not have CC2
+COMMTR:					.equ	TA2R
+COMMTCCR0:				.equ	TA2CCR0
+COMMTCCR1:				.equ	TA2CCR1
+;COMMTCCR2:				.equ	TA2CCR2				;Timer A2 does not have CC2
+COMMTEX0:				.equ	TA2EX0
+COMMTIV:				.equ	TA2IV
+						.define	"TIMER2_A0_VECTOR", COMMTVECTOR0
+						.define "TIMER2_A1_VECTOR", COMMTVECTOR1
+	.elseif (UART_TIMERA == 3)
+COMMTCTL:				.equ	TA3CTL
+COMMTCCTL0:				.equ	TA3CCTL0
+COMMTCCTL1:				.equ	TA3CCTL1
+;COMMTCCTL2:			.equ	TA3CCTL2			;Timer A3 does not have CC2
+COMMTR:					.equ	TA3R
+COMMTCCR0:				.equ	TA3CCR0
+COMMTCCR1:				.equ	TA3CCR1
+;COMMTCCR2:				.equ	TA3CCR2				;Timer A3 does not have CC2
+COMMTEX0:				.equ	TA3EX0
+COMMTIV:				.equ	TA3IV
+						.define	"TIMER3_A0_VECTOR", COMMTVECTOR0
+						.define "TIMER3_A1_VECTOR", COMMTVECTOR1
+	.elseif (UART_TIMERA == 4)
+COMMTCTL:				.equ	TA4CTL
+COMMTCCTL0:				.equ	TA4CCTL0
+COMMTCCTL1:				.equ	TA4CCTL1
+COMMTCCTL2:				.equ	TA4CCTL2
+COMMTR:					.equ	TA4R
+COMMTCCR0:				.equ	TA4CCR0
+COMMTCCR1:				.equ	TA4CCR1
+COMMTCCR2:				.equ	TA4CCR2
+COMMTEX0:				.equ	TA4EX0
+COMMTIV:				.equ	TA4IV
+						.define	"TIMER4_A0_VECTOR", COMMTVECTOR0
+						.define "TIMER4_A1_VECTOR", COMMTVECTOR1
+	.else
+		.emsg "UART_TIMERA definition in UART.h43 file has to be between 0 and 4"
+	.endif											;UART_TIMERA
 
 	.endif										;__UART_RS232_LIB_AUTO_DEFS__
