@@ -62,8 +62,8 @@ ADC_TRG_TA2CCR1:	.equ	5					;ADC conversion triggered by Timer A2 CCR1
 ADC_TRG_TA3CCR1:	.equ	6					;ADC conversion triggered by Timer A3 CCR1
 ADC_TRG_TA4CCR1:	.equ	7					;ADC conversion triggered by Timer A4 CCR1
 
-DEF_ADCTEMPVREF:	.equ	REFVSEL_2			;ADC voltage reference for internal
-												; temperature sensor = 2.5V
+DEF_ADCTEMPVREF:	.equ	REFVSEL_0			;ADC voltage reference for internal
+												; temperature sensor = 1.2V
 
 ;The ADCStatus word is consisted of flags that describe the status of the software subsytem.
 ; The following definitions describe these flags

@@ -203,9 +203,9 @@ ADREF_Wait:	BIT		#REFGENRDY,&REFCTL0			;Is the reference ready to be used?
 ADCEnableTempSensor:
 			MOV		#DEF_ADCTEMPVREF,R10
 			CALL	#ADCSetRefV					;Setup internal VRef
+			MOV		#DEF_ADCTEMPCHANNEL,R10
 			MOV		#ADCTemperatureCb,R12		;The callback function of the temperatue
 			CALL	#ADCChannelCb				; sensor channel is set
-			MOV		#DEF_ADCTEMPCHANNEL,R10
 			;JMP	ADCSetTempChannel			;No need to have it here, as ADCSetTempChannel
 												; function follows, but inserted for clarity
 
@@ -222,7 +222,7 @@ ADCEnableTempSensor:
 ; OTHER FUNCS   : ADCSetChannel
 ADCSetTempChannel:	;Going to use internal reference of 2.5V for input A30. The EOS bit is set
 					;according to DEF_TEMPEOS
-			MOV		#DEF_TEMPEOS | ADC12VRSEL_2 | ADC12INCH_30,R11
+			MOV		#DEF_TEMPEOS | ADC12VRSEL_1 | ADC12INCH_30,R11
 			;JMP	ADCSetChannel				;No need to have it here because ADCSetChannel
 												; function follows, but inserted for clarity
 
@@ -422,6 +422,7 @@ ADCTrigger:
 ; returned as 253
 ; INPUT         : None
 ; OUTPUT        : R4 contains the temperature in Celcius degrees (x10)
+;                 Carry flag is cleared if there is a new reading, set if not
 ; REGS USED     : R4, R5, R6, R7, R15
 ; REGS AFFECTED : R4, R5, R6, R7
 ; STACK USAGE   : 6 = 1x Call + 4 by called function (Div32By16)
@@ -429,6 +430,9 @@ ADCTrigger:
 ;                 ADCStatus
 ; OTHER FUNCS   : Div32By16
 ADCGetTemperature:
+			BIT		#ADCF_TEMPOK,&ADCStatus		;Do we have a new value of temperature?
+			SETC								;Assume no new value
+			JZ		ADCGT_End
 			BIT		#ADCF_TEMPCONVOK,&ADCStatus	;Is there a converted value already?
 			JNZ		ADCGT_Good					;Yes => no need to convert it. Get the result
 			PUSH	SR							;Need to disable temporarily the interrupts
@@ -436,12 +440,12 @@ ADCGetTemperature:
 			NOP
 			MOV		&ADCCalMult,&RESLO			;Prepare the "previous value" as ADCCalMult
 			MOV		&ADCCalMult+2,&RESHI
-			MOV		R4,&MAC						;Going to Multiply ADC value to ...
+			MOV		&ADCLastTemp,&MAC			;Going to Multiply ADC value to ...
 			MOV		#550,&OP2					;... 550 and add it to ADCCalMult
 			NOP
 			MOV		&RESHI,R4					;... and divide it by...
 			MOV		&RESLO,R5
-			POP		SR							;Restore interupts status.
+			POP		SR							;(Restore interupts status)
 			MOV		&ADCCalDiff,R6				;The calculated difference of the factors
 			CALL	#Div32By16					;Perform the division
 			;Now R4:R5 contain the result. Well only the 16 lower bits can have a value!
@@ -449,7 +453,8 @@ ADCGetTemperature:
 			BIS		#ADCF_TEMPCONVOK,&ADCStatus	;Flag that the copnversion is done
 ADCGT_Good:	BIC		#ADCF_TEMPOK,&ADCStatus		;Last reading done
 			MOV		&ADCLastCelcius,R4			;Get the last calculated Celcius value
-			RET
+			CLRC								;Clear carry flag to indicate a new value
+ADCGT_End:	RET
 
 
 ;----------------------------------------
