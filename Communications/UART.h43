@@ -64,6 +64,23 @@ UARTPARITY:		.equ	"NONE"				;Expresses the parity setting. Can be one of
 UARTSTOPBITS:	.equ	1					;Number of stop bits
 UARTBAUDRATE:	.equ	115200				;The Baud Rate needed
 
+WAKEUPCHARS:	.equ	10					;The time in serial characters that when idle, the
+											; RS232 subsystem wakes up the system to use the
+											; received data
+
+;USEACLK:	.equ	1						;Define if the clock source is ACLK. If it is 0 or
+											; commented out the clock source is SMCLK
+											
+;The folowing definition forces the oversampling bit setting in UCAxMCTL register. If it is
+; coMmented out, the preprocessor selects its optimal value
+;BROS16:		.set	0					;If defined sets the UCOS16 bit state of UCAxMCTL
+
+;The following definitions, if commented out, they are calculated by the preprocessor. If they
+; are set, no caclulation is done on them. They construct UCAxMCTL's value. None or All must
+; be specified
+;BRSMOD:		.set	0					;If defined sets UCBRSx base value in UCAxMCTL
+;BRFMOD:		.set	0Bh					;If defined sets UCBRFx base value in UCAxMCTL
+
 UARTUSCIBUS:	.equ	Board_CommPort		;The number of eUSCI_A port to be used
 
 
@@ -71,6 +88,17 @@ UARTUSCIBUS:	.equ	Board_CommPort		;The number of eUSCI_A port to be used
 ; Global Functions
 ;========================================
 			.global	UARTPInit				;Initializes the port pins used for RS232
+			.global	UARTCInit				;Initializes the eUSCI_A peripheral to be used as
+											; UART-RS232
+			.global	UARTSysInit				;Initializes UART variables and timeout timer
+			.global	UARTEnableInts			;Enables the receiving interrupt
+			.global	UARTDisableInts			;Disables the receiving interrupt
+			.global	UARTSetBinMode			;Sets binary reception mode (no filtering)
+			.global	UARTSetTxtMode			;Sets text reception mode (EOL comes from CR/LF)
+			.global	UARTCheckServe			;Checks if there is the need to serve received
+											; data
+			.global	UARTSend				;Sends data through the RS232 bus
+			.global	UARTReceive				;Gets one character previously read from RS232 bus
 			
 
 	.endif									;__UART_RS232_LIB_H43__

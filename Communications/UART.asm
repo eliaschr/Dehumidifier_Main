@@ -123,6 +123,245 @@ UARTPInit:
 
 
 ;----------------------------------------
+; UARTCInit
+; Initialises the USCI that is used for RS232 communications
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : BRx, CTL0VAL, CTL1VAL, MCTLVAL, COMM_BRW, COMM_CTLW0, COMM_CTLW1, COMM_MCTLW
+; OTHER FUNCS   : None
+UARTCInit:
+			BIS.B	#UCSWRST,&COMM_CTLW1	;Keep USCI in reset mode
+			MOV.B	#BRx,&COMM_BRW			;Set the baud rate prescaler
+			MOV.B	#CTL0VAL,&COMM_CTLW0	;Set Data format
+			MOV.B	#CTL1VAL,&COMM_CTLW1	;Set the control of the bus
+			MOV.B	#MCTLVAL,&COMM_MCTLW	;Set the Modulation Control register
+			BIC.B	#UCSWRST,&COMM_CTLW1	;Release Serial module
+			RET
+
+
+;----------------------------------------
+; UARTSysInit
+; Initialises the UART-RS232 system variables and Timer module
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : COMMTCCR1, COMMTCCTL1, UARTFlags, UARTRxLen, UARTRxStrt, UARTRXWAKELIM,
+;                 UARTTxLen, UARTTxStrt, UARTWakeLim
+; OTHER FUNCS   : None
+UARTSysInit:
+			MOV		#000h,&UARTTxStrt		;Move starting pointer to the beginning of buffer
+			MOV		#000h,&UARTTxLen		;Transmition buffer does not contain data
+			MOV		#000h,&UARTRxStrt		;Move starting pointer to the beginning of buffer
+			MOV		#000h,&UARTRxLen		;Reception buffer does not contain data
+			MOV		#00000h,&UARTFlags		;Reset flags
+
+			MOV		#UARTRXWAKELIM,&UARTWakeLim	;Setup the default wake up limit
+			
+			MOV		#TASSEL_1,&COMMTCTL		;Timer is clocked by AClk (32768)
+			MOV		#00000h,&COMMTR			;Clear "Now"
+			MOV		#00000h,&COMMTCCTL0		;Compare mode, no interrupts (yet)
+			MOV		#00000h,&COMMTEX0		;No extension to input clock divider
+			MOV		#UARTWAKEUPTICKS,&COMMTCCR0	;Set the point of interrupt to 10 characters
+			RET
+
+
+;----------------------------------------
+; UARTEnableInts
+; Enables the receiving interrupt of RS232
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : COMM_IE, COMM_IFG
+; OTHER FUNCS   : None
+UARTEnableInts:
+			BIC.B	#UCRXIFG,&COMM_IFG		;Clear any pending interrupts of UCAxRX
+			BIS.B	#UCRXIE,&COMM_IE		;Enable the reception interrupt of RS232
+			RET
+
+
+;----------------------------------------
+; UARTDisableInts
+; Disables the receiving interrupt of UART. Transmition interrupt is disabled automatically
+; when there is no data to be sent
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : COMM_IE, COMM_IFG
+; OTHER FUNCS   : None
+UARTDisableInts:
+			BIC.B	#UCRXIFG,&COMM_IFG		;Clear any pending interrupts of UCAxRX
+			BIC.B	#UCRXIE,&COMM_IE		;Disable the reception interrupt of RS232
+			RET
+
+
+;----------------------------------------
+; UARTSetBinMode
+; Sets the receiving mode to Binary. No data is filtered upon receiving. Timer wakes up the
+; system to handle the received data
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : RSBinary, UARTFlags
+; OTHER FUNCS   : None
+UARTSetBinMode:
+			BIS		#RSBinary,&UARTFlags	;Set binary flag
+			RET
+
+
+;----------------------------------------
+; UARTSetTxtMode
+; Sets the receiving mode to text. New line sequences are filtered. No timer is used
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : RSBinary, UARTFlags
+; OTHER FUNCS   : None
+UARTSetTxtMode:
+			BIC		#CCIE | CCIFG,&UARTCCTL1;Disable timer interrupt in this mode
+			BIC		#RSBinary,&UARTFlags	;Clear binary flag
+			RET
+
+
+;----------------------------------------
+; UARTGetMode
+; Gets the receiving mode
+; INPUT         : None
+; OUTPUT        : Carry flag is set on binary mode, reset on text mode
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : RSBinary, UARTFlags
+; OTHER FUNCS   : None
+UARTGetMode:
+			BIT		#RSBinary,&UARTFlags	;Test binary flag
+			RET
+
+
+;----------------------------------------
+; UARTSetupTimer
+; (Re)Starts the timeout timer counting for binary reception.
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : 2 = 1x Push
+; VARS USED     : COMMTCCR0, COMMTCTL, COMMTCCTL0, COMMTR, UARTWAKEUPTICKS
+; OTHER FUNCS   : None
+UARTSetupTimer:
+			PUSH	SR						;Keep the state of general interrupts flag
+			DINT							;Timer should not disturb us
+			NOP
+			MOV		#UARTWAKEUPTICKS,&COMMTCCR0	;Set the offset in timer ticks
+			ADD		#COMMTR,&COMMTCCR0		;Add "Now"
+			BIC		#CCIFG,&COMMTCCTL0		;No pending interrupt from timer CCR0 limit
+			BIS		#CCIE,&COMMTCCTL0		;Enable interrut of CCR0 limit
+			BIS		#MC_2,&COMMTCTL			;Start in Continuous mode
+			POP		SR						;Restore interrupt state
+			RET
+
+
+;----------------------------------------
+; UARTCheckServe
+; Gets the status of Serve flag. After reading the RSServe flag, it resets it
+; INPUT         : None
+; OUTPUT        : Carry flag is set on need to get the reception buffer's data
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : RSServe, UARTFlags
+; OTHER FUNCS   : None
+UARTCheckServe:
+			BIT		#RSServe,&UARTFlags		;Carry flag contains the value of Serve flag
+			BIC		#RSServe,&UARTFlags		;Clear this flag
+			RET
+
+
+;----------------------------------------
+; UARTSend
+; Sends a byte to the RS232 bus
+; INPUT         : R4 contains the byte to be sent
+; OUTPUT        : Carry flag is set on error (buffer full), cleared on success
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : 2 = 1x Push
+; VARS USED     : COMM_IE, COMM_IFG, COMM_TXBUF, UARTTxCBuf, UARTTxLen, UARTTXSIZE, UARTTxStrt
+; OTHER FUNCS   : None
+UARTSend:
+			CMP		#000h,&UARTTxLen		;Do we have characters in the buffer?
+			JZ		RSS_Send				;No => Try to send the byte at once
+			CMP		#UARTTXSIZE,&UARTTxLen	;Is the buffer full?
+			JHS		RSS_Exit				;Yes => exit with carry flag set
+			PUSH	SR						;Store the state of interrupts
+			DINT							;Pause interrupts for a little bit
+			NOP
+RSS_Store:	MOV		&UARTTxStrt,R5			;Get the strting offset of the first character
+			ADD		&UARTTxLen,R5			;Add the length of data stored in the buffer to
+											; find the first empty cell in it
+			POP		SR						;Restore interrupts
+			CMP		#UARTTXSIZE,R5			;Passed the end of physical buffer?
+			JLO		RSSNoRvt				;No => Do not revert to its beginning
+			SUB		#UARTTXSIZE,R5			;else bring it inside buffer's bounds
+RSSNoRvt:	MOV.B	R4,UARTTxCBuf(R5)		;Store the byte into the buffer
+			INC		&UARTTxLen				;Increment the stored buffer data length by one
+			CLRC							;Clear carry to flag success
+RSS_Exit:	RET
+RSS_Send:	PUSH	SR						;Store interrupts' status
+			DINT							;Disable them
+			NOP
+			BIT.B	#UCTXIFG,&COMM_IFG		;Is the buffer in use?
+			JZ		RSS_Store				;Yes => Store the byte for later transmition
+			POP		SR						;Restore interrupts' status
+			MOV.B	R4,&COMM_TXBUF			;Send it now
+			BIS.B	#UCTXIE,&COMM_IE		;Enable transmit interrupt
+			CLRC							;Clear carry to flag success
+			RET								;and exit
+
+
+;----------------------------------------
+; UARTReceive
+; Fetches a byte from the RS232 reception buffer
+; INPUT         : None
+; OUTPUT        : R4 contains the byte fetched. Carry flag is set on error (buffer full) or
+;                 cleared on success
+; REGS USED     : R4, R5
+; REGS AFFECTED : R4, R5
+; STACK USAGE   : 2 = 1x Push
+; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
+; OTHER FUNCS   : None
+UARTReceive:
+			CMP		#00000h,&UARTRxLen		;Is there any data in the receiving buffer?
+			JZ		RSRecFail				;No => exit with carry flag set
+			MOV		&UARTRxStrt,R5			;Get the starting offset of the first character
+			MOV.B	UARTRxCBuf(R5),R4		;Get this byte
+			PUSH	SR						;Store the state of interrupts
+			DINT							;Both start and length should be changed before
+											; another process use them
+			DEC		&UARTRxLen				;One character less in the buffer
+			INC		R5						;Advance the starting pointer to the next stored
+											; character
+			CMP		#UARTRXSIZE,R5			;Crossed the physical buffer's boundary?
+			JLO		RSRecNoRvt				;No => do not revert to the beginning
+			MOV		#00000h,R5				;else, move pointer to the beginning of the buffer
+RSRecNoRvt:	MOV		R5,&UARTRxStrt			;Store the starting pointer
+			POP		SR						;Restore interrupts
+			CLRC							;Flag success
+RSRecFail:	RET								;and return to caller
+
+
+;----------------------------------------
 ; Interrupt Service Routines
 ;========================================
 ;----------------------------------------
@@ -134,28 +373,18 @@ UARTPInit:
 ; OUTPUT        : None
 ; REGS USED     : None
 ; REGS AFFECTED : None
-; STACK USAGE   :
-; VARS USED     :
-; OTHER FUNCS   :
+; STACK USAGE   : None
+; VARS USED     : COMMTCCTL0, COMMTR, RSServe, UARTFlags, UARTRxLen
+; OTHER FUNCS   : None
 UARTTimerISR:
 			CMP		#00000h,&UARTRxLen		;Are there any characters waiting in the queue?
 			JEQ		TISR_Unused				;No => exit. No reason to wake up the system
-			CMP		#00000h,&UARTTCounter+2	;Is the high word zeroed?
-			JNE		TISR_NoWake				;No => Do not wake up the system... Keep counting
-			CMP		#00000h,&UARTTCounter	;Is the itteration counter zeroed?
-			JEQ		TISR_WakeUp				;Yes => Wake up the system
-TISR_NoWake:
-			DEC		&UARTTCounter			;else, decrement the itteration counter
-			SUBC	#00000h,&UARTTCounter+2	;... all 32 bit counter value
-			RETI							;and return to interrupted process
-
 TISR_WakeUp:
 			BIC		#LPM4,0(SP)				;Wake up
 			BIS		#RSServe,&UARTFlags		;Flag the necessity to be serviced
 TISR_Unused:
-			MOV		#00000h,&COMMT_CCR		;Clear the counter to have the advantage of OUTx
-											; following the counting direction in Up/Down mode
-			BIC		#CCIE+CCIFG,&COMMT_CCTL	;Clear any pending interrupts and disable this
+			MOV		#00000h,&COMMTR			;Clear the counter
+			BIC		#CCIE+CCIFG,&COMMTCCTL0	;Clear any pending interrupts and disable this
 											; timer's interrupt
 			RETI							;Return to interrupted process
 
@@ -198,8 +427,8 @@ RTX_Exit:	RETI
 ; REGS AFFECTED : None
 ; STACK USAGE   : COMM_RXBUF, RS0A, RS0D, RSBinary, RSRxError, RSRxEol, RSServe, UARTFlags,
 ;                 UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt, UARTWakeLim
-; VARS USED     : 6 = 2x Push + 1x Call
-; OTHER FUNCS   : SetupTimer
+; VARS USED     : 8 = 2x Push + 1x Call + 2 by called function
+; OTHER FUNCS   : UARTSetupTimer
 UARTRxISR:
 			CMP		#UARTRXSIZE,&UARTRxLen	;Is the receive buffer full?
 			JEQ		RxSRFail				;Yes => Flag the failure and exit
@@ -234,7 +463,7 @@ RxSRNo0A:	CMP.B	#00Dh,R5				;Is the received character 0Dh?
 			BIC		#RS0A | RS0D,&UARTFlags	;else, clear the character reception flags
 			JMP		RxSR_WakeUp				;and wake up the system. No need to store the
 											; second character of the "New Line" sequence
-RxSRBinTim:	CALL	#SetupTimer
+RxSRBinTim:	CALL	#UARTSetupTimer			;Reset timeout counter
 RxSRNo0D:	BIC		#RS0A | RS0D,&UARTFlags	;Ordinary character => No 0Ah or 0Dh
 RxSRStore:	MOV.B	R5,UARTRxCBuf(R4)		;Insert the newly received value
 			INC		&UARTRxLen				;Increment the length of stored data in the buffer

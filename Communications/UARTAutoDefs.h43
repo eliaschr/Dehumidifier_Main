@@ -43,8 +43,8 @@
 		.emsg "UART.h43 must have been included in the file before UARTAutoDefs.h43"
 	.endif
 
-__UART_RS232_LIB_AUTO_DEFS__:.equ	1			;Need to define this in order to avoid
-												; double inclusions
+__UART_RS232_LIB_AUTO_DEFS__:.equ	1				;Need to define this in order to avoid
+													; double inclusions
 
 ;----------------------------------------
 ; UART Definitions for RS232
@@ -67,19 +67,20 @@ COMM_INTF:		.equ	P2IFG						;Interrupt flags register
 COMM_INTV:		.equ	P2IV						;Interrupt vector register
 				.define	"PORT2_VECTOR", COMMP_Vector;Interrupt Vector Memory Segment
 
-COMM_CTLW0:		.equ	UCA0CTLW0
-COMM_CTLW1:		.equ	UCA0CTLW1
-COMM_BRW:		.equ	UCA0BRW
-COMM_MCTLW:		.equ	UCA0MCTLW
-COMM_STATW:		.equ	UCA0STATW
-COMM_RXBUF:		.equ	UCA0RXBUF
-COMM_TXBUF:		.equ	UCA0TXBUF
-COMM_ABCTL:		.equ	UCA0ABCTL
-COMM_IRCLT:		.equ	UCA0IRCTL
-COMM_IE:		.equ	UCA0IE
-COMM_IFG:		.equ	UCA0IFG
-COMM_IV:		.equ	UCA0IV
-				.define "EUSCI_A0_VECTOR", COMMU_Vector	;eUSCI_A interrupt vector memory segment
+COMM_CTLW0:		.equ	UCA0CTLW0					;eUSCI_A Control Word 0
+COMM_CTLW1:		.equ	UCA0CTLW1					;eUSCI_A Control Word 1
+COMM_BRW:		.equ	UCA0BRW						;eUSCI_A Baud Rate Generator
+COMM_MCTLW:		.equ	UCA0MCTLW					;eUSCI_A Modulation Control
+COMM_STATW:		.equ	UCA0STATW					;eUSCI_A Status Word
+COMM_RXBUF:		.equ	UCA0RXBUF					;eUSCI_A Receive Buffer
+COMM_TXBUF:		.equ	UCA0TXBUF					;eUSCI_A Transmit Buffer
+COMM_ABCTL:		.equ	UCA0ABCTL					;eUSCI_A Auto Baud-Rate Control
+COMM_IRCLT:		.equ	UCA0IRCTL					;eUSCI_A IrDA Control
+COMM_IE:		.equ	UCA0IE						;eUSCI_A Interrupt Enable
+COMM_IFG:		.equ	UCA0IFG						;eUSCI_A Interrupt Flags
+COMM_IV:		.equ	UCA0IV						;eUSCI_A Interrupt Vector Register
+				.define "EUSCI_A0_VECTOR", COMMU_Vector	;eUSCI_A interrupt vector memory
+													; segment
 	.elseif (UARTUSCIBUS == 1)
 COMM_TXD:		.equ	BIT5
 COMM_RXD:		.equ	BIT6
@@ -172,79 +173,200 @@ COMM_IV:		.equ	UCA3IV
 				.define "EUSCI_A3_VECTOR", COMMU_Vector
 	.else
 		.emsg	"UARTUSCIBUS must be between 0 and 3!"
-	.endif										;UARTUSCIBUS
+	.endif											;UARTUSCIBUS
 
-COMM_ALL	.equ	COMM_RXD | COMM_TXD			;Mask bit for both Receive and Transmit pins
+COMM_ALL		.equ	(COMM_RXD | COMM_TXD)		;Mask bit for both Rx and Tx pins
 
 ;Time to setup the timer definitions according to the defined timer used for waking up the
 ; system when binary reception mode is used
 	.if (UART_TIMERA == 0)							;Lets define the led timer registers
-COMMTCTL:				.equ	TA0CTL
-COMMTCCTL0:				.equ	TA0CCTL0
-COMMTCCTL1:				.equ	TA0CCTL1
-COMMTCCTL2:				.equ	TA0CCTL2
-COMMTR:					.equ	TA0R
-COMMTCCR0:				.equ	TA0CCR0
-COMMTCCR1:				.equ	TA0CCR1
-COMMTCCR2:				.equ	TA0CCR2
-COMMTEX0:				.equ	TA0EX0
-COMMTIV:				.equ	TA0IV
-						.define	"TIMER0_A0_VECTOR", COMMTVECTOR0
-						.define "TIMER0_A1_VECTOR", COMMTVECTOR1
+COMMTCTL:		.equ	TA0CTL
+COMMTCCTL0:		.equ	TA0CCTL0
+COMMTCCTL1:		.equ	TA0CCTL1
+COMMTCCTL2:		.equ	TA0CCTL2
+COMMTR:			.equ	TA0R
+COMMTCCR0:		.equ	TA0CCR0
+COMMTCCR1:		.equ	TA0CCR1
+COMMTCCR2:		.equ	TA0CCR2
+COMMTEX0:		.equ	TA0EX0
+COMMTIV:		.equ	TA0IV
+				.define	"TIMER0_A0_VECTOR", COMMTVECTOR0
+				.define "TIMER0_A1_VECTOR", COMMTVECTOR1
 	.elseif (UART_TIMERA == 1)
-COMMTCTL:				.equ	TA1CTL
-COMMTCCTL0:				.equ	TA1CCTL0
-COMMTCCTL1:				.equ	TA1CCTL1
-COMMTCCTL2:				.equ	TA1CCTL2
-COMMTR:					.equ	TA1R
-COMMTCCR0:				.equ	TA1CCR0
-COMMTCCR1:				.equ	TA1CCR1
-COMMTCCR2:				.equ	TA1CCR2
-COMMTEX0:				.equ	TA1EX0
-COMMTIV:				.equ	TA1IV
-						.define	"TIMER1_A0_VECTOR", COMMTVECTOR0
-						.define "TIMER1_A1_VECTOR", COMMTVECTOR1
+COMMTCTL:		.equ	TA1CTL
+COMMTCCTL0:		.equ	TA1CCTL0
+COMMTCCTL1:		.equ	TA1CCTL1
+COMMTCCTL2:		.equ	TA1CCTL2
+COMMTR:			.equ	TA1R
+COMMTCCR0:		.equ	TA1CCR0
+COMMTCCR1:		.equ	TA1CCR1
+COMMTCCR2:		.equ	TA1CCR2
+COMMTEX0:		.equ	TA1EX0
+COMMTIV:		.equ	TA1IV
+				.define	"TIMER1_A0_VECTOR", COMMTVECTOR0
+				.define "TIMER1_A1_VECTOR", COMMTVECTOR1
 	.elseif (UART_TIMERA == 2)
-COMMTCTL:				.equ	TA2CTL
-COMMTCCTL0:				.equ	TA2CCTL0
-COMMTCCTL1:				.equ	TA2CCTL1
-;COMMTCCTL2:			.equ	TA2CCTL2			;Timer A2 does not have CC2
-COMMTR:					.equ	TA2R
-COMMTCCR0:				.equ	TA2CCR0
-COMMTCCR1:				.equ	TA2CCR1
-;COMMTCCR2:				.equ	TA2CCR2				;Timer A2 does not have CC2
-COMMTEX0:				.equ	TA2EX0
-COMMTIV:				.equ	TA2IV
-						.define	"TIMER2_A0_VECTOR", COMMTVECTOR0
-						.define "TIMER2_A1_VECTOR", COMMTVECTOR1
+COMMTCTL:		.equ	TA2CTL
+COMMTCCTL0:		.equ	TA2CCTL0
+COMMTCCTL1:		.equ	TA2CCTL1
+;COMMTCCTL2:	.equ	TA2CCTL2					;Timer A2 does not have CC2
+COMMTR:			.equ	TA2R
+COMMTCCR0:		.equ	TA2CCR0
+COMMTCCR1:		.equ	TA2CCR1
+;COMMTCCR2:		.equ	TA2CCR2						;Timer A2 does not have CC2
+COMMTEX0:		.equ	TA2EX0
+COMMTIV:		.equ	TA2IV
+				.define	"TIMER2_A0_VECTOR", COMMTVECTOR0
+				.define "TIMER2_A1_VECTOR", COMMTVECTOR1
 	.elseif (UART_TIMERA == 3)
-COMMTCTL:				.equ	TA3CTL
-COMMTCCTL0:				.equ	TA3CCTL0
-COMMTCCTL1:				.equ	TA3CCTL1
-;COMMTCCTL2:			.equ	TA3CCTL2			;Timer A3 does not have CC2
-COMMTR:					.equ	TA3R
-COMMTCCR0:				.equ	TA3CCR0
-COMMTCCR1:				.equ	TA3CCR1
-;COMMTCCR2:				.equ	TA3CCR2				;Timer A3 does not have CC2
-COMMTEX0:				.equ	TA3EX0
-COMMTIV:				.equ	TA3IV
-						.define	"TIMER3_A0_VECTOR", COMMTVECTOR0
-						.define "TIMER3_A1_VECTOR", COMMTVECTOR1
+COMMTCTL:		.equ	TA3CTL
+COMMTCCTL0:		.equ	TA3CCTL0
+COMMTCCTL1:		.equ	TA3CCTL1
+;COMMTCCTL2:	.equ	TA3CCTL2					;Timer A3 does not have CC2
+COMMTR:			.equ	TA3R
+COMMTCCR0:		.equ	TA3CCR0
+COMMTCCR1:		.equ	TA3CCR1
+;COMMTCCR2:		.equ	TA3CCR2						;Timer A3 does not have CC2
+COMMTEX0:		.equ	TA3EX0
+COMMTIV:		.equ	TA3IV
+				.define	"TIMER3_A0_VECTOR", COMMTVECTOR0
+				.define "TIMER3_A1_VECTOR", COMMTVECTOR1
 	.elseif (UART_TIMERA == 4)
-COMMTCTL:				.equ	TA4CTL
-COMMTCCTL0:				.equ	TA4CCTL0
-COMMTCCTL1:				.equ	TA4CCTL1
-COMMTCCTL2:				.equ	TA4CCTL2
-COMMTR:					.equ	TA4R
-COMMTCCR0:				.equ	TA4CCR0
-COMMTCCR1:				.equ	TA4CCR1
-COMMTCCR2:				.equ	TA4CCR2
-COMMTEX0:				.equ	TA4EX0
-COMMTIV:				.equ	TA4IV
-						.define	"TIMER4_A0_VECTOR", COMMTVECTOR0
-						.define "TIMER4_A1_VECTOR", COMMTVECTOR1
+COMMTCTL:		.equ	TA4CTL
+COMMTCCTL0:		.equ	TA4CCTL0
+COMMTCCTL1:		.equ	TA4CCTL1
+COMMTCCTL2:		.equ	TA4CCTL2
+COMMTR:			.equ	TA4R
+COMMTCCR0:		.equ	TA4CCR0
+COMMTCCR1:		.equ	TA4CCR1
+COMMTCCR2:		.equ	TA4CCR2
+COMMTEX0:		.equ	TA4EX0
+COMMTIV:		.equ	TA4IV
+				.define	"TIMER4_A0_VECTOR", COMMTVECTOR0
+				.define "TIMER4_A1_VECTOR", COMMTVECTOR1
 	.else
 		.emsg "UART_TIMERA definition in UART.h43 file has to be between 0 and 4"
 	.endif											;UART_TIMERA
 
-	.endif										;__UART_RS232_LIB_AUTO_DEFS__
+;Will try to calculate the values of the registers for the baud rate setting needed
+				.asg	0, CTL0VAL					;Initial CTL0 value
+				.asg	UCSWRST, CTL1VAL			;Initial CTL1 value
+
+;Going to construct UCSxCTL0 register's value according to data format specified earlier
+				;CHARTICKS will hold the total number of bits per RS232 character; one is the
+				; Start bit and 8 bits in case 8-bit interface is selected and one stop bit.
+				; These make a total of 10
+				.asg	10, CHARTICKS				;Default value for 8N1 setting
+	.if (DATABITS == 7)
+				.asg	(CTL0VAL | UC7BIT), CTL0VAL	;Need to set the 7 bit flag in CTL0
+				.asg	(CHARTICKS -1), CHARTICKS	;Earlier we used 8 bits of data to set
+													; initial CHARTICKS. Since we need 7, we
+													; have to subtract one
+	.elseif (DATABITS != 8)
+		.emsg "DATABITS can be 7 or 8"
+	.endif
+
+	.if (PARITY == "ODD")
+				.asg	(CTL0VAL | UCPEN), CTL0VAL	;Use Odd Parity
+				.asg	(CHARTICKS +1), CHARTICKS	;Add the parity bit to CHARTICKS
+	.elseif (PARITY == "EVEN")
+				.asg	(CTL0VAL | UCPEN | UCPAR), CTL0VAL;Use Even Parity
+				.asg	(CHARTICKS +1), CHARTICKS	;Add the parity bit to CHARTICKS
+	.elseif (PARITY != "NONE")
+		.emsg "PARITY should be a litteral value NONE, ODD or EVEN"
+	.endif
+
+	.if (STOPBITS == 2)
+				.asg	(CTL0VAL | UCSPB), CTL0VAL	;Need to set 2 Stop bits
+				.asg	(CHARTICKS +1), CHARTICKS	;Add the second stop bit to CHARTICKS
+	.elseif (STOPBITS != 1)
+		.emsg "STOPBITS can be 1 or 2"
+	.endif
+
+;Next try to construct the value of UCAxCTL1 register, according to values specified earlier
+				;If USEACLK is not defined, is the same as if it is 0
+	.if ($isdefed("USEACLK") == 0)
+USEACLK:		.set	0
+	.endif
+	.if (USEACLK == 1)
+BRCLK:			.set	ACLKFreq					;BRCLK is the clock input of eUSCI
+				.asg	(CTL1VAL | UCSSEL_1), CTL1VAL;AClk is the clock source setting
+	.elseif (USEACLK == 0)
+BRCLK:			.set	SMCLKFreq					;BRCLK is the clock input of eUSCI
+				.asg	(CTL1VAL | UCSSEL_2), CTL1VAL;SMClk is the clock source setting
+	.else
+		.emsg "USEACLK can be undefined, 0 or 1"
+	.endif
+
+;Modulation control follows. UCAxBRx value must define the prescaler of clock to create the
+; bit clock frequency. If there is oversampling then this register contains 1/16th of the
+; normal value. So, the calculations include the setting of oversampling bit in UCAxMCTL
+; register
+				.asg	(BRCLK/BAUDRATE), BRx		;Normal Baud Rate prescaler setting
+;If BROS16 is not defined then we have to calculate it by ourselves. For low frequency bit
+; clock this bit should be 0. In case of a high frequecy bit clock is set, this bit divides
+; the bit clock by 16. Of cource, if BROS16 is defined we should keep that setting
+	.if ($isdefed("BROS16") == 0)
+				.asg	0, BROS16
+		.if (BRCLK >32768)
+			.if (BRx >= 16)
+				.asg	1, BROS16
+			.endif
+		.endif
+	.endif
+
+	.if (BROS16 == 1)
+				.asg	(BRCLK / (BAUDRATE *16)), BRx
+	.elseif (BROS16 != 0)
+		.emsg	"BROS16 is a bit value. It can be 0 or 1 only"
+	.endif
+
+;Lets try to calculate UCBRFx and UCBRSx values. These definitions must be both set, or
+; neither of them set. If UCBRFx value is defined then UCBRSx value must also be defined and
+; vice versa. Lets check if this is true
+				.asg	2, BRDEFS
+	.if ($isdefed("BRFMOD") == 0)
+				.asg	(BRDEFS -1), BRDEFS
+	.endif
+	.if ($isdefed("BRSMOD") == 0)
+				.asg	(BRDEFS -1), BRDEFS
+	.endif
+
+;At this point if BRDEFS is 0, neither UCBRFx nor UCBRSx values are defined (OK). If it is 2
+; both definitions are set (OK). If it is 1 then one of the values is not defined while the
+; other one is (FALSE)
+	.if (BRDEFS == 0)								;No definitions are made, lets calculate
+													; the needed values
+				.asg	10000, MODACCURACY
+				.asg	(BRCLK*MODACCURACY/BAUDRATE), BRx100
+				.asg	(BRx100 - (BRx * MODACCURACY)), BRDOT
+				.asg	((BRDOT + 5) *8 / MODACCURACY), BRSMOD
+				.asg	0, BRFMOD
+		.if (BRSMOD == 8)
+				.asg	7, BRSMOD
+		.endif
+		.if (BROS16 == 1)
+				.asg	(BRCLK / (BAUDRATE *16)), BRx
+				.asg	(BRCLK * MODACCURACY / (BAUDRATE *16)), BRx100
+				.asg	(BRx100 - (BRx * MODACCURACY)), BRDOT
+				.asg	((BRDOT +5) * 16 / MODACCURACY), BRFMOD
+			.if (BRFMOD == 16)
+				.asg	15, BRFMOD
+			.endif
+				.asg	((16 * BRx + BRFMOD) * MODACCURACY), BRF16
+				.asg	((BRCLK * MODACCURACY - BRF16 * BAUDRATE) / BAUDRATE), BRDOT16
+				.asg	((BRDOT16 + 5) *8 / MODACCURACY), BRSMOD
+			.if (BRSMOD == 8)
+				.asg	7, BRSMOD
+			.endif
+		.endif
+	.elseif (BRDEFS != 2)							;Only one of those two values is defined
+				.emsg	"All or none of BRSMOD and BRFMOD must be defined"
+	.endif
+
+			.asg	((BRFMOD << 4) + (BRSMOD << 1) + BROS16),MCTLVAL
+
+;Now we have to calculate the clock ticks of the timer for the reception timeout
+			.asg	(((ACLKFreq  *WAKEUPCHARS *CHARTICKS)/BAUDRATE) +1), UARTWAKEUPTICKS
+
+	.endif											;__UART_RS232_LIB_AUTO_DEFS__
