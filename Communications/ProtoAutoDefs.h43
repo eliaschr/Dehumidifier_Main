@@ -1,7 +1,7 @@
 ;*********************************************************************************************
-;* NTC Library                                                                               *
+;* UART Protocol Library                                                                     *
 ;*-------------------------------------------------------------------------------------------*
-;* NTC.h43                                                                                   *
+;* ProtoAutoDefs.h43                                                                         *
 ;* Author: eliaschr                                                                          *
 ;* Copyright (c) 2019, Elias Chrysocheris                                                    *
 ;*                                                                                           *
@@ -18,25 +18,19 @@
 ;* You should have received a copy of the GNU General Public License                         *
 ;* along with this program.  If not, see <https://www.gnu.org/licenses/>.                    *
 ;*-------------------------------------------------------------------------------------------*
-;* In this file all the necessary definitions for the NTC handling are set and the functions *
-;* that need to be available to the rest of the program are made global.                     *
+;* Here there are some automatic definitions computed. The reason is for the setup to be as  *
+;* simple as possible and the user intervention as less as possible.                         *
+;* Example of automatic definitions is the computation of interrupt vectors according to     *
+;* resources selected for the correct functionality of the whole library                     *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
-			.title	"NTC Library"
+			.title	"UART Protocol Library"
 			.width	94
 			.tab	4
 
 ;*===========================================================================================*
-;* Definitions of the Library (Set by the developer):                                        *
-;* ----------------------------------------------------                                      *
-;*                                                                                           *
-;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
-;*                                                                                           *
-;*===========================================================================================*
-;* Global functions of the Library:                                                          *
-;* ---------------------------------                                                         *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
@@ -44,34 +38,16 @@
 ;*                                                                                           *
 ;*********************************************************************************************
 
-	.if  ($isdefed("__NTCONV_LIB_H43__") == 0)
+	.if ($isdefed("__UARTPROTO_AUTO_DEFS__") == 0)
+	.if ($isdefed("__UARTPROTO_LIB_H43__") == 0)
+		.emsg "UARTProtocol.h43 must have been included in the file before ProtoAutoDefs.h43"
+	.endif
 
-__NTCONV_LIB_H43__:	.equ	1					;Must define this in order to avoid double
-												; inclusions
-;----------------------------------------
-; Global Definitions
-;========================================
-DEF_NTCMCTL:		.equ	(0 | NTC_ACHANNEL)	;Default settings (Vref=3V3)
-NTC_ENABLE:			.equ	Board_NTCEnable		;The mask bit of the Enable pin of NTC
-NTC_ACHANNEL:		.equ	Board_NTCChannel	;The ADC channel used for NTC measurements
-NTC_MCHANNEL:		.equ	DEF_NTCMCHANNEL		;The default MCTL channel for NTC reading
-
-;The following definitions are for the flags that describe the status of the NTC subsystem
-NTC_READY:			.equ	BITF				;Flags that there is new data fetched from NTC
-NTC_CONVERTED:		.equ	BITE				;Flags that the NTC value currently read is
-												; converted
-
+__UARTPROTO_AUTO_DEFS__:.equ	1				;Need to define this in order to avoid
+												; double inclusions
 
 ;----------------------------------------
-; Global Functions
+; Definitions
 ;========================================
-					.global	NTCPInit			;Initializes the NTC I/O port pins used
-					.global	NTCTrigger			;Starts a temperature measurement from NTC
-					.global	NTCEnable			;Enables the NTC hardware to be ready to fetch
-												; a reading
-					.global	NTCDisable			;Disables the NTC hardware to avoid
-												; sel heating of the sensor
-					.global	NTCReadTemp			;Converts the NTC reading to Celcius
 
-
-	.endif										;__NTCONV_LIB_H43__
+	.endif											;__UARTPROTO_AUTO_DEFS__

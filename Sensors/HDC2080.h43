@@ -27,7 +27,7 @@
 			.tab	4
 
 ;*===========================================================================================*
-;* Definitions of the Library (Set by the developper):                                       *
+;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
 ;* HDCADDR          : I2C Address of the sensor (can be 40h or 41h)                          *
 ;* DEF_HDCTEMPRES   : Default resolution when taking temperature measurements                *

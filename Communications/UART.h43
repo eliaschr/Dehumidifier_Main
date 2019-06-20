@@ -28,7 +28,7 @@
 			.tab	4
 
 ;*===========================================================================================*
-;* Definitions of the Library (Set by the developper):                                       *
+;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
 ;*                                                                                           *
 ;*===========================================================================================*
@@ -55,8 +55,8 @@ __UART_RS232_LIB_H43__:	.equ	1			;Must define this in order to avoid double
 UART_TIMERA:	.equ	4					;The TimerA module used for UART timeout counting
 
 UARTTXSIZE:		.equ	32					;The number of bytes in cyclic transmit buffer
-UARTRXSIZE:		.equ	512					;The number of bytes in cyclic receive buffer
-UARTRXWAKELIM:	.equ	128					;The number of bytes that when the buffer reaches
+UARTRXSIZE:		.equ	32					;The number of bytes in cyclic receive buffer
+UARTRXWAKELIM:	.equ	27					;The number of bytes that when the buffer reaches
 											; it will wake up the system
 UARTDATABITS:	.equ	8					;Number of data bits (7 or 8)
 UARTPARITY:		.equ	"NONE"				;Expresses the parity setting. Can be one of

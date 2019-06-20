@@ -28,7 +28,7 @@
 			.tab	4
 
 ;*===========================================================================================*
-;* Definitions of the Library (Set by the developper):                                       *
+;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
 ;* RELPUMP  : The pin that drives the relay that sets the compressor on/off                  *                                                                                *
 ;* RELFANLO : The pin that drives the relay that sets the fan speed to low                   *

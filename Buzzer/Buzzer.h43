@@ -27,7 +27,7 @@
 			.tab	4
 
 ;*===========================================================================================*
-;* Definitions of the Library (Set by the developper):                                       *
+;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
 ;* BUZZER_TIMERA : The number of the timer module to be used for buzzer functionality        *
 ;* BUZZPIN       : The pin that the buzzer is connected                                      *

@@ -27,9 +27,9 @@
 			.tab	4
 
 ;*===========================================================================================*
-;* Definitions of the Library (Set by the developper):                                       *
+;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
-;* KEYBTIMER : Number of TimerA to be used for the keyboard. Thiw timer is used excusively   *
+;* KEYBTIMER : Number of TimerA to be used for the keyboard. This timer is used excusively   *
 ;*             for keyboard functionality only and cannot be used by other resources of the  *
 ;*             system.                                                                       *
 ;* KBUFSIZE  : The size of a cyclic buffer that is used to store keypresses until they are   *

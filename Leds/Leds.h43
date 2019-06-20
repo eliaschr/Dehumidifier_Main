@@ -28,7 +28,7 @@
 			.tab	4
 
 ;*===========================================================================================*
-;* Definitions of the Library (Set by the developper):                                       *
+;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
 ;* LED_TIMERA  : Timer to be used for LED scanning                                           *
 ;*                                                                                           *
