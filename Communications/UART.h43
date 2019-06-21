@@ -30,6 +30,31 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
+;* UART_TIMERA   : The TimerA module used for UART timeout counting                          *
+;* UARTTXSIZE    : The number of bytes in cyclic transmit buffer                             *
+;* UARTRXSIZE    : The number of bytes in cyclic receive buffer                              *
+;* UARTRXWAKELIM : When the receive buffer reaches this limit, it is considered almost full  *
+;*                  and the main thread wakes up to consume these data in order to have a    *
+;*                  flowless communication                                                   *
+;* UARTDATABITS  : Number of data bits (7 or 8)                                              *
+;* UARTPARITY    : Expresses the parity setting. Can be one of "NONE", "ODD" or "EVEN"       *
+;* UARTSTOPBITS  : Number of stop bits                                                       *
+;* UARTBAUDRATE  : The Baud Rate needed                                                      *
+;* WAKEUPCHARS   : The time in serial characters that when idle, the system wakes up to use  *
+;*                  the fetched data.                                                        *
+;* USEACLK       : Define if the clock source is ACLK. If it is 0 or undefined the system    *
+;*                  uses SMClk as the clock source of the UART module                        *
+;* BROS16        : If defined sets the UCOS16 bit state of UCAxMCTL for Over Sampling. If it *
+;*                  is not defined the preprocessor automatically sets it at its optimum     *
+;*                  value                                                                    *
+;* BRSMOD        : If defined sets UCBRSx base value in UCAxMCTL. In that case BRFMOD must   *
+;*                  also be defined. If it is not defined the preprocessor automatically     *
+;*                  sets its optimum value                                                   *
+;* BRFMOD        : If defined sets UCBRFx base value in UCAxMCTL. In that case BRSMOD must   *
+;*                  also be defined. If it is not defined the preprocessor automatically     *
+;*                  sets its optimum value                                                   *
+;* UARTUSCIBUS   : The number of eUSCI_A port to be used. Normally this is set through       *
+;*                  Board.h43 file.                                                          *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
@@ -38,6 +63,16 @@
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
+;* UARTPInit       : Initializes the port pins used for RS232                                *
+;* UARTCInit       : Initializes the eUSCI_A peripheral to be used as UART-RS232             *
+;* UARTSysInit     : Initializes UART variables and timeout timer                            *
+;* UARTEnableInts  : Enables the receiving interrupt                                         *
+;* UARTDisableInts : Disables the receiving interrupt                                        *
+;* UARTSetBinMode  : Sets binary reception mode (no filtering)                               *
+;* UARTSetTxtMode  : Sets text reception mode (EOL comes from CR/LF, at least one of them)   *
+;* UARTCheckServe  : Checks if there is the need to serve received data                      *
+;* UARTSend        : Sends a data byte through the RS232 bus                                 *
+;* UARTReceive     : Gets one character previously read from RS232 bus                       *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *

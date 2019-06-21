@@ -29,14 +29,48 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
+;* ADCBUFFSIZE     : Length of the results buffer in words                                   *
+;* DEF_ADCTEMPVREF : ADC voltage reference for internal temperature sensor = 1.2V, as this   *
+;*                    makes more accurate reading                                            *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* ADC_TRG_NONE    : ADC Trigger by ADC12SC bit, manually                                    *
+;* ADC_TRG_TB0CCR0 : ADC conversion triggered by Timer B0 CCR0                               *
+;* ADC_TRG_TB0CCR1 : ADC conversion triggered by Timer B0 CCR1                               *
+;* ADC_TRG_TA0CCR1 : ADC conversion triggered by Timer A0 CCR1                               *
+;* ADC_TRG_TA1CCR1 : ADC conversion triggered by Timer A1 CCR1                               *
+;* ADC_TRG_TA2CCR1 : ADC conversion triggered by Timer A2 CCR1                               *
+;* ADC_TRG_TA3CCR1 : ADC conversion triggered by Timer A3 CCR1                               *
+;* ADC_TRG_TA4CCR1 : ADC conversion triggered by Timer A4 CCR1                               *
+;* The ADCStatus word is consisted of flags that describe the status of the software         *
+;* subsytem. The following definitions describe these flags:                                 *
+;* ADCF_TEMPOK     : Flags there is a new temperature value in memory                        *
+;* ADCF_TEMPCONVOK : Flags that the new value is already converted                           *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
+;* ADCInit             : Initializes the ADC subsystem                                       *
+;* ADCSetRefV          : Configures the Voltage Reference for the specified voltage          *
+;*                        generation                                                         *
+;* ADCEnableTempSensor : Enables the use of temperature sensor                               *
+;* ADCSetChannel       : Sets the MCTLx register of a ADC channel                            *
+;* ADCSetTempChannel   : Sets the MCTLx thet will be used for internal temperature sensor    *
+;* ADCSetWindow        : Sets the window limits (Low and High)                               *
+;* ADCSetTrigger       : Sets the trigger input of the ADC                                   *
+;* ADCStartSingle      : Starts a single channel - single conversion at once                 *
+;* ADCPrepareSingle    : Prepares the ADC module to perform a single channel - single        *
+;*                        conversion                                                         *
+;* ADCStartSequence    : Starts a conversion of sequence of channels                         *
+;* ADCPrepareSequence  : Prepares the ADC module to perform a sequence of channels           *
+;*                        conversion, to be started later                                    *
+;* ADCTrigger          : Triggers the ADC ta start conversion at the current mode            *
+;* ADCChannelCb        : Set a callback function to be used when a specific channel is       *
+;*                        converted                                                          *
+;* ADCReadBuffer       : Reads the first available value stored in ADC buffer                *
+;* ADCGetTemperature   : Reads the temperature in Celcius                                    *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *

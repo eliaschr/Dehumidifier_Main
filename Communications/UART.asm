@@ -28,14 +28,53 @@
 ;*===========================================================================================*
 ;* Names And Values:                                                                         *
 ;* ------------------                                                                        *
+;* The UARTFlags variable is consisted of bit flags that present the current status of the   *
+;* UART subsystem. Their meanings are explained in the following definitions                 *
+;* RSServe   : Flags that RS232 subsystem needs attention                                    *
+;* RSRxError : Flags that a character was received while the buffer was full                 *
+;* RS0A      : Last character received was 0Ah (perhaps part of a newline character)         *
+;* RS0D      : Last character received was 0Dh (perhaps part of a newline character)         *
+;* RSRxEol   : Flags that the system has just received a new line character (force wake up   *
+;*              by RX ISR)                                                                   *
+;* RSBinary  : Flags binary mode. It does not filter any characters and the wake up is       *
+;*              controlled by timer                                                          *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
 ;* -----------                                                                               *
+;* UARTFlags   : Flags to control the functionality of RS232 subsystem                       *
+;* UARTTxStrt  : Offset in transmition buffer of the first character to be transmitted       *
+;* UARTTxLen   : Length of data waiting to be sent in the transmition buffer                 *
+;* UARTRxStrt  : Offset in reception buffer of the first character received earlier by RS232 *
+;* UARTRxLen   : Number of bytes waiting to be read in the reception buffer                  *
+;* UARTWakeLim : The wake up buffer limit. When the receiving buffer reaches this limit it   *
+;*                wakes up the system to handle received data                                *
+;* UARTTxCBuf  : Cyclic buffer to hold the data to be sent                                   *
+;* UARTRxCBuf  : Cyclic buffer to hold the data received                                     *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
 ;* --------------------------                                                                *
+;* UARTPInit       : Initialises the port pins used for the serial bus                       *
+;* UARTCInit       : Initialises the USCI that is used for RS232 communications              *
+;* UARTSysInit     : Initialises the UART-RS232 system variables and Timer module            *
+;* UARTEnableInts  : Enables the receiving interrupt of UART                                 *
+;* UARTDisableInts : Disables the receiving interrupt of UART                                *
+;* UARTSetBinMode  : Sets the systen to binary mode, no EOL filtering is done, data are      *
+;*                    considered binary                                                      *
+;* UARTSetTxtMode  : Sets the system to Text mode. EOL filtering is performed by checking    *
+;*                    the existance of at least one character of CR or LF (or both)          *
+;* UARTGetMode     : Returnes the current mode of reception (text or binary)                 *
+;* UARTSetupTimer  : Starts or restarts the timeout reception timer                          *
+;* UARTCheckServe  : Checks if there is the need to consume received data                    *
+;* UARTSend        : Sends a byte of data to the UART stream                                 *
+;* UARTReceive     : Gets the current byte from the reception queue                          *
+;* UARTTimerISR    : The TimerA timeout interrupt service routine                            *
+;* UARTTxISR       : Transmission interrupt service routine                                  *
+;* UARTRxISR       : Reception interrupt service routine                                     *
+;* UARTIDispatcher : UART Interrupt Service Dispatcher. The interrupt of the UART is multi-  *
+;*                    plexed, so the dispatcher looks which one is the source of the         *
+;*                    interrutp and dispatches the code to the correct service routine       *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
@@ -61,11 +100,6 @@ RSRxEol:	.equ	BIT4					;Flags that the system has just received a new
 RSBinary:	.equ	BIT5					;Flags binary mode. It does not filter any
 											; characters and the wake up is controlled by
 											; timer
-RSUpDown:	.equ	BIT6					;Flags that the timer is used in Up/Down mode
-RSCountDown:.equ	BIT7					;Flags that the timer counts towards down
-											; direction
-RSNeedDown:	.equ	BIT8					;Flags that a full period is considered when
-											; counting down
 
 
 ;*********************************************************************************************
@@ -73,8 +107,6 @@ RSNeedDown:	.equ	BIT8					;Flags that a full period is considered when
 ;-------------------------------------------
 			.bss	UARTFlags, 2			;Flags to control the functionality of RS232
 											; subsystem
-			.bss	UARTTCounter, 4			;Counter for hit itterations of the timer until
-											; considered expired (Long number = QuadByte)
 			.bss	UARTTxStrt, 2			;Offset in transmition buffer of the first
 											; character to be transmitted
 			.bss	UARTTxLen, 2			;Length of data waiting to be sent in the

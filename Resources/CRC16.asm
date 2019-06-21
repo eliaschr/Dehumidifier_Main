@@ -21,6 +21,7 @@
 ;* Library of procedures for calculating CRC16 checksums, using the hardware module. CRC16   *
 ;* is very important for checking communication integrity, especially in a electromagnetic   *
 ;* noisy environment.                                                                        *
+;* The library supports both normal and reversed bit order                                   *
 ;*********************************************************************************************
 ;* Note: Correct format of the file is presented when tab space is set to 4
 			.title	"CRC16 Library"
@@ -38,6 +39,16 @@
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
 ;* --------------------------                                                                *
+;* CRC16Init        : Initializes the CRC16 hardware module                                  *
+;* CRC16Add         : Adds a byte into the CRC16 calculation                                 *
+;* CRC16AddRB       : Adds a byte into the CRC16 calculation in reverse bit order            *
+;* CRC16AddResult   : Adds a byte in CRC16 sum and gets the resulting CRC16                  *
+;* CRC16AddResultRB : Adds a byte in CRC16 sum and gets the resulting CRC16. The input byte  *
+;*                     and the result is in reverse bit order                                *
+;* CRC16AddList     : Adds a whole list of bytes into the CRC16 sun and returns the current  *
+;*                     CRC16 checksum                                                        *
+;* CRC16AddListRB   : Adds a whole list of bytes into the CRC16 sun and returns the current  *
+;*                     CRC16 checksum. Values and result are in bit reversed order           *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file
@@ -78,7 +89,7 @@
 ; REGS USED     : None
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
-; VARS USED     : None
+; VARS USED     : CRC16Seed
 ; OTHER FUNCS   : None
 CRC16Init:	MOV		#CRC16Seed,&CRCINIRES			;Initialize the seed of the CRC engine
 			RET

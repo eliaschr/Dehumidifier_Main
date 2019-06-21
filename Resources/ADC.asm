@@ -28,14 +28,52 @@
 ;*===========================================================================================*
 ;* Names And Values:                                                                         *
 ;* ------------------                                                                        *
+;* ADCMCtlArr : Array to convert number of channel to MCTLx register                         *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
 ;* -----------                                                                               *
+;* ADCCallbacks   : Callback functions for ADC channels                                      *
+;* ADCLastVals    : Buffer that contains the last converted values of each analog input      *
+;* ADCBuffer      : Buffer to hold the conversion results                                    *
+;* ADCBufStrt     : Starting offset of the data in ADCBuffer                                 *
+;* ADCBufLen      : Length of data stored in ADBuffer, in bytes                              *
+;* ADCLastIV      : The last interrupt vector that triggered ADC interrupt                   *
+;* ADCCalMult     : ADC Calibration multiplier                                               *
+;* ADCCalDiff     : ADC Calibration Divider (ADCAL85-ADCCAL30)                               *
+;* ADCStatus      : Status word for the ADC subsystem                                        *
+;* ADCLastTemp    : Last converted temperature (ADC value)                                   *
+;* ADCLastCelcius : Last converted value to Celcius                                          *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
 ;* --------------------------                                                                *
+;* ADCInit             : Initializes the ADC subsystem                                       *
+;* ADCSetRefV          : Configures the Voltage Reference for the specified voltage          *
+;*                        generation                                                         *
+;* ADCEnableTempSensor : Enables the use of temperature sensor                               *
+;* ADCSetChannel       : Sets the MCTLx register of a ADC channel                            *
+;* ADCSetTempChannel   : Sets the MCTLx thet will be used for internal temperature sensor    *
+;* ADCSetWindow        : Sets the window limits (Low and High)                               *
+;* ADCSetTrigger       : Sets the trigger input of the ADC                                   *
+;* ADCStartSingle      : Starts a single channel - single conversion at once                 *
+;* ADCPrepareSingle    : Prepares the ADC module to perform a single channel - single        *
+;*                        conversion                                                         *
+;* ADCStartSequence    : Starts a conversion of sequence of channels                         *
+;* ADCPrepareSequence  : Prepares the ADC module to perform a sequence of channels           *
+;*                        conversion, to be started later                                    *
+;* ADCTrigger          : Triggers the ADC ta start conversion at the current mode            *
+;* ADCChannelCb        : Set a callback function to be used when a specific channel is       *
+;*                        converted                                                          *
+;* ADCReadBuffer       : Reads the first available value stored in ADC buffer                *
+;* ADCGetTemperature   : Reads the temperature in Celcius                                    *
+;* ADCTemperatureCb    : Callback function that is called just after fetching the ADC data   *
+;*                        of the internal temperature sensor                                 *
+;* ADCStoreVal         : Stores the ADC value just converted to its appropriate places,      *
+;*                        including the FIFO buffer that holds the last values               *
+;* ADCIDispatcher      : ADC interrupt sources are multiplexed into a sinlge ISR. This       *
+;*                        function dispatches the code to ots appropriate ISR according to   *
+;*                        the source that triggered it                                       *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file

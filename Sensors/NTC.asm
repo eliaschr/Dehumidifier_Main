@@ -28,14 +28,27 @@
 ;*===========================================================================================*
 ;* Names And Values:                                                                         *
 ;* ------------------                                                                        *
+;* NTC_Table     : This is the table that contains ADC values to temperature conversion data *
+;* NTC_Table_END : The end of NTC_Table                                                      *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
 ;* -----------                                                                               *
+;* NTCStatus   : Flags that describe the status of the NTC system                            *
+;* NTCLastVal  : Value fetched by the ADC                                                    *
+;* NTCLastTemp : Temperature value converted                                                 *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
 ;* --------------------------                                                                *
+;* NTCPInit    : Initializes the NTC I/O port pins used                                      *
+;* NTCTrigger  : Starts a temperature measurement from NTC                                   *
+;* NTCEnable   : Enables the NTC hardware to be ready to fetch a reading                     *
+;* NTCDisable  : Disables the NTC hardware to avoid sel heating of the sensor                *
+;* NTCReadTemp : Converts the NTC reading to Celcius                                         *
+;* NTCCallback : The callback function needed to be called after fetching the NTC ADC value. *
+;*                This is a callback function that is called by ADC interrupt handler and is *
+;*                is executed upon interrupt context                                         *
 ;*                                                                                           *
 ;*********************************************************************************************
 			.cdecls	C,LIST,"msp430.h"		;Include device header file

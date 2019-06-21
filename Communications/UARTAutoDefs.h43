@@ -31,10 +31,75 @@
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* COMM_TXD       : Bit mask for Tx pin                                                      *
+;* COMM_RXD       : Bit mask for Rx pin                                                      *
+;* COMM_SEL0VAL   : Default value of SEL0 register                                           *
+;* COMM_SEL1VAL   : Default value of SEL1 register                                           *
+;* COMM_IN        : Data input register of the port pins                                     *
+;* COMM_OUT       : Data output register of the port pins                                    *
+;* COMM_DIR       : Data direction register                                                  *
+;* COMM_REN       : Pull-up/down resistor enable register                                    *
+;* COMM_SEL0      : Special function selection register 0                                    *
+;* COMM_SEL1      : Special function selection register 1                                    *
+;* COMM_INTE      : Interrupt enable register                                                *
+;* COMM_INTES     : Interrupt edge selector register                                         *
+;* COMM_INTF      : Interrupt flags register                                                 *
+;* COMM_INTV      : Interrupt vector register                                                *
+;* COMMP_Vector   : Interrupt Vector Memory Segment                                          *
+;* COMM_CTLW0     : eUSCI_A Control Word 0                                                   *
+;* COMM_CTLW1     : eUSCI_A Control Word 1                                                   *
+;* COMM_BRW       : eUSCI_A Baud Rate Generator                                              *
+;* COMM_MCTLW     : eUSCI_A Modulation Control                                               *
+;* COMM_STATW     : eUSCI_A Status Word                                                      *
+;* COMM_RXBUF     : eUSCI_A Receive Buffer                                                   *
+;* COMM_TXBUF     : eUSCI_A Transmit Buffer                                                  *
+;* COMM_ABCTL     : eUSCI_A Auto Baud-Rate Control                                           *
+;* COMM_IRCLT     : eUSCI_A IrDA Control                                                     *
+;* COMM_IE        : eUSCI_A Interrupt Enable                                                 *
+;* COMM_IFG       : eUSCI_A Interrupt Flags                                                  *
+;* COMM_IV        : eUSCI_A Interrupt Vector Register                                        *
+;* COMMU_Vector   : eUSCI_A interrupt vector memory segment                                  *
+;* COMMTCTL       : TimerA module's Control register                                         *
+;* COMMTCCTL0     : TimerA CCR0 Control register                                             *
+;* COMMTCCTL1     : TimerA CCR1 Control register                                             *
+;* COMMTCCTL2     : TimerA CCR2 Control register, if applicable                              *
+;* COMMTR         : TimerA Counter register                                                  *
+;* COMMTCCR0      : TimerA CCR0 Counter register                                             *
+;* COMMTCCR1      : TimerA CCR1 Counter register                                             *
+;* COMMTCCR2      : TimerA CCR2 Counter register, if applicable                              *
+;* COMMTEX0       : TimerA Extension register                                                *
+;* COMMTIV        : TimerA Interrupt Vector register                                         *
+;* COMMTVECTOR0   : Interrupt Vector Segment for CCR0 Interrupt Service Routine              *
+;* COMMTVECTOR1   : Interrupt Vector Segment for other Interrupt Service Routines of TimerA  *
+;* COMM_ALL       : Mask bit for both Rx and Tx pins used for the UART bus                   *
+;* CTL0VAL        : The calculated value for CCTL0 register of eUSCI                         *
+;* CTL1VAL        : The calculated value for CCTL1 register of eUSCI                         *
+;* CHARTICKS      : The number of bits that constructs a full byte in the bus                *
+;* BRCLK          : The clock frequency that sources the eUSCI module                        *
+;* BRx            : Prescaler setting                                                        *
+;* MODACCURACY    : Factor that values are multiplied in order to include fractional part in *
+;*                   them. Prescaler uses integers, so a number like 3.14159265358 can not   *
+;*                   be set. To be able to keep some fractional part digits, we multiply     *
+;*                   this value by a power of 10, ie. 10000. In that case the value of the   *
+;*                   variable becomes 31416. By using this at the rest of the calculations   *
+;*                   we can achieve better accuracy. Of course the final result of the       *
+;*                   calculation must be normalized according to that factor                 *
+;* BRx100         : Prescaler factor including some fractional digits                        *
+;* BRDOT          : Fractional part of BRx                                                   *
+;* BRF16          : The BRF setting for 16x Input Clock                                      *
+;* BRDOT16        : Fractional part of BR at 16x Input Clock                                 *
+;* BRDEFS         : Number of BRFMOD and BRSMOD definitions found. BRFMOD and BRSMOD must be *
+;*                   both undefined or both set. This definition helps to find if we are in  *
+;*                   a legal state.                                                          *
+;* UARTWAKEUPTICKS: Number of TimerA ticks that the system will consider a binary            *
+;*                   communication finished. After that time from the last byte received the *
+;*                   system wakes up to consume the received data                            *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
 ;* ------------------------------------------------                                          *
+;* ACLKFreq  : Frequency of ACLK in Hz                                                       *
+;* SMCLKFreq : Frequency of SMCLK in Hz                                                      *
 ;*                                                                                           *
 ;*********************************************************************************************
 
@@ -175,7 +240,7 @@ COMM_IV:		.equ	UCA3IV
 		.emsg	"UARTUSCIBUS must be between 0 and 3!"
 	.endif											;UARTUSCIBUS
 
-COMM_ALL		.equ	(COMM_RXD | COMM_TXD)		;Mask bit for both Rx and Tx pins
+COMM_ALL:		.equ	(COMM_RXD | COMM_TXD)		;Mask bit for both Rx and Tx pins
 
 ;Time to setup the timer definitions according to the defined timer used for waking up the
 ; system when binary reception mode is used

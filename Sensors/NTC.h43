@@ -29,14 +29,26 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
+;* DEF_NTCMCTL  : Default settings (Vref=3V3)                                                *
+;* NTC_ENABLE   : The mask bit of the Enable pin of NTC                                      *
+;* NTC_ACHANNEL : The ADC channel used for NTC measurements                                  *
+;* NTC_MCHANNEL : The default MCTL channel for NTC reading                                   *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* The following definitions are for the flags that describe the status of the NTC subsystem *
+;* NTC_READY     : Flags that there is new data fetched from NTC                             *
+;* NTC_CONVERTED : Flags that the NTC value currently read is converted                      *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
+;* NTCPInit    : Initializes the NTC I/O port pins used                                      *
+;* NTCTrigger  : Starts a temperature measurement from NTC                                   *
+;* NTCEnable   : Enables the NTC hardware to be ready to fetch a reading                     *
+;* NTCDisable  : Disables the NTC hardware to avoid sel heating of the sensor                *
+;* NTCReadTemp : Converts the NTC reading to Celcius                                         *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *

@@ -29,6 +29,7 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
+;* CRC16Seed : The initial seed to be used for the calculation of CRC16                      *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
@@ -37,6 +38,16 @@
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
 ;* ---------------------------------                                                         *
+;* CRC16Init        : Initializes the CRC16 hardware module                                  *
+;* CRC16Add         : Adds a byte into the CRC16 calculation                                 *
+;* CRC16AddRB       : Adds a byte into the CRC16 calculation in reverse bit order            *
+;* CRC16AddResult   : Adds a byte in CRC16 sum and gets the resulting CRC16                  *
+;* CRC16AddResultRB : Adds a byte in CRC16 sum and gets the resulting CRC16. The input byte  *
+;*                     and the result is in reverse bit order                                *
+;* CRC16AddList     : Adds a whole list of bytes into the CRC16 sun and returns the current  *
+;*                     CRC16 checksum                                                        *
+;* CRC16AddListRB   : Adds a whole list of bytes into the CRC16 sun and returns the current  *
+;*                     CRC16 checksum. Values and result are in bit reversed order           *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Predefined Definitions Expected by the Library:                                           *
