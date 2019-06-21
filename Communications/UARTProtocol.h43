@@ -30,10 +30,23 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
+;* PACKETSIZE : Is the maximum length of supported packet, including header and footer       *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
 ;* ----------------------------                                                              *
+;* The following definitions describe the available types of packets used in UART            *
+;* communication                                                                             *
+;* ID_INDICATIONS    : Leds/Displays information                                             *
+;* ID_KEYPRESS       : Keypress information                                                  *
+;* ID_KEYPRESS_RTR   : Keypress information, Retransmission                                  *
+;* ID_RTC            : Real Time Clock information                                           *
+;* ID_TOUCHPRESS     : Touchscreen Press information                                         *
+;* ID_TOUCHPRESS_RTR : Touchscreen Press information, Retransmission                         *
+;* ID_CONFIG         : Configuration data                                                    *
+;* ID_ACK            : Acknowledge                                                           *
+;* ID_REQUESTINFO    : Request Info packet                                                   *
+;* ID_REQUESTWLEN    : Request Info with Start/Length                                        *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Global functions of the Library:                                                          *
@@ -52,6 +65,19 @@ __UARTPROTO_LIB_H43__:	.equ	1				;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
+PACKETSIZE:				.equ	128				;The maximum length of a packet
+
+;Packet type definitions
+ID_INDICATIONS:			.equ	001h			;Leds/Displays information
+ID_KEYPRESS:			.equ	002h			;Keypress information
+ID_KEYPRESS_RTR:		.equ	082h			;Keypress information, Retransmission
+ID_RTC:					.equ	003h			;Real Time Clock information
+ID_TOUCHPRESS:			.equ	004h			;Touchscreen Press information
+ID_TOUCHPRESS_RTR:		.equ	084h			;Touchscreen Press information, Retransmission
+ID_CONFIG:				.equ	005h			;Configuration data
+ID_ACK:					.equ	080h			;Acknowledge
+ID_REQUESTINFO:			.equ	040h			;Request Info packet
+ID_REQUESTWLEN:			.equ	041h			;Request Info with Start/Length
 
 
 ;----------------------------------------

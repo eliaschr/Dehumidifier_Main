@@ -60,7 +60,9 @@
 ;*********************************************************************************************
 ; Variables Definitions
 ;-------------------------------------------
-
+			.bss	InPacket, PACKETSIZE	;Incoming packet construction buffer
+			.bss	OutPacket, PACKETSIZE   ;Outgoing packet construction buffer
+			
 
 ;----------------------------------------
 ; Constants
