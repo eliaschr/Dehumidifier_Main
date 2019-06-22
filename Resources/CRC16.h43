@@ -70,17 +70,28 @@ CRC16Seed:			.equ	0EC1Bh				;The initial seed value used for the CRC16
 ;========================================
 					.global	CRC16Init			;Initializes the CRC16 hardware module
 					.global	CRC16Add			;Adds a byte into the CRC16 calculation
+					.global	CRC16AddW			;Adds a word into the CRC16 calculation
 					.global	CRC16AddRB			;Adds a byte into the CRC16 calculation in
+												; reverse bit order
+					.global	CRC16AddWRB			;Adds a word into the CRC16 calculation in
 												; reverse bit order
 					.global	CRC16AddResult		;Adds a byte in CRC16 sum and gets the
 												; resulting CRC16
+					.global	CRC16AddWResult		;Adds a word in CRC16 sum and gets the
+												; resulting CRC16
 					.global	CRC16AddResultRB	;Adds a byte in CRC16 sum and gets the
 												; resulting CRC16. The input byte and the
-												; result is in reverse bit order
+												; result are in reverse bit order
+					.global	CRC16AddWResultRB	;Adds a word in CRC16 sum and gets the
+												; resulting CRC16. The input word and the
+												; result are in reverse bit order
 					.global	CRC16AddList		;Adds a whole list of bytes into the CRC16
 												; sun and returns the current CRC16 checksum
 					.global	CRC16AddListRB		;Adds a whole list of bytes into the CRC16
 												; sun and returns the current CRC16 checksum.
 												; Values and result are in bit reversed order
+					.global	CRC16Result			;Returns the current result of the CRC16
+					.global	CRC16ResultRB		;Returns the current CRC16 result in reverse
+												; bit order
 
 	.endif										;__CRC16_LIB_H43__

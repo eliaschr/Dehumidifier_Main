@@ -97,7 +97,7 @@ CRC16Init:	MOV		#CRC16Seed,&CRCINIRES			;Initialize the seed of the CRC engine
 
 ;----------------------------------------
 ; CRC16Add
-; Adds a byte of value into the CRC16 calculated checksum
+; Adds a byte value into the CRC16 calculated checksum
 ; INPUT         : R4 contains the byte to be added
 ; OUTPUT        : None
 ; REGS USED     : R4
@@ -105,23 +105,83 @@ CRC16Init:	MOV		#CRC16Seed,&CRCINIRES			;Initialize the seed of the CRC engine
 ; STACK USAGE   : None
 ; VARS USED     : None
 ; OTHER FUNCS   : None
-CRC16Add:	MOV.B	R4,&CRCDI_L						;Input a word of data in CRC16 module
+CRC16Add:	MOV.B	R4,&CRCDI_L						;Input a byte of data in CRC16 module
 			RET
 
 
 ;----------------------------------------
-; CRC16AddResult
-; Adds a byte of value into the CRC16 calculated checksum
-; INPUT         : R4 contains the byte to be added
-; OUTPUT        : R4 contains the currently calculated CRC16 checksum
+; CRC16AddW
+; Adds a word value into the CRC16 calculated checksum
+; INPUT         : R4 contains the word to be added
+; OUTPUT        : None
 ; REGS USED     : R4
 ; REGS AFFECTED : None
 ; STACK USAGE   : None
 ; VARS USED     : None
 ; OTHER FUNCS   : None
+CRC16AddW:	MOV		R4,&CRCDI						;Input a word of data in CRC16 module
+			RET
+
+
+;----------------------------------------
+; CRC16AddResult
+; Adds a byte value into the CRC16 calculated checksum and returns its result
+; INPUT         : R4 contains the byte to be added
+; OUTPUT        : R4 contains the currently calculated CRC16 checksum
+; REGS USED     : R4
+; REGS AFFECTED : R4
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
 CRC16AddResult:
-			MOV.B	R4,&CRCDI_L						;Input a word of data in CRC16 module
+			MOV.B	R4,&CRCDI_L						;Input a byte of data in CRC16 module
 			MOV		&CRCINIRES,R4					;Get the CRC16 sum
+			RET
+
+
+;----------------------------------------
+; CRC16AddWResult
+; Adds a word value into the CRC16 calculated checksum and returns its result
+; INPUT         : R4 contains the word to be added
+; OUTPUT        : R4 contains the currently calculated CRC16 checksum
+; REGS USED     : R4
+; REGS AFFECTED : R4
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+CRC16AddWResult:
+			MOV		R4,&CRCDI						;Input a word of data in CRC16 module
+			MOV		&CRCINIRES,R4					;Get the CRC16 sum
+			RET
+
+
+;----------------------------------------
+; CRC16Result
+; Returns the currently calculates CRC16 checksum
+; INPUT         : None
+; OUTPUT        : R4 contains the currently calculated CRC16 checksum
+; REGS USED     : R4
+; REGS AFFECTED : R4
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+CRC16Result:
+			MOV		&CRCINIRES,R4					;Get the CRC16 checksum
+			RET
+
+
+;----------------------------------------
+; CRC16ResultRB
+; Returns the currently calculates CRC16 checksum in reverse bit order
+; INPUT         : None
+; OUTPUT        : R4 contains the currently calculated CRC16 checksum
+; REGS USED     : R4
+; REGS AFFECTED : R4
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+CRC16ResultRB:
+			MOV		&CRCRESR,R4					;Get the CRC16 checksum
 			RET
 
 
@@ -158,13 +218,28 @@ CRC16AddList:
 ; STACK USAGE   : None
 ; VARS USED     : None
 ; OTHER FUNCS   : None
-CRC16AddRB:	MOV.B	R4,&CRCDIRB_L					;Input a word of data in CRC16 module
+CRC16AddRB:	MOV.B	R4,&CRCDIRB_L					;Input a byte of data in CRC16 module
+			RET
+
+
+;----------------------------------------
+; CRC16AddWRB
+; Adds a word value into the CRC16 calculated checksum. The value is added in reversed bit
+; order
+; INPUT         : R4 contains the word to be added
+; OUTPUT        : None
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+CRC16AddWRB:MOV		R4,&CRCDIRB						;Input a word of data in CRC16 module
 			RET
 
 
 ;----------------------------------------
 ; CRC16AddResultRB
-; Adds a byte of value into the CRC16 calculated checksum. The value is added in reversed bit
+; Adds a byte value into the CRC16 calculated checksum. The value is added in reversed bit
 ; order
 ; INPUT         : R4 contains the byte to be added
 ; OUTPUT        : R4 contains the currently calculated CRC16 checksum
@@ -175,7 +250,24 @@ CRC16AddRB:	MOV.B	R4,&CRCDIRB_L					;Input a word of data in CRC16 module
 ; OTHER FUNCS   : None
 CRC16AddResultRB:
 			MOV.B	R4,&CRCDIRB_L					;Input a word of data in CRC16 module
-			MOV		&CRCRESRB,R4					;Get the CRC16 sum
+			MOV		&CRCRESR,R4					;Get the CRC16 sum
+			RET
+
+
+;----------------------------------------
+; CRC16AddWResultRB
+; Adds a word value into the CRC16 calculated checksum and returns the current result. The
+; value is added in reversed bit order
+; INPUT         : R4 contains the word to be added
+; OUTPUT        : R4 contains the currently calculated CRC16 checksum
+; REGS USED     : R4
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : None
+; OTHER FUNCS   : None
+CRC16AddWResultRB:
+			MOV		R4,&CRCDIRB						;Input a word of data in CRC16 module
+			MOV		&CRCRESR,R4					;Get the CRC16 sum
 			RET
 
 
@@ -197,7 +289,7 @@ CRC16AddListRB:
 			MOV.B	@R5+,&CRCDIRB_L					;Input a word of data in CRC16 module
 			DEC		R6
 			JNZ		CRC16AddListRB					;Repeat for all R6 bytes
-			MOV		&CRCRESRB,R4					;Get the CRC16 sum
+			MOV		&CRCRESR,R4					;Get the CRC16 sum
 			RET
 
 

@@ -53,6 +53,9 @@
 ;* BRFMOD        : If defined sets UCBRFx base value in UCAxMCTL. In that case BRSMOD must   *
 ;*                  also be defined. If it is not defined the preprocessor automatically     *
 ;*                  sets its optimum value                                                   *
+;* UARTTEXTMODE  : Text Mode                                                                 *
+;* UARTBINMODE   : Binary Mode                                                               *
+;* UARTPACKETMODE: Packet Mode                                                               *
 ;* UARTUSCIBUS   : The number of eUSCI_A port to be used. Normally this is set through       *
 ;*                  Board.h43 file.                                                          *
 ;*                                                                                           *
@@ -116,7 +119,19 @@ WAKEUPCHARS:	.equ	10					;The time in serial characters that when idle, the
 ;BRSMOD:		.set	0					;If defined sets UCBRSx base value in UCAxMCTL
 ;BRFMOD:		.set	0Bh					;If defined sets UCBRFx base value in UCAxMCTL
 
+;The following definitions are for getting the current mode of the UART reception subsystem
+UARTTEXTMODE:	.equ	0					;Text Mode
+UARTBINMODE:	.equ	RSBinary			;Binary Mode
+UARTPACKETMODE:	.equ	RSPacket			;Packet Mode
+
 UARTUSCIBUS:	.equ	Board_CommPort		;The number of eUSCI_A port to be used
+
+
+;----------------------------------------
+; Global Variables
+;========================================
+			.global	RSBinary				;The flag that denotes Binary reception mode
+			.global	RSPacket				;The flag that denotes Packet reception mode
 
 
 ;----------------------------------------
@@ -130,8 +145,12 @@ UARTUSCIBUS:	.equ	Board_CommPort		;The number of eUSCI_A port to be used
 			.global	UARTDisableInts			;Disables the receiving interrupt
 			.global	UARTSetBinMode			;Sets binary reception mode (no filtering)
 			.global	UARTSetTxtMode			;Sets text reception mode (EOL comes from CR/LF)
+			.global	UARTSetPcktMode			;Sets packet reception mode (Specific number of
+											; bytes)
+			.global	UARTGetMode				;Returns the current reception mode
 			.global	UARTCheckServe			;Checks if there is the need to serve received
 											; data
+			.global	UARTSendStream			;Sends a whole stream of data (blocking call)
 			.global	UARTSend				;Sends data through the RS232 bus
 			.global	UARTReceive				;Gets one character previously read from RS232 bus
 			

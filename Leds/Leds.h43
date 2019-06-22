@@ -76,6 +76,8 @@
 ;* Disp1BlinkOff : Stops display 2 blinking                                                  *
 ;* Disp0SetDigit : Sets the display 0 digit                                                  *
 ;* Disp1SetDigit : Sets the display 1 digit                                                  *
+;* SetLedBuffer  : Copies data from a source buffer directly to Led / Blink status buffers   *
+;* GetLedBuffer  : Copies the Led and Blink status data to a destination buffer              *
 ;* LedsTest      : Tests the led subsystem                                                   *
 ;*                                                                                           *
 ;*===========================================================================================*
@@ -161,7 +163,10 @@ LEDNSANION:				.equ	Board_LedNSAnion;Anionizer On led - Non scanning led
 						.global	Disp1BlinkOff	;Stops display 2 blinking
 						.global	Disp0SetDigit	;Sets the display 0 digit
 						.global	Disp1SetDigit	;Sets the display 1 digit
-						
+						.global	SetLedBuffer	;Stores Led and Blink data in buffers
+
+						.global	GetLedBuffer	;Copies the buffers of Data/Blink data to a
+												; target buffer
 						.global	LedsTest		;Tests the led subsystem
 
 

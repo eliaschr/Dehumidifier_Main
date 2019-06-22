@@ -44,12 +44,14 @@
 ;* --------------------------                                                                *
 ;*                                                                                           *
 ;*********************************************************************************************
-			.cdecls	C,LIST,"msp430.h"		;Include device header file
-			.include "Board.h43"			;Hardware Connections
-			.include "Definitions.h43"		;Global definitions
-			.include "UARTProtocol.h43"		;Local definitions
-			.include "ProtoAutoDefs.h43"	;Auto definitions according to settings in
-											; UARTProtocol.h43
+			.cdecls	C,LIST,"msp430.h"			;Include device header file
+			.include "Board.h43"				;Hardware Connections
+			.include "Definitions.h43"			;Global definitions
+			.include "Resources/CRC16.h43"		;Going to use CRC16 library
+			.include "Communications/UART.h43"	;UART library to send/receive packets
+			.include "UARTProtocol.h43"			;Local definitions
+			.include "ProtoAutoDefs.h43"		;Auto definitions according to settings in
+												; UARTProtocol.h43
 
 
 ;----------------------------------------
@@ -60,6 +62,7 @@
 ;*********************************************************************************************
 ; Variables Definitions
 ;-------------------------------------------
+			.bss	CurrUID, 2				;Current free UID of a packet
 			.bss	InPacket, PACKETSIZE	;Incoming packet construction buffer
 			.bss	OutPacket, PACKETSIZE   ;Outgoing packet construction buffer
 			
@@ -74,12 +77,12 @@
 ;========================================
 			.text
 ;Interrupt Service Routines must be global
-			.global	ISRName
+;			.global	ISRName
 
 
 ;----------------------------------------
-; FunctionName
-; Function Description
+; UARTProtoInit
+; Initializes the local variables of the UART Protocol engine
 ; INPUT         : None
 ; OUTPUT        : None
 ; REGS USED     : None
@@ -87,9 +90,99 @@
 ; STACK USAGE   : None
 ; VARS USED     : None
 ; OTHER FUNCS   : None
-FunctionName:
+UARTProtoInit:
+			MOV		#UARTPROTOSEED,&CurrUID	;Reset the UID Seed
+			RET
+
+
+;----------------------------------------
+; PrepIndPacket
+; Prepares an Indications Packet with data that come from an external buffer
+; INPUT         : R11 points to the buffer that holds the indocations data the packet will
+;                 contain
+; OUTPUT        : None
+; REGS USED     : R10, R11, R12
+; REGS AFFECTED : R10, R11, R12
+; STACK USAGE   : None
+; VARS USED     : CurrUID, ID_INDICATIONS, OutPacket, P_IND_DATALEN, P_IND_LEDS_OFFS,
+;                 P_IND_LEN, P_LEN_OFFS, P_TYPE_OFFS, P_UID_OFFS
+; OTHER FUNCS   : None
+PrepIndPacket:
+			MOV		#OutPacket,R12			;Target buffer is the Outgoing Packet one
+			MOV.B	#P_IND_LEN,P_LEN_OFFS(R12)	;Set the length of the packet
+			MOV.B	#ID_INDICATIONS,P_TYPE_OFFS(R12);Set the type of the packet
+			ADD		#P_IND_LEN,&CurrUID		;Prepare UID to use
+			MOV		&CurrUID,P_UID_OFFS(R12);Set the UID
+			MOV		#P_IND_DATALEN,R10		;Length of data to be transfered
+PIndPLoop:	MOV.B	@R11+,P_IND_LEDS_OFFS(R12)	;Copy that byte into the Output buffer
+			INC		R12						;Also advance the target pointer
+			DEC		R10						;One byte less to copy
+			JNZ		PIndPLoop				;More bytes => Repeat
 			RET
 			
+
+;----------------------------------------
+; PrepKbdPacket
+; Prepares a KeyPress Packet
+; INPUT         : R4 contains the keypress
+; OUTPUT        : None
+; REGS USED     : R12
+; REGS AFFECTED : R12
+; STACK USAGE   : None
+; VARS USED     : CurrUID, ID_KEYPRESS, OutPacket, P_KBD_DUMMYB, P_KBD_KEY_OFFS, P_KBD_LEN,
+;                 P_LEN_OFFS, P_TYPE_OFFS, P_UID_OFFS, UARTDUMMY
+; OTHER FUNCS   : None
+PrepKbdPacket:
+			MOV		#OutPacket,R12			;Target buffer is the Outgoing Packet one
+			MOV.B	#ID_KEYPRESS,P_TYPE_OFFS(R12);Set the type of the packet
+PKBDPMore:	MOV.B	#P_KBD_LEN,P_LEN_OFFS(R12)	;Set the length of the packet
+			ADD		#P_KBD_LEN,&CurrUID		;Prepare UID to use
+			MOV		&CurrUID,P_UID_OFFS(R12);Set the UID
+			MOV		R4,P_KBD_KEY_OFFS(R12)	;Set the keypress data
+			MOV		#UARTDUMMY,P_KBD_DUMMYB(R12);Fill in the dummy byte
+			RET
+
+
+;----------------------------------------
+; PrepKbdRtrPacket
+; Prepares a KeyPress Retransmission Packet
+; INPUT         : R4 contains the keypress
+; OUTPUT        : None
+; REGS USED     : R12
+; REGS AFFECTED : R12
+; STACK USAGE   : None
+; VARS USED     : CurrUID, ID_KEYPRESS, OutPacket, P_KBD_DUMMYB, P_KBD_KEY_OFFS, P_KBD_LEN,
+;                 P_LEN_OFFS, P_TYPE_OFFS, P_UID_OFFS, UARTDUMMY
+; OTHER FUNCS   : None
+PrepKbdRtrPacket:
+			MOV		#OutPacket,R12			;Target buffer is the Outgoing Packet one
+			MOV.B	#ID_KEYPRESS_RTR,P_TYPE_OFFS(R12);Set the type of the packet
+			JMP		PKBDPMore				;The rest are the same as in Keypress packet
+
+
+;----------------------------------------
+; SendPacket
+; Calculates the CRC16 and sends the already prepared packet
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     :
+; REGS AFFECTED :
+; STACK USAGE   : None
+; VARS USED     :
+; OTHER FUNCS   : None
+SendPacket:
+			CALL	#CRC16Init				;Initialize the CRC16 module
+			MOV		#OutPacket,R5			;This packet is going to be transmitted
+			MOV		@R5,R6					;R6 contains the number of bytes to be used
+			SUB 	#00002h,R6				;CRC16 field is not going to be included in the
+											; checksum
+			CALL	#CRC16AddList			;Calculate the checksum of the packet
+			MOV		R4,0(R5)				;Store the CRC16 value
+			MOV		#OutPacket,R5			;The totally prepared packet is going to be sent
+			MOV		@R5,R6					;R6 contains the size of the packet
+			CALL	#UARTSendStream			;Send the packet
+			RET
+
 
 ;----------------------------------------
 ; Interrupt Service Routines
@@ -104,8 +197,8 @@ FunctionName:
 ; STACK USAGE   : None
 ; VARS USED     : None
 ; OTHER FUNCS   : None
-ISRName:
-			RETI
+;ISRName:
+;			RETI
 
 
 ;----------------------------------------

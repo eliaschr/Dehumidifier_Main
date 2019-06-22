@@ -201,7 +201,7 @@ COMM_STATW:		.equ	UCA2STATW
 COMM_RXBUF:		.equ	UCA2RXBUF
 COMM_TXBUF:		.equ	UCA2TXBUF
 COMM_ABCTL:		.equ	UCA2ABCTL
-COMM_IRCLT:		.equ	UCA2IRCTL
+COMM_IRCLT:		.equ	UCA2IRCTLUARTAutoDefs
 COMM_IE:		.equ	UCA2IE
 COMM_IFG:		.equ	UCA2IFG
 COMM_IV:		.equ	UCA2IV
@@ -322,30 +322,30 @@ COMMTIV:		.equ	TA4IV
 				; Start bit and 8 bits in case 8-bit interface is selected and one stop bit.
 				; These make a total of 10
 				.asg	10, CHARTICKS				;Default value for 8N1 setting
-	.if (DATABITS == 7)
+	.if (UARTDATABITS == 7)
 				.asg	(CTL0VAL | UC7BIT), CTL0VAL	;Need to set the 7 bit flag in CTL0
 				.asg	(CHARTICKS -1), CHARTICKS	;Earlier we used 8 bits of data to set
 													; initial CHARTICKS. Since we need 7, we
 													; have to subtract one
-	.elseif (DATABITS != 8)
-		.emsg "DATABITS can be 7 or 8"
+	.elseif (UARTDATABITS != 8)
+		.emsg "UARTDATABITS in UART.h43 can be 7 or 8"
 	.endif
 
-	.if (PARITY == "ODD")
+	.if (UARTPARITY == "ODD")
 				.asg	(CTL0VAL | UCPEN), CTL0VAL	;Use Odd Parity
 				.asg	(CHARTICKS +1), CHARTICKS	;Add the parity bit to CHARTICKS
-	.elseif (PARITY == "EVEN")
+	.elseif (UARTPARITY == "EVEN")
 				.asg	(CTL0VAL | UCPEN | UCPAR), CTL0VAL;Use Even Parity
 				.asg	(CHARTICKS +1), CHARTICKS	;Add the parity bit to CHARTICKS
-	.elseif (PARITY != "NONE")
-		.emsg "PARITY should be a litteral value NONE, ODD or EVEN"
+	.elseif (UARTPARITY != "NONE")
+		.emsg "UARTPARITY in UART.h43 should be a litteral value NONE, ODD or EVEN"
 	.endif
 
-	.if (STOPBITS == 2)
+	.if (UARTSTOPBITS == 2)
 				.asg	(CTL0VAL | UCSPB), CTL0VAL	;Need to set 2 Stop bits
 				.asg	(CHARTICKS +1), CHARTICKS	;Add the second stop bit to CHARTICKS
-	.elseif (STOPBITS != 1)
-		.emsg "STOPBITS can be 1 or 2"
+	.elseif (UARTSTOPBITS != 1)
+		.emsg "UARTSTOPBITS in UART.h43 can be 1 or 2"
 	.endif
 
 ;Next try to construct the value of UCAxCTL1 register, according to values specified earlier
@@ -360,14 +360,14 @@ BRCLK:			.set	ACLKFreq					;BRCLK is the clock input of eUSCI
 BRCLK:			.set	SMCLKFreq					;BRCLK is the clock input of eUSCI
 				.asg	(CTL1VAL | UCSSEL_2), CTL1VAL;SMClk is the clock source setting
 	.else
-		.emsg "USEACLK can be undefined, 0 or 1"
+		.emsg "USEACLK in UART.h43 file can be undefined, 0 or 1"
 	.endif
 
 ;Modulation control follows. UCAxBRx value must define the prescaler of clock to create the
 ; bit clock frequency. If there is oversampling then this register contains 1/16th of the
 ; normal value. So, the calculations include the setting of oversampling bit in UCAxMCTL
 ; register
-				.asg	(BRCLK/BAUDRATE), BRx		;Normal Baud Rate prescaler setting
+				.asg	(BRCLK/UARTBAUDRATE),BRx	;Normal Baud Rate prescaler setting
 ;If BROS16 is not defined then we have to calculate it by ourselves. For low frequency bit
 ; clock this bit should be 0. In case of a high frequecy bit clock is set, this bit divides
 ; the bit clock by 16. Of cource, if BROS16 is defined we should keep that setting
@@ -381,7 +381,7 @@ BRCLK:			.set	SMCLKFreq					;BRCLK is the clock input of eUSCI
 	.endif
 
 	.if (BROS16 == 1)
-				.asg	(BRCLK / (BAUDRATE *16)), BRx
+				.asg	(BRCLK / (UARTBAUDRATE *16)), BRx
 	.elseif (BROS16 != 0)
 		.emsg	"BROS16 is a bit value. It can be 0 or 1 only"
 	.endif
@@ -403,7 +403,7 @@ BRCLK:			.set	SMCLKFreq					;BRCLK is the clock input of eUSCI
 	.if (BRDEFS == 0)								;No definitions are made, lets calculate
 													; the needed values
 				.asg	10000, MODACCURACY
-				.asg	(BRCLK*MODACCURACY/BAUDRATE), BRx100
+				.asg	(BRCLK*MODACCURACY/UARTBAUDRATE), BRx100
 				.asg	(BRx100 - (BRx * MODACCURACY)), BRDOT
 				.asg	((BRDOT + 5) *8 / MODACCURACY), BRSMOD
 				.asg	0, BRFMOD
@@ -411,27 +411,27 @@ BRCLK:			.set	SMCLKFreq					;BRCLK is the clock input of eUSCI
 				.asg	7, BRSMOD
 		.endif
 		.if (BROS16 == 1)
-				.asg	(BRCLK / (BAUDRATE *16)), BRx
-				.asg	(BRCLK * MODACCURACY / (BAUDRATE *16)), BRx100
+				.asg	(BRCLK / (UARTBAUDRATE *16)), BRx
+				.asg	(BRCLK * MODACCURACY / (UARTBAUDRATE *16)), BRx100
 				.asg	(BRx100 - (BRx * MODACCURACY)), BRDOT
 				.asg	((BRDOT +5) * 16 / MODACCURACY), BRFMOD
 			.if (BRFMOD == 16)
 				.asg	15, BRFMOD
 			.endif
 				.asg	((16 * BRx + BRFMOD) * MODACCURACY), BRF16
-				.asg	((BRCLK * MODACCURACY - BRF16 * BAUDRATE) / BAUDRATE), BRDOT16
+				.asg	((BRCLK * MODACCURACY - BRF16 * UARTBAUDRATE) / UARTBAUDRATE), BRDOT16
 				.asg	((BRDOT16 + 5) *8 / MODACCURACY), BRSMOD
 			.if (BRSMOD == 8)
 				.asg	7, BRSMOD
 			.endif
 		.endif
 	.elseif (BRDEFS != 2)							;Only one of those two values is defined
-				.emsg	"All or none of BRSMOD and BRFMOD must be defined"
+				.emsg	"All or none of BRSMOD and BRFMOD must be defined in UART.h43 file"
 	.endif
 
 			.asg	((BRFMOD << 4) + (BRSMOD << 1) + BROS16),MCTLVAL
 
 ;Now we have to calculate the clock ticks of the timer for the reception timeout
-			.asg	(((ACLKFreq  *WAKEUPCHARS *CHARTICKS)/BAUDRATE) +1), UARTWAKEUPTICKS
+			.asg	(((ACLKFreq  *WAKEUPCHARS *CHARTICKS)/UARTBAUDRATE) +1), UARTWAKEUPTICKS
 
 	.endif											;__UART_RS232_LIB_AUTO_DEFS__

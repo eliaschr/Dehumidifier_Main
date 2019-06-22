@@ -83,6 +83,8 @@
 ;* Disp1SetDigit : Sets the digit to be displayed by Display 1                               *
 ;* Disp0SetLeds  : Sets the leds of Display 0 according to the input parameter               *
 ;* Disp1SetLeds  : Sets the leds of Display 0 according to the input parameter               *
+;* SetLedBuffer  : Copies data from a source buffer directly to Led / Blink status buffers   *
+;* GetLedBuffer  : Copies the Led and Blink status data to a destination buffer              *
 ;* LedsTest      : Starts a led test                                                         *
 ;* LEDTimerISR   : Dispatces the Led Interrupt according to the vector that triggered it     *
 ;* LedScan       : Interrupt Service Routine for Led Scanning, triggered by CCR0 of the Led  *
@@ -533,6 +535,58 @@ Disp0SetLeds:
 Disp1SetLeds:
 			MOV.B	R4,&(LedBuffer +DISP1OFFS)	;Set the Display 1 led mask
 			RET
+
+
+;----------------------------------------
+; SetLedBuffer
+; Fills in the Led and Blink status buffers from another source
+; INPUT         : R10 contains the length of the source buffer
+;                 R11 points to the source address that holds the Led and Blink Status data
+; OUTPUT        : None
+; REGS USED     : R10, R11, R12
+; REGS AFFECTED : R10, R11, R12
+; STACK USAGE   : None
+; VARS USED     : LedBuffer, LEDBUFSIZE
+; OTHER FUNCS   : None
+SetLedBuffer:
+			CMP		#00000h,R10					;Do we have to copy 0 bytes?
+			JZ		SLBExit						;Yes => Then nothing to do, just exit
+			CMP		#LEDBUFSIZE *2,R10			;Is the length more than the total buffer
+												; of Data and Blink Data?
+			JLO		SLBCopy						;No => Perform the copy
+			MOV		#LEDBUFSIZE *2,R10			;else, trunkate to the maximum length
+SLBCopy:	MOV		#00000h,R12					;Target is the LedBuffer(0) data
+SLBLoop:	MOV		@R11+,LedBuffer(R12)		;Copy one byte and advance source pointer
+			INC		R12							;Advance the target pointer
+			CMP		R10,R12						;Reached the end?
+			JLO		SLBLoop						;No => Repeat for next bytes
+SLBExit:	RET
+
+
+;----------------------------------------
+; GetLedBuffer
+; Copies the Led and Blink status buffers to a destination
+; INPUT         : R10 contains the length of the target buffer
+;                 R11 points to the target address that will hold the copied data
+; OUTPUT        : None
+; REGS USED     : R10, R11, R12
+; REGS AFFECTED : R10, R11, R12
+; STACK USAGE   : None
+; VARS USED     : LedBuffer, LEDBUFSIZE
+; OTHER FUNCS   : None
+GetLedBuffer:
+			CMP		#00000h,R10					;Do we have to copy 0 bytes?
+			JZ		GLBExit						;Yes => Then nothing to do, just exit
+			CMP		#LEDBUFSIZE *2,R10			;Is the length more than the total buffer
+												; of Data and Blink Data?
+			JLO		GLBCopy						;No => Perform the copy
+			MOV		#LEDBUFSIZE *2,R10			;else, trunkate to the maximum length
+GLBCopy:	MOV		#LedBuffer,R12				;Source is the LedBuffer data
+GLBLoop:	MOV		@R12+,0(R11)				;Copy one byte and advance source pointer
+			INC		R11							;Advance the target pointer
+			DEC		R10							;One byte less
+			JNZ		GLBLoop						;More to copy? => Repeat for next bytes
+GLBExit:	RET
 
 
 ;----------------------------------------

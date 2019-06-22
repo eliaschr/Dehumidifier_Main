@@ -30,7 +30,9 @@
 ;*===========================================================================================*
 ;* Definitions of the Library (Set by the developer):                                        *
 ;* ----------------------------------------------------                                      *
-;* PACKETSIZE : Is the maximum length of supported packet, including header and footer       *
+;* UARTPROTOSEED : The initial seed for the Unique ID of packets                             *
+;* UARTDUMMY     : The value the dummy bytes will contain                                    *
+;* PACKETSIZE    : Is the maximum length of supported packet, including header and footer    *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Definitions of the Library:                                                               *
@@ -65,24 +67,69 @@ __UARTPROTO_LIB_H43__:	.equ	1				;Must define this in order to avoid double
 ;----------------------------------------
 ; Global Definitions
 ;========================================
-PACKETSIZE:				.equ	128				;The maximum length of a packet
+UARTPROTOSEED:		.equ	0EC1Bh				;The initial seed for the Unique ID of packets
+UARTDUMMY:			.equ	0AAh				;The value the dummy bytes will contain
+PACKETSIZE:			.equ	128					;The maximum length of a packet
 
 ;Packet type definitions
-ID_INDICATIONS:			.equ	001h			;Leds/Displays information
-ID_KEYPRESS:			.equ	002h			;Keypress information
-ID_KEYPRESS_RTR:		.equ	082h			;Keypress information, Retransmission
-ID_RTC:					.equ	003h			;Real Time Clock information
-ID_TOUCHPRESS:			.equ	004h			;Touchscreen Press information
-ID_TOUCHPRESS_RTR:		.equ	084h			;Touchscreen Press information, Retransmission
-ID_CONFIG:				.equ	005h			;Configuration data
-ID_ACK:					.equ	080h			;Acknowledge
-ID_REQUESTINFO:			.equ	040h			;Request Info packet
-ID_REQUESTWLEN:			.equ	041h			;Request Info with Start/Length
+ID_INDICATIONS:		.equ	001h				;Leds/Displays information
+ID_KEYPRESS:		.equ	002h				;Keypress information
+ID_KEYPRESS_RTR:	.equ	082h				;Keypress information, Retransmission
+ID_RTC:				.equ	003h				;Real Time Clock information
+ID_TOUCHPRESS:		.equ	004h				;Touchscreen Press information
+ID_TOUCHPRESS_RTR:	.equ	084h				;Touchscreen Press information, Retransmission
+ID_CONFIG:			.equ	005h				;Configuration data
+ID_ACK:				.equ	080h				;Acknowledge
+ID_REQUESTINFO:		.equ	040h				;Request Info packet
+ID_REQUESTWLEN:		.equ	041h				;Request Info with Start/Length
+
+;Common Packet Field Offsets
+P_LEN_OFFS:			.equ	0					;Lebgth of the packet field offset
+P_TYPE_OFFS:		.equ	(P_LEN_OFFS +1)		;Packet Type field offset
+P_UID_OFFS:			.equ	(P_TYPE_OFFS +1)	;Packet Unique ID
+P_HEADERLEN:		.equ	(P_UID_OFFS +2)		;Header length
+P_FOOTERLEN:		.equ	2					;Only the CRC16 field is at Footer
+P_COMMONLEN:		.equ	(P_HEADERLEN +P_FOOTERLEN)
+												;Length of common to all packets part (Header
+												; and Footer fields)
+
+;Indications Packet Field Offsets
+P_IND_LEDS_OFFS:	.equ	P_HEADERLEN				;Leds data
+P_IND_DISP0_OFFS:	.equ	(P_IND_LEDS_OFFS +1)	;Display 0 Data
+P_IND_DISP1_OFFS:	.equ	(P_IND_DISP0_OFFS +1)	;Display 1 Data
+P_IND_LBLNK_OFFS:	.equ	(P_IND_DISP1_OFFS +1)	;Led Blink Data
+P_IND_DBLNK0_OFFS:	.equ	(P_IND_LBLNK_OFFS +1)	;Display 0 Blink Data
+P_IND_DBLNK1_OFFS:	.equ	(P_IND_DBLNK0_OFFS +1)	;Display 1 Blink Data
+P_IND_CRC_OFFS:		.equ	(P_IND_DBLNK1_OFFS +1)	;CRC16 of the packet
+P_IND_LEN:			.equ	(P_IND_CRC_OFFS +2)		;Total length of the packet
+P_IND_DATALEN:		.equ	(P_IND_LEN -P_COMMONLEN);Net length of the packet (excluding
+													; header and footer fields)
+
+;Keypress and Keypress Retransmission Packets Field Offsets
+P_KBD_KEY_OFFS:		.equ	P_HEADERLEN				;Key code
+P_KBD_DUMMYB:		.equ	(P_KBD_KEY_OFFS +1)		;Dummy byte to align CRC
+P_KBD_CRC_OFFS:		.equ	(P_KBD_DUMMYB +1)		;CRC16 of the packet
+P_KBD_LEN:			.equ	(P_KBD_CRC_OFFS +2)		;Total length if the keypress packet
+P_KDB_DATALEN:		.equ	(P_KBD_LEN -P_COMMONLEN);Net length of the packet (excluding
+													; header and CRC fields)
+
+;Acknowledge Packet Field Offsets
+P_ACK_UID_OFFS:		.equ	P_HEADERLEN				;The packet that is acknowledged
+P_ACK_CRC_OFFS:		.equ	(P_ACK_UID_OFFS +2)		;CRC16 of the packet
+P_ACK_LEN:			.equ	(P_ACK_CRC_OFFS +2)		;Total length of the packet
+P_ACK_DATALEN:		.equ	(P_ACK_LEN -P_COMMONLEN);Net length of the packet (excluding
+													; header and CRC fields)
 
 
 ;----------------------------------------
 ; Global Functions
 ;========================================
+					.global	UARTProtoInit		;Initializes local variables that are used by
+												; the protocol engine
+					.global	PrepIndPacket		;Prepares an Indications packet
+					.global	PrepKbdPacket		;Prepares a Keypress packet
+					.global	PrepKbdRtrPacket	;Prepares a Keypres Retransmission packet
+					.global	SendPacket			;Fills in CRC16 and sends the prepared packet
 
 
 	.endif										;__UARTPROTO_LIB_H43__

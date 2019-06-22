@@ -38,19 +38,25 @@
 ;*              by RX ISR)                                                                   *
 ;* RSBinary  : Flags binary mode. It does not filter any characters and the wake up is       *
 ;*              controlled by timer                                                          *
+;* RSPacket  : Flags packet mode. As in binary mode, it doesnot filter the incoming data but *
+;*              the first byte received is considered a length of packet field. After        *
+;*              receiving this number of bytes it wakes the system up to consume the packet. *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Variables:                                                                                *
 ;* -----------                                                                               *
-;* UARTFlags   : Flags to control the functionality of RS232 subsystem                       *
-;* UARTTxStrt  : Offset in transmition buffer of the first character to be transmitted       *
-;* UARTTxLen   : Length of data waiting to be sent in the transmition buffer                 *
-;* UARTRxStrt  : Offset in reception buffer of the first character received earlier by RS232 *
-;* UARTRxLen   : Number of bytes waiting to be read in the reception buffer                  *
-;* UARTWakeLim : The wake up buffer limit. When the receiving buffer reaches this limit it   *
-;*                wakes up the system to handle received data                                *
-;* UARTTxCBuf  : Cyclic buffer to hold the data to be sent                                   *
-;* UARTRxCBuf  : Cyclic buffer to hold the data received                                     *
+;* UARTFlags     : Flags to control the functionality of RS232 subsystem                     *
+;* UARTTxStrt    : Offset in transmition buffer of the first character to be transmitted     *
+;* UARTTxLen     : Length of data waiting to be sent in the transmition buffer               *
+;* UARTRxStrt    : Offset in reception buffer of the first character received earlier by     *
+;*                  RS232                                                                    *
+;* UARTRxLen     : Number of bytes waiting to be read in the reception buffer                *
+;* UARTWakeLim   : The wake up buffer limit. When the receiving buffer reaches this limit it *
+;*                  wakes up the system to handle received data                              *
+;* UARTPacketLen : The number of bytes remaining to complete the incoming packet             *
+;* UARTPacketQ   : The number of complete packets received in the input buffer               *
+;* UARTTxCBuf    : Cyclic buffer to hold the data to be sent                                 *
+;* UARTRxCBuf    : Cyclic buffer to hold the data received                                   *
 ;*                                                                                           *
 ;*===========================================================================================*
 ;* Functions of the Library:                                                                 *
@@ -67,6 +73,7 @@
 ;* UARTGetMode     : Returnes the current mode of reception (text or binary)                 *
 ;* UARTSetupTimer  : Starts or restarts the timeout reception timer                          *
 ;* UARTCheckServe  : Checks if there is the need to consume received data                    *
+;* UARTSendStream  : Sends a whole stream of data                                            *
 ;* UARTSend        : Sends a byte of data to the UART stream                                 *
 ;* UARTReceive     : Gets the current byte from the reception queue                          *
 ;* UARTTimerISR    : The TimerA timeout interrupt service routine                            *
@@ -100,6 +107,12 @@ RSRxEol:	.equ	BIT4					;Flags that the system has just received a new
 RSBinary:	.equ	BIT5					;Flags binary mode. It does not filter any
 											; characters and the wake up is controlled by
 											; timer
+RSPacket:	.equ	BIT6					;Flags packet mode. It does not filter any
+											; characters like binary mode, but the first byte
+											; received is considered as the number of bytes
+											; that form a complete packet. After receiving
+											; the whole packet, it wakes the system up to
+											; consule it.
 
 
 ;*********************************************************************************************
@@ -118,6 +131,9 @@ RSBinary:	.equ	BIT5					;Flags binary mode. It does not filter any
 			.bss	UARTWakeLim, 2			;The wake up buffer limit. When the receiving
 											; buffer reaches this limit it wakes up the system
 											; to handle received data
+			.bss	UARTPacketLen, 2		;The number of bytes need to receive in order to
+											; complete a whole packet
+			.bss	UARTPacketQ, 2			;The number of packets
 			.bss	UARTTxCBuf, UARTTXSIZE	;Cyclic buffer to hold the data to be sent
 			.bss	UARTRxCBuf, UARTRXSIZE	;Cyclic buffer to hold the data received
 
@@ -247,6 +263,7 @@ UARTDisableInts:
 ; VARS USED     : RSBinary, UARTFlags
 ; OTHER FUNCS   : None
 UARTSetBinMode:
+			BIC		#RSPacket,&UARTFlags	;Clear possible packet mode
 			BIS		#RSBinary,&UARTFlags	;Set binary flag
 			RET
 
@@ -262,8 +279,25 @@ UARTSetBinMode:
 ; VARS USED     : RSBinary, UARTFlags
 ; OTHER FUNCS   : None
 UARTSetTxtMode:
-			BIC		#CCIE | CCIFG,&UARTCCTL1;Disable timer interrupt in this mode
+			BIC		#CCIE | CCIFG,&COMMTCCTL1;Disable timer interrupt in this mode
+			BIC		#RSBinary | RSPacket,&UARTFlags	;Clear binary an packet flags
+			RET
+
+
+;----------------------------------------
+; UARTSetPcktMode
+; Sets the receiving mode to text. New line sequences are filtered. No timer is used
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     : None
+; REGS AFFECTED : None
+; STACK USAGE   : None
+; VARS USED     : RSBinary, UARTFlags
+; OTHER FUNCS   : None
+UARTSetPcktMode:
+			BIC		#CCIE | CCIFG,&COMMTCCTL1;Disable timer interrupt in this mode
 			BIC		#RSBinary,&UARTFlags	;Clear binary flag
+			BIS		#RSPacket,&UARTFlags	;Set the packet flag
 			RET
 
 
@@ -271,14 +305,15 @@ UARTSetTxtMode:
 ; UARTGetMode
 ; Gets the receiving mode
 ; INPUT         : None
-; OUTPUT        : Carry flag is set on binary mode, reset on text mode
-; REGS USED     : None
-; REGS AFFECTED : None
+; OUTPUT        : R4 contains the current mode
+; REGS USED     : R4
+; REGS AFFECTED : R4
 ; STACK USAGE   : None
-; VARS USED     : RSBinary, UARTFlags
+; VARS USED     : RSBinary, RSPacket, UARTFlags
 ; OTHER FUNCS   : None
 UARTGetMode:
-			BIT		#RSBinary,&UARTFlags	;Test binary flag
+			MOV		&UARTFlags,R4			;Get the flags
+			AND		#RSPacket | RSBinary,R4	;Filter only the mode bits
 			RET
 
 
@@ -322,12 +357,38 @@ UARTCheckServe:
 
 
 ;----------------------------------------
+; UARTSendStream
+; Sends a whole stream of data to the RS232 bus. If the buffer is full it waits until is is
+; free to send the necessary bytes. So, the call is blocking if needed
+; INPUT         : R5 points to the buffer that contains the data to be sent
+;                 R6 contains the length of the stream in bytes
+; OUTPUT        : None
+; REGS USED     : R4, R5, R6, R8 (from UARTSend)
+; REGS AFFECTED : R4, R5, R6, R8
+; STACK USAGE   : 4 = 1x Call + 2 bytes by called function
+; VARS USED     : UARTTxLen, UARTTXSIZE
+; OTHER FUNCS   : UARTSend
+UARTSendStream:
+			CMP		#00000h,R6				;Are there any bytes to be sent?
+			JZ		USS_Exit				;No => Exit
+			MOV.B	@R5+,R4					;Get the byte to be transmitted
+USS_Cont:	CALL	#UARTSend				;Send the byte
+			JC		USS_Error				;Carry flag set? => Buffer full... need to wait
+			DEC		R6						;One byte less to send
+			JMP		UARTSendStream			;Restart
+USS_Error:	CMP		#UARTTXSIZE,&UARTTxLen	;Is the buffer full?
+			JHS		USS_Error				;Yes => Repeat check until there is an empty cell
+			JMP		USS_Cont
+USS_Exit:	RET
+
+
+;----------------------------------------
 ; UARTSend
 ; Sends a byte to the RS232 bus
 ; INPUT         : R4 contains the byte to be sent
 ; OUTPUT        : Carry flag is set on error (buffer full), cleared on success
-; REGS USED     : None
-; REGS AFFECTED : None
+; REGS USED     : R4
+; REGS AFFECTED : R8
 ; STACK USAGE   : 2 = 1x Push
 ; VARS USED     : COMM_IE, COMM_IFG, COMM_TXBUF, UARTTxCBuf, UARTTxLen, UARTTXSIZE, UARTTxStrt
 ; OTHER FUNCS   : None
@@ -339,14 +400,14 @@ UARTSend:
 			PUSH	SR						;Store the state of interrupts
 			DINT							;Pause interrupts for a little bit
 			NOP
-RSS_Store:	MOV		&UARTTxStrt,R5			;Get the strting offset of the first character
-			ADD		&UARTTxLen,R5			;Add the length of data stored in the buffer to
+RSS_Store:	MOV		&UARTTxStrt,R8			;Get the strting offset of the first character
+			ADD		&UARTTxLen,R8			;Add the length of data stored in the buffer to
 											; find the first empty cell in it
 			POP		SR						;Restore interrupts
-			CMP		#UARTTXSIZE,R5			;Passed the end of physical buffer?
+			CMP		#UARTTXSIZE,R8			;Passed the end of physical buffer?
 			JLO		RSSNoRvt				;No => Do not revert to its beginning
-			SUB		#UARTTXSIZE,R5			;else bring it inside buffer's bounds
-RSSNoRvt:	MOV.B	R4,UARTTxCBuf(R5)		;Store the byte into the buffer
+			SUB		#UARTTXSIZE,R8			;else bring it inside buffer's bounds
+RSSNoRvt:	MOV.B	R4,UARTTxCBuf(R8)		;Store the byte into the buffer
 			INC		&UARTTxLen				;Increment the stored buffer data length by one
 			CLRC							;Clear carry to flag success
 RSS_Exit:	RET
@@ -381,6 +442,7 @@ UARTReceive:
 			PUSH	SR						;Store the state of interrupts
 			DINT							;Both start and length should be changed before
 											; another process use them
+			NOP
 			DEC		&UARTRxLen				;One character less in the buffer
 			INC		R5						;Advance the starting pointer to the next stored
 											; character
@@ -473,9 +535,10 @@ UARTRxISR:
 			SUB		#UARTRXSIZE,R4			;else, Subtract the length of buffer to revert it
 											; to its beginning
 RxSR_NoRvt:	MOV.B	&COMM_RXBUF,R5			;Get incoming byte
-			BIT		#RSBinary,&UARTFlags	;Are we in binary mode?
+			BIT		#RSPacket | RSBinary,&UARTFlags	;Are we in binary or packet mode?
 			JNZ		RxSRBinTim				;If yes => Do not filter incoming character; store
 											; it as is
+			;Text Mode - Filter EOL charcaters (CR/LF)
 			CMP.B	#00Ah,R5				;Is it 0Ah (One of the line terminating values)
 			JNE		RxSRNo0A				;No => OK, Check for other
 			BIS		#RS0A | RSRxEol,&UARTFlags;Flag the character reception and the need to
@@ -495,7 +558,26 @@ RxSRNo0A:	CMP.B	#00Dh,R5				;Is the received character 0Dh?
 			BIC		#RS0A | RS0D,&UARTFlags	;else, clear the character reception flags
 			JMP		RxSR_WakeUp				;and wake up the system. No need to store the
 											; second character of the "New Line" sequence
-RxSRBinTim:	CALL	#UARTSetupTimer			;Reset timeout counter
+RxSRBinTim:	BIT		#RSPacket,&UARTFlags	;Packet mode?
+			JZ		RxSRBinary				;No => Use Binary Mode reception
+			;Packet Mode - Decide Length and/or Wake up of the system
+			CMP		#00000h,&UARTPacketLen	;Is the current packet length 0?
+			JNZ		RxSR_PEndTst			;No => Have to test is the packet ends
+			MOV		R5,&UARTPacketLen		;Store the number of bytes to receive to complete
+											; the packet
+			DEC		&UARTPacketLen			;Exclude length byte from the length of bytes to
+											; be received to complete the packet
+			JMP		RxSRNo0D				;Store and exit
+RxSR_PEndTst:								;Well another byte from the packet...
+			DEC		&UARTPacketLen			;Finished?
+			JNZ		RxSRNo0D				;No => Just store and exit
+			INC		&UARTPacketQ			;else, Another packet is in the queue
+			BIS		#RSRxEol,&UARTFlags		;Flag the need to wake the system up
+			JMP		RxSRNo0D				;Store and exit, waking up the system to collect
+											; the received packet
+
+			;Binary Mode
+RxSRBinary:	CALL	#UARTSetupTimer			;Reset timeout counter
 RxSRNo0D:	BIC		#RS0A | RS0D,&UARTFlags	;Ordinary character => No 0Ah or 0Dh
 RxSRStore:	MOV.B	R5,UARTRxCBuf(R4)		;Insert the newly received value
 			INC		&UARTRxLen				;Increment the length of stored data in the buffer
