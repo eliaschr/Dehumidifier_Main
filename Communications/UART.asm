@@ -456,6 +456,92 @@ RSRecFail:	RET								;and return to caller
 
 
 ;----------------------------------------
+; UARTReceiveStream
+; Fetches a stream of bytes from the RS232 reception buffer and copies them to a destination
+; buffer. If the subsystem is in packet mode, it stops when a packet is completed or the
+; destination buffer is full.
+; INPUT         : R5 points to the target buffer
+;                 R6 contains the maximum size of the destination buffer
+; OUTPUT        : R contains the number of bytes fetched.
+;                 Carry flag is set if the destination buffer is full and there are more bytes
+;                 to be fetched. This means that if the system is in packet mode, there is at
+;                 least one more packet in the buffer to be received.
+; REGS USED     :
+; REGS AFFECTED :
+; STACK USAGE   :
+; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
+; OTHER FUNCS   :
+UARTReceiveStream:
+			;First lets decide the number of bytes to be copied. This number is the minimum of
+			; the destination buffer's size, the packet length (or the line length) that is in
+			; UART Rx buffer and the size of the received bytes.
+			MOV		&UARTRxLen,R10			;Get the number of bytes stored in Rx buffer
+			CMP		R10,R6					;Is the target buffer greater or equal to the
+			JHS		URS_Get					; received bytes? => OK, get them
+			MOV		R6,R10					;else will only as many bytes as the target can
+											; hold
+URS_Get:	BIT		#RSBinary,&UARTStatus	;Binary mode?
+			JZ		URS_GetNbin				;No => Test for other modes
+			CALL	#UARTReciveBin			;else, copy all of them to the target buffer
+			RET
+
+URS_GetNBin:BIT		#RSPacket,&UARTStatus	;Packet mode?
+			JZ		URS_GetLine				;No => then in text mode, so get the line
+			CALL	#UARTReceivePack		;else receive a packet
+			RET
+
+USR_GetLine:
+			;Well, normally in URS_GetLine we chould CALL #UARTReceiveLine and then RET, but
+			; since UARTReceiveLine follows in source code and at its end it just RETs, we can
+			; skip these two lines and proceed directly to the UARTReceiveLine
+
+
+
+;----------------------------------------
+; UARTReceiveLine
+; Fetches a stream of bytes from the RS232 reception buffer and copies them to a destination
+; buffer. The transfer of bytes ends either when the target buffer is filled up totally, or
+; when the EOL character (either of CR or LF) appears. The terminating character is also
+; copied. This is not a global function as it does not check for target buffer overflow or
+; Rx buffer underflow. It expects the calling process to put in the correct maximum number of
+; bytes to be copied. It should be used through UARTReceiveStream, since it calls this
+; function only when in text mode. Fetching a line of data when the UART is in binary or
+; packet mode does not make sense.
+; INPUT         : R5 points to the target buffer
+;                 R10 contains the number of bytes to be transfered
+; OUTPUT        : R6 contains the number of bytes fetched.
+; REGS USED     :
+; REGS AFFECTED :
+; STACK USAGE   :
+; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
+; OTHER FUNCS   :
+UARTReceiveLine:
+			MOV		#00000h,R15				;Clear the number of fetched bytes
+			MOV		&UARTRxStrt,R11			;Get the starting offset of the first character
+URL_NextChr:CMP		#00000h,R10				;Do we have to fetch more bytes?
+			JEQ		URL_End					;No => then exit
+
+			MOV.B	UARTRxCBuf(R11),R4		;Get this byte
+			MOV.B	R4,0(R5)				;Store it
+			INC		R5						;Advance the target pointer to the next cell
+			DEC		R10						;One character less in the reception buffer
+			INC		R11						;Advance the starting pointer to the next stored
+											; character
+			INC		R15						;One more characters read
+			CMP		#UARTRXSIZE,R11			;Crossed the physical buffer's boundary?
+			JLO		URL_NoRvt				;No => do not revert to the beginning
+			MOV		#00000h,R11				;else, move pointer to the beginning of the buffer
+URL_NoRvt:	CMP.B	#00Ah,R4				;Is it a 0Ah terminating character (LF)?
+			JEQ		URL_End					;Yes => Exit copying
+			CMP.B	#00Dh,R4				;Is it a 0Dh terminating character (CR)?
+			JNE		URL_NextChr				;No => no EOL yet, keep on
+URL_End:
+			MOV		R11,&UARTRxStrt			;Store the starting pointer
+			SUB		R15,&UARTRxLen			;Sub the number of characters copied from length
+RSRecFail:	RET								;and return to caller
+
+
+;----------------------------------------
 ; Interrupt Service Routines
 ;========================================
 ;----------------------------------------

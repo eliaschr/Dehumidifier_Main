@@ -153,6 +153,7 @@ UARTUSCIBUS:	.equ	Board_CommPort		;The number of eUSCI_A port to be used
 			.global	UARTSendStream			;Sends a whole stream of data (blocking call)
 			.global	UARTSend				;Sends data through the RS232 bus
 			.global	UARTReceive				;Gets one character previously read from RS232 bus
+			.global	UARTReceiveStream		;Receives a number of bytes
 			
 
 	.endif									;__UART_RS232_LIB_H43__

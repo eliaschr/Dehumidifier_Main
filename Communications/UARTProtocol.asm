@@ -63,6 +63,7 @@
 ; Variables Definitions
 ;-------------------------------------------
 			.bss	CurrUID, 2				;Current free UID of a packet
+			.bss	InLength, 2				;Current received length (bytes)
 			.bss	InPacket, PACKETSIZE	;Incoming packet construction buffer
 			.bss	OutPacket, PACKETSIZE   ;Outgoing packet construction buffer
 			
@@ -165,11 +166,11 @@ PrepKbdRtrPacket:
 ; Calculates the CRC16 and sends the already prepared packet
 ; INPUT         : None
 ; OUTPUT        : None
-; REGS USED     :
-; REGS AFFECTED :
-; STACK USAGE   : None
-; VARS USED     :
-; OTHER FUNCS   : None
+; REGS USED     : R4, R5, R6, R8
+; REGS AFFECTED : R4, R5, R6, R8
+; STACK USAGE   : 6 = 1x Call + 4 by called function (UARTSendStream)
+; VARS USED     : OutPacket
+; OTHER FUNCS   : CRC16AddList, CRC16Init, UARTSendStream
 SendPacket:
 			CALL	#CRC16Init				;Initialize the CRC16 module
 			MOV		#OutPacket,R5			;This packet is going to be transmitted
@@ -181,6 +182,20 @@ SendPacket:
 			MOV		#OutPacket,R5			;The totally prepared packet is going to be sent
 			MOV		@R5,R6					;R6 contains the size of the packet
 			CALL	#UARTSendStream			;Send the packet
+			RET
+
+
+;----------------------------------------
+; ReceivePacket
+; Calculates the CRC16 and sends the already prepared packet
+; INPUT         : None
+; OUTPUT        : None
+; REGS USED     :
+; REGS AFFECTED :
+; STACK USAGE   : None
+; VARS USED     :
+; OTHER FUNCS   : None
+ReceivePacket:
 			RET
 
 
