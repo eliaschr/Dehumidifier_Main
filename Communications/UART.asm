@@ -113,6 +113,9 @@ RSPacket:	.equ	BIT6					;Flags packet mode. It does not filter any
 											; that form a complete packet. After receiving
 											; the whole packet, it wakes the system up to
 											; consule it.
+RSStrTrnc:	.equ	BIT7					;Stream is truncated
+RSPcktCont:	.equ	BIT8					;Need to continue a packet previously received but
+											; not completed
 
 
 ;*********************************************************************************************
@@ -427,29 +430,29 @@ RSS_Send:	PUSH	SR						;Store interrupts' status
 ; UARTReceive
 ; Fetches a byte from the RS232 reception buffer
 ; INPUT         : None
-; OUTPUT        : R4 contains the byte fetched. Carry flag is set on error (buffer full) or
+; OUTPUT        : R4 contains the byte fetched. Carry flag is set on error (buffer empty) or
 ;                 cleared on success
-; REGS USED     : R4, R5
-; REGS AFFECTED : R4, R5
+; REGS USED     : R4, R11
+; REGS AFFECTED : R4, R11
 ; STACK USAGE   : 2 = 1x Push
 ; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
 ; OTHER FUNCS   : None
 UARTReceive:
 			CMP		#00000h,&UARTRxLen		;Is there any data in the receiving buffer?
 			JZ		RSRecFail				;No => exit with carry flag set
-			MOV		&UARTRxStrt,R5			;Get the starting offset of the first character
-			MOV.B	UARTRxCBuf(R5),R4		;Get this byte
+			MOV		&UARTRxStrt,R11			;Get the starting offset of the first character
+			MOV.B	UARTRxCBuf(R11),R4		;Get this byte
 			PUSH	SR						;Store the state of interrupts
 			DINT							;Both start and length should be changed before
 											; another process use them
 			NOP
 			DEC		&UARTRxLen				;One character less in the buffer
-			INC		R5						;Advance the starting pointer to the next stored
+			INC		R11						;Advance the starting pointer to the next stored
 											; character
-			CMP		#UARTRXSIZE,R5			;Crossed the physical buffer's boundary?
+			CMP		#UARTRXSIZE,R11			;Crossed the physical buffer's boundary?
 			JLO		RSRecNoRvt				;No => do not revert to the beginning
-			MOV		#00000h,R5				;else, move pointer to the beginning of the buffer
-RSRecNoRvt:	MOV		R5,&UARTRxStrt			;Store the starting pointer
+			MOV		#00000h,R11				;else, move pointer to the beginning of the buffer
+RSRecNoRvt:	MOV		R11,&UARTRxStrt			;Store the starting pointer
 			POP		SR						;Restore interrupts
 			CLRC							;Flag success
 RSRecFail:	RET								;and return to caller
@@ -462,10 +465,13 @@ RSRecFail:	RET								;and return to caller
 ; destination buffer is full.
 ; INPUT         : R5 points to the target buffer
 ;                 R6 contains the maximum size of the destination buffer
-; OUTPUT        : R contains the number of bytes fetched.
+;                 Carry flag, if UART is in Packet Mode, presents if there is the need to
+;                 start fetching a new packet (Carry flag cleared) or continue fetching a
+;                 previously started one (Carry flag set). Does not bother in other modes
+; OUTPUT        : R15 contains the number of bytes fetched.
 ;                 Carry flag is set if the destination buffer is full and there are more bytes
 ;                 to be fetched. This means that if the system is in packet mode, there is at
-;                 least one more packet in the buffer to be received.
+;                 least one more complete packet in the buffer to be received.
 ; REGS USED     :
 ; REGS AFFECTED :
 ; STACK USAGE   :
@@ -475,19 +481,56 @@ UARTReceiveStream:
 			;First lets decide the number of bytes to be copied. This number is the minimum of
 			; the destination buffer's size, the packet length (or the line length) that is in
 			; UART Rx buffer and the size of the received bytes.
+			; For a packet the lengths are three, one is the target buffer size, the second is
+			; the receiving buffer number of bytes and the third is the packet length. The
+			; number of bytes that are going to be fetched are the smaller one of these
+			; lengths. For the other two modes, binary and text, there is no predefined length
+			; as in a packet, so the only lengths that count are the received bytes length and
+			; the target buffer's length.
+			;So, lets first test if we are in Packet mode or not
+			BIC		#RSPcktCont,&UARTFlags	;Assume no packet starting if in Packet mode
+			JNC		URS_TstPckt				;Carry flag cleared? => keep on
+			BIS		#RSPcktCont,&UARTFlags	;else, set the Packet Continue flag
+URS_TstPckt:
+			BIT		#RSPacket,&UARTFlags	;Packet mode?
+			JZ		URS_GetNPacket			;No => No Packet Mode, test for other ones
+			CMP		#00000h,R6				;Is the target length 0? then we cannot fetch any
+											; packet
+			JEQ		URS_Error				;Flag the error and exit
+			MOV		&UARTRxLen,R10			;Get the number of bytes stored in RX buffer. This
+											; is needed only if there is the need to continue
+											; a packet reception
+			BIT		#RSPcktCont,&UARTFlags	;Do we have to start a new packet?
+			JNZ		URS_SkipLen				;No => Skip fetching the packet length
+			;In a packet the first byte is its length. When there is a new packet to be
+			; received, the number of bytes is the minimum of the packet length, the buffer
+			; completeness and the target buffer size. R10 already contains the number of
+			; bytes in the Rx Buffer - Buffer completeness. Need to fetch one byte, which is
+			; the packet size, and keep the smaller number
+			CALL	#UARTReceive			;Get one byte from the Rx Buffer
+			JC		URS_Error				;Error? => Exit with Carry Flag set
+			CMP		R10,R4					;Packet length higher or equal to Rx Buffer bytes?
+			JHS		URS_SkipLen				;Yes => then keep the smaller number (Buffer size)
+			MOV		R4,R10					;else, keep the packet size as it is the smaller
+											; number of bytes
+URS_SkipLen:
+			CMP		R10,R6					;Is the target buffer greater or equal to the
+			JHS		URS_GetPckt				; received bytes? => OK, get them
+			MOV		R6,R10					;else will only fetch as many bytes as the target
+											; buffer can hold
+URS_GetPckt:
+			CALL	#UARTReceiveBin			;else receive a packet as binary stream
+URS_Error:	RET
+
+URS_GetNPacket:
 			MOV		&UARTRxLen,R10			;Get the number of bytes stored in Rx buffer
 			CMP		R10,R6					;Is the target buffer greater or equal to the
 			JHS		URS_Get					; received bytes? => OK, get them
-			MOV		R6,R10					;else will only as many bytes as the target can
-											; hold
-URS_Get:	BIT		#RSBinary,&UARTStatus	;Binary mode?
-			JZ		URS_GetNbin				;No => Test for other modes
-			CALL	#UARTReciveBin			;else, copy all of them to the target buffer
-			RET
-
-URS_GetNBin:BIT		#RSPacket,&UARTStatus	;Packet mode?
-			JZ		URS_GetLine				;No => then in text mode, so get the line
-			CALL	#UARTReceivePack		;else receive a packet
+			MOV		R6,R10					;else will only fetch as many bytes as the target
+											; buffer can hold
+URS_Get:	BIT		#RSBinary,&UARTFlags	;Binary mode?
+			JZ		URS_GetLine				;No => Text mode, Receive a line
+			CALL	#UARTReceiveBin			;else, copy all of them to the target buffer
 			RET
 
 USR_GetLine:
@@ -501,7 +544,7 @@ USR_GetLine:
 ; UARTReceiveLine
 ; Fetches a stream of bytes from the RS232 reception buffer and copies them to a destination
 ; buffer. The transfer of bytes ends either when the target buffer is filled up totally, or
-; when the EOL character (either of CR or LF) appears. The terminating character is also
+; when the EOL character (00 for ASCIIZ stream) appears. The terminating character is also
 ; copied. This is not a global function as it does not check for target buffer overflow or
 ; Rx buffer underflow. It expects the calling process to put in the correct maximum number of
 ; bytes to be copied. It should be used through UARTReceiveStream, since it calls this
@@ -509,12 +552,12 @@ USR_GetLine:
 ; packet mode does not make sense.
 ; INPUT         : R5 points to the target buffer
 ;                 R10 contains the number of bytes to be transfered
-; OUTPUT        : R6 contains the number of bytes fetched.
-; REGS USED     :
-; REGS AFFECTED :
-; STACK USAGE   :
+; OUTPUT        : R15 contains the number of bytes fetched.
+; REGS USED     : R4, R5, R10, R11, R15
+; REGS AFFECTED : R4, R5, R10, R11, R15
+; STACK USAGE   : 2 = 1x Push
 ; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
-; OTHER FUNCS   :
+; OTHER FUNCS   : None
 UARTReceiveLine:
 			MOV		#00000h,R15				;Clear the number of fetched bytes
 			MOV		&UARTRxStrt,R11			;Get the starting offset of the first character
@@ -525,20 +568,75 @@ URL_NextChr:CMP		#00000h,R10				;Do we have to fetch more bytes?
 			MOV.B	R4,0(R5)				;Store it
 			INC		R5						;Advance the target pointer to the next cell
 			DEC		R10						;One character less in the reception buffer
+			INC		R15						;One more characters read
+			PUSH	SR						;Store the interrupts status
+			DINT							;Interrupts must be off; Critical section
+			NOP
+			DEC		&UARTRxLen				;One character less in buffer
 			INC		R11						;Advance the starting pointer to the next stored
 											; character
-			INC		R15						;One more characters read
 			CMP		#UARTRXSIZE,R11			;Crossed the physical buffer's boundary?
 			JLO		URL_NoRvt				;No => do not revert to the beginning
 			MOV		#00000h,R11				;else, move pointer to the beginning of the buffer
-URL_NoRvt:	CMP.B	#00Ah,R4				;Is it a 0Ah terminating character (LF)?
-			JEQ		URL_End					;Yes => Exit copying
-			CMP.B	#00Dh,R4				;Is it a 0Dh terminating character (CR)?
+URL_NoRvt:	MOV		R11,&UARTRxStrt			;Advance the starting pointer to empty the first
+			POP		SR						; cell and restore interrupts state
+											;End of critical section
+			CMP.B	#000h,R4				;Is it a ASCIIZ terminating character?
 			JNE		URL_NextChr				;No => no EOL yet, keep on
-URL_End:
-			MOV		R11,&UARTRxStrt			;Store the starting pointer
-			SUB		R15,&UARTRxLen			;Sub the number of characters copied from length
+			CMP		#00000h,&UARTPacketQ	;Is there any complete line in the queue recorded?
+			JEQ		URL_Exit				;No => just exit
+			DEC		&UARTPacketQ			;else, exclude one line
+URL_Exit:	BIT		#0FFFFh,&UARTPacketQ	;Are there any complete lines in the queue?
+											; (Sets Carry Flag in case of >0)
+			RET
+URL_End:	BIT		#0FFFFh,&UARTRxLen		;Are there more characters in the Rx Buffer?
+											; (Sets Carry Flag in case of >0)
 RSRecFail:	RET								;and return to caller
+
+
+;----------------------------------------
+; UARTReceiveBin
+; Fetches a stream of bytes from the RS232 reception buffer and copies them to a destination
+; buffer. The transfer of bytes ends when the specified number of bytes are copied. This is
+; not a global function as it does not check for target buffer overflow or Rx buffer under-
+; flow. It expects the calling process to put in the correct maximum number of bytes to be
+; copied. It should be used through UARTReceiveStream, since it calls this function only when
+; in binary mode. Using it when the UART is in text or packet mode could lead to problems.
+; INPUT         : R5 points to the target buffer
+;                 R10 contains the number of bytes to be transfered
+; OUTPUT        : R15 contains the number of bytes fetched.
+;                 Carray flag presents if there are more data received in the buffer
+; REGS USED     : R4, R5, R6, R11, R15
+; REGS AFFECTED : R4, R5, R6, R11, R15
+; STACK USAGE   : 2 = 1x Push
+; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
+; OTHER FUNCS   : None
+UARTReceiveBin:
+			MOV		#00000h,R15				;Clear the number of fetched bytes
+			MOV		&UARTRxStrt,R11			;Get the starting offset of the first character
+URB_NextChr:CMP		#00000h,R10				;Do we have to fetch more bytes?
+			JEQ		URB_End					;No => then exit
+
+			MOV.B	UARTRxCBuf(R11),R4		;Get this byte
+			MOV.B	R4,0(R5)				;Store it
+			INC		R5						;Advance the target pointer to the next cell
+			DEC		R10						;One character less in the reception buffer
+			INC		R15						;One more characters read
+			PUSH	SR						;Store the interrupts status
+			DINT							;Interrupts must be off; Critical section
+			NOP
+			DEC		&UARTRxLen				;One character less in buffer
+			INC		R11						;Advance the starting pointer to the next stored
+											; character
+			CMP		#UARTRXSIZE,R11			;Crossed the physical buffer's boundary?
+			JLO		URB_NoRvt				;No => do not revert to the beginning
+			MOV		#00000h,R11				;else, move pointer to the beginning of the buffer
+URB_NoRvt:	MOV		R11,&UARTRxStrt			;Advance the starting pointer to empty the first
+			POP		SR						; cell and restore interrupts state
+											;End of critical section
+			JMP		URB_NextChr				;Repeat for all bytes in Rx buffer
+URB_End:	BIT		#0FFFFh,&UARTRxLen		;Are there more bytes in the buffer?
+			RET								;Return to caller
 
 
 ;----------------------------------------
@@ -627,28 +725,35 @@ RxSR_NoRvt:	MOV.B	&COMM_RXBUF,R5			;Get incoming byte
 			;Text Mode - Filter EOL charcaters (CR/LF)
 			CMP.B	#00Ah,R5				;Is it 0Ah (One of the line terminating values)
 			JNE		RxSRNo0A				;No => OK, Check for other
+			MOV.B	#000h,R5				;ASCIIZ type of line, OOh is the termination
 			BIS		#RS0A | RSRxEol,&UARTFlags;Flag the character reception and the need to
 											; wake up the system
+			INC		&UARTPacketQ			;One more line in the buffer
 			BIT		#RS0D,&UARTFlags		;Was the last character 0Dh (the other new line
 											; character)
 			JZ		RxSRStore				;No => OK, Keep going on storing it
-			BIC		#RS0A | RS0D,&UARTFlags	;else, Clear both flags for character reception
+			DEC		&UARTPacketQ			;else, false alarm. EOL was previously counted
+			BIC		#RS0A | RS0D,&UARTFlags	;Clear both flags for character reception
 			JMP		RxSR_WakeUp				;The second character is not stored. It just wakes
 											; up the system
 RxSRNo0A:	CMP.B	#00Dh,R5				;Is the received character 0Dh?
 			JNE		RxSRNo0D				;No => OK, Store the character
+			MOV.B	#000h,R5				;ASCIIZ type of line, OOh is the termination
 			BIS		#RS0D | RSRxEol,&UARTFlags;Flag the reception of this character and the
 											; necessity to wake up the system
+			INC		&UARTPacketQ			;One more line in the buffer
 			BIT		#RS0A,&UARTFlags		;Was the last character a 0A?
 			JZ		RxSRStore				;No => just store the character
 			BIC		#RS0A | RS0D,&UARTFlags	;else, clear the character reception flags
+			DEC		&UARTPacketQ			;False alarm, This line was previously counted in
 			JMP		RxSR_WakeUp				;and wake up the system. No need to store the
 											; second character of the "New Line" sequence
 RxSRBinTim:	BIT		#RSPacket,&UARTFlags	;Packet mode?
 			JZ		RxSRBinary				;No => Use Binary Mode reception
 			;Packet Mode - Decide Length and/or Wake up of the system
 			CMP		#00000h,&UARTPacketLen	;Is the current packet length 0?
-			JNZ		RxSR_PEndTst			;No => Have to test is the packet ends
+			JNZ		RxSR_PEndTst			;No => Have to test if this is the last packet
+											; byte
 			MOV		R5,&UARTPacketLen		;Store the number of bytes to receive to complete
 											; the packet
 			DEC		&UARTPacketLen			;Exclude length byte from the length of bytes to
