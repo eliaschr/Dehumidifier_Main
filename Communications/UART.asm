@@ -136,6 +136,8 @@ RSPcktCont:	.equ	BIT8					;Need to continue a packet previously received but
 											; to handle received data
 			.bss	UARTPacketLen, 2		;The number of bytes need to receive in order to
 											; complete a whole packet
+			.bss	UARTStreamLen, 2		;The length of the current packet receiving (by
+											; UARTReceiveStream)
 			.bss	UARTPacketQ, 2			;The number of packets
 			.bss	UARTTxCBuf, UARTTXSIZE	;Cyclic buffer to hold the data to be sent
 			.bss	UARTRxCBuf, UARTRXSIZE	;Cyclic buffer to hold the data received
@@ -472,11 +474,11 @@ RSRecFail:	RET								;and return to caller
 ;                 Carry flag is set if the destination buffer is full and there are more bytes
 ;                 to be fetched. This means that if the system is in packet mode, there is at
 ;                 least one more complete packet in the buffer to be received.
-; REGS USED     :
-; REGS AFFECTED :
-; STACK USAGE   :
+; REGS USED     : R4, R5, R6, R10, R11, R15
+; REGS AFFECTED : R4, R5, R6, R10, R11, R15
+; STACK USAGE   : 4 = 1x Call + 2 by calling function
 ; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
-; OTHER FUNCS   :
+; OTHER FUNCS   : UARTReceive, UARTReceiveBin, UARTReceiveLine
 UARTReceiveStream:
 			;First lets decide the number of bytes to be copied. This number is the minimum of
 			; the destination buffer's size, the packet length (or the line length) that is in
@@ -492,16 +494,25 @@ UARTReceiveStream:
 			JNC		URS_TstPckt				;Carry flag cleared? => keep on
 			BIS		#RSPcktCont,&UARTFlags	;else, set the Packet Continue flag
 URS_TstPckt:
+			MOV		&UARTRxLen,R10			;Get the number of bytes stored in Rx buffer
+			CMP		R10,R6					;Is the target buffer greater or equal to the
+			JHS		URS_Get					; received bytes? => OK, get them
+			MOV		R6,R10					;else will only fetch as many bytes as the target
+											; buffer can hold
+
+URS_Get:	BIT		#RSBinary,&UARTFlags	;Are we in Binary Mode?
+			JNZ		URS_GetBin				;Yes => Fetch stream in binary mode
+
 			BIT		#RSPacket,&UARTFlags	;Packet mode?
-			JZ		URS_GetNPacket			;No => No Packet Mode, test for other ones
+			JZ		URS_GetLine				;No => Text Mode, receive up to a line of data
+
 			CMP		#00000h,R6				;Is the target length 0? then we cannot fetch any
 											; packet
 			JEQ		URS_Error				;Flag the error and exit
-			MOV		&UARTRxLen,R10			;Get the number of bytes stored in RX buffer. This
-											; is needed only if there is the need to continue
-											; a packet reception
+			MOV		&UARTStreamLen,R4		;The remaining packet size to be fetched
 			BIT		#RSPcktCont,&UARTFlags	;Do we have to start a new packet?
-			JNZ		URS_SkipLen				;No => Skip fetching the packet length
+			JNZ		URS_PackLen				;No => Continue fetching the rest of the previous
+											; packet
 			;In a packet the first byte is its length. When there is a new packet to be
 			; received, the number of bytes is the minimum of the packet length, the buffer
 			; completeness and the target buffer size. R10 already contains the number of
@@ -509,31 +520,33 @@ URS_TstPckt:
 			; the packet size, and keep the smaller number
 			CALL	#UARTReceive			;Get one byte from the Rx Buffer
 			JC		URS_Error				;Error? => Exit with Carry Flag set
+			MOV.B	R4,0(R5)				;Store the length of the packet
+			MOV		R4,&UARTStreamLen		;Store the length of the new packet
+			DEC		&UARTStreamLen			;Need to read one byte less
+			DEC		R10						;One less byte to fetch
+			INC		R5						;Advance the target pointer to the next cell
+URS_PackLen:
 			CMP		R10,R4					;Packet length higher or equal to Rx Buffer bytes?
-			JHS		URS_SkipLen				;Yes => then keep the smaller number (Buffer size)
+			JHS		URS_ContPack			;Yes => then keep the smaller number (Buffer size)
 			MOV		R4,R10					;else, keep the packet size as it is the smaller
 											; number of bytes
-URS_SkipLen:
-			CMP		R10,R6					;Is the target buffer greater or equal to the
-			JHS		URS_GetPckt				; received bytes? => OK, get them
-			MOV		R6,R10					;else will only fetch as many bytes as the target
-											; buffer can hold
-URS_GetPckt:
-			CALL	#UARTReceiveBin			;else receive a packet as binary stream
+URS_ContPack:
+			CALL	#UARTReceiveBin			;Receive a packet as binary stream
+			SUB		R15,&UARTStreamLen		;Subtract the received bytes from the packet size
+			JNC		URS_WTF					;More bytes read than the size of the packet? WTF!
+			JNZ		URS_Error				;More bytes to read to complete the packet?
+			;If the packet is complete, then we need to find if there are more packets in the
+			; queue in order to schedule their reception
+			DEC		&UARTPacketQ			;One packet less in the queue
+			BIT		#0FFFFh,&UARTPacketQ	;Test if there is any complete packet in the queue
+											; waiting
+URS_Exit:	RET
+URS_GetBin:
+			CALL	#UARTReceiveBin			;Receive a binary stream
+URS_WTF:									;Placeholder. Should never jump to WTF!!!
 URS_Error:	RET
 
-URS_GetNPacket:
-			MOV		&UARTRxLen,R10			;Get the number of bytes stored in Rx buffer
-			CMP		R10,R6					;Is the target buffer greater or equal to the
-			JHS		URS_Get					; received bytes? => OK, get them
-			MOV		R6,R10					;else will only fetch as many bytes as the target
-											; buffer can hold
-URS_Get:	BIT		#RSBinary,&UARTFlags	;Binary mode?
-			JZ		URS_GetLine				;No => Text mode, Receive a line
-			CALL	#UARTReceiveBin			;else, copy all of them to the target buffer
-			RET
-
-USR_GetLine:
+URS_GetLine:
 			;Well, normally in URS_GetLine we chould CALL #UARTReceiveLine and then RET, but
 			; since UARTReceiveLine follows in source code and at its end it just RETs, we can
 			; skip these two lines and proceed directly to the UARTReceiveLine
@@ -556,7 +569,7 @@ USR_GetLine:
 ; REGS USED     : R4, R5, R10, R11, R15
 ; REGS AFFECTED : R4, R5, R10, R11, R15
 ; STACK USAGE   : 2 = 1x Push
-; VARS USED     : UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
+; VARS USED     : UARTPacketQ, UARTRxCBuf, UARTRxLen, UARTRXSIZE, UARTRxStrt
 ; OTHER FUNCS   : None
 UARTReceiveLine:
 			MOV		#00000h,R15				;Clear the number of fetched bytes
@@ -591,7 +604,7 @@ URL_Exit:	BIT		#0FFFFh,&UARTPacketQ	;Are there any complete lines in the queue?
 			RET
 URL_End:	BIT		#0FFFFh,&UARTRxLen		;Are there more characters in the Rx Buffer?
 											; (Sets Carry Flag in case of >0)
-RSRecFail:	RET								;and return to caller
+			RET								;and return to caller
 
 
 ;----------------------------------------
@@ -748,6 +761,7 @@ RxSRNo0A:	CMP.B	#00Dh,R5				;Is the received character 0Dh?
 			DEC		&UARTPacketQ			;False alarm, This line was previously counted in
 			JMP		RxSR_WakeUp				;and wake up the system. No need to store the
 											; second character of the "New Line" sequence
+
 RxSRBinTim:	BIT		#RSPacket,&UARTFlags	;Packet mode?
 			JZ		RxSRBinary				;No => Use Binary Mode reception
 			;Packet Mode - Decide Length and/or Wake up of the system
